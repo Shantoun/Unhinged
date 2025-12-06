@@ -1,6 +1,6 @@
 import streamlit as st
 
-
+auth = None
 if st.button("Sign in with Google"):
   auth = st.login("google")
 
