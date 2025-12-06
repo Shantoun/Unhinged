@@ -6,30 +6,29 @@ supabase_url = st.secrets["SUPABASE_URL"]
 supabase_key = st.secrets["SUPABASE_KEY"]
 supabase: Client = create_client(supabase_url, supabase_key)
 
-# --- Check OAuth Session on Load ---
+# --- Check OAuth Session ---
 session = supabase.auth.get_session()
 if session and session.user:
     st.session_state.user_email = session.user.email
+    st.rerun()
 
 # --- Auth Functions ---
 def sign_up(email, password):
     try:
-        user = supabase.auth.sign_up({"email": email, "password": password})
-        return user
+        return supabase.auth.sign_up({"email": email, "password": password})
     except Exception as e:
         st.error(f"Registration failed: {e}")
 
 def sign_in(email, password):
     try:
-        user = supabase.auth.sign_in_with_password({"email": email, "password": password})
-        return user
+        return supabase.auth.sign_in_with_password({"email": email, "password": password})
     except Exception as e:
         st.error(f"Login failed: {e}")
 
 def sign_in_google():
     try:
         res = supabase.auth.sign_in_with_oauth({"provider": "google"})
-        st.markdown(f"[Continue with Google]({res.url})")
+        st.link_button("Sign in with Google", res.url)
     except Exception as e:
         st.error(f"Google login failed: {e}")
 
@@ -44,39 +43,32 @@ def sign_out():
 # --- Main App ---
 def main_app(user_email):
     st.title("🎉 Welcome Page")
-    st.success(f"Welcome, {user_email}! 👋")
-    
+    st.success(f"Welcome, {user_email}!")
     if st.button("Logout"):
         sign_out()
 
 # --- Auth Screen ---
 def auth_screen():
     st.title("🔐 Streamlit & Supabase Auth App")
-    
+
     option = st.selectbox("Choose an action:", ["Login", "Sign Up"])
     email = st.text_input("Email")
     password = st.text_input("Password", type="password")
 
-    # Email/Password Sign Up
     if option == "Sign Up" and st.button("Register"):
         user = sign_up(email, password)
         if user and user.user:
             st.success("Registration successful. Please log in.")
 
-    # Email/Password Login
     if option == "Login" and st.button("Login"):
         user = sign_in(email, password)
         if user and user.user:
             st.session_state.user_email = user.user.email
-            st.success(f"Welcome back, {email}!")
             st.rerun()
 
-    # Divider + Google Login
     st.divider()
     st.write("Or")
-
-    if st.button("Sign in with Google"):
-        sign_in_google()
+    sign_in_google()
 
 # --- Session Init ---
 if "user_email" not in st.session_state:
