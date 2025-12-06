@@ -28,9 +28,10 @@ def sign_in(email, password):
 def sign_in_google():
     try:
         res = supabase.auth.sign_in_with_oauth({"provider": "google"})
-        st.experimental_redirect(res.url)
+        st.session_state.oauth_url = res.url  # store the URL
     except Exception as e:
         st.error(f"Google login failed: {e}")
+
 
 def sign_out():
     try:
@@ -39,6 +40,14 @@ def sign_out():
         st.rerun()
     except Exception as e:
         st.error(f"Logout failed: {e}")
+
+
+# --- Redirect Handler (runs BEFORE UI) ---
+if "oauth_url" in st.session_state and st.session_state.oauth_url:
+    url = st.session_state.oauth_url
+    st.session_state.oauth_url = None
+    st.markdown(f'<meta http-equiv="refresh" content="0;url={url}">', unsafe_allow_html=True)
+    st.stop()
 
 
 # --- Main App ---
