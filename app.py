@@ -4,7 +4,7 @@ import streamlit as st
 if st.button("Sign in with Google"):
     st.login("google")
 
-
+st.json(st.user)
 
 # from supabase import create_client, Client
 
