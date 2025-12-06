@@ -30,9 +30,7 @@ def sign_in_google():
         res = supabase.auth.sign_in_with_oauth({"provider": "google"})
         oauth_url = res.url
 
-        # Same-tab OAuth redirect (important)
-        st.markdown(
-            f"""
+        html = f'''
             <a href="{oauth_url}" target="_self">
                 <button style="
                     padding: 0.6rem 1rem;
@@ -42,9 +40,10 @@ def sign_in_google():
                     Sign in with Google
                 </button>
             </a>
-            """,
-            unsafe_allow_html=True
-        )
+        '''
+
+        st.markdown(html, unsafe_allow_html=True)
+
     except Exception as e:
         st.error(f"Google login failed: {e}")
 
