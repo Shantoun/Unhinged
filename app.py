@@ -6,7 +6,7 @@ supabase_url = st.secrets["SUPABASE_URL"]
 supabase_key = st.secrets["SUPABASE_KEY"]
 supabase: Client = create_client(supabase_url, supabase_key)
 
-# --- Check OAuth Session ---
+# --- FIRST: OAuth Redirect Handler (must run before UI) ---
 session = supabase.auth.get_session()
 if session and session.user:
     st.session_state.user_email = session.user.email
@@ -28,7 +28,23 @@ def sign_in(email, password):
 def sign_in_google():
     try:
         res = supabase.auth.sign_in_with_oauth({"provider": "google"})
-        st.link_button("Sign in with Google", res.url)
+        oauth_url = res.url
+
+        # Same-tab OAuth redirect (important)
+        st.markdown(
+            f"""
+            <a href="{oauth_url}" target="_self">
+                <button style="
+                    padding: 0.6rem 1rem;
+                    font-size: 1rem;
+                    border-radius: 6px;
+                ">
+                    Sign in with Google
+                </button>
+            </a>
+            """,
+            unsafe_allow_html=True
+        )
     except Exception as e:
         st.error(f"Google login failed: {e}")
 
@@ -55,11 +71,13 @@ def auth_screen():
     email = st.text_input("Email")
     password = st.text_input("Password", type="password")
 
+    # Sign Up
     if option == "Sign Up" and st.button("Register"):
         user = sign_up(email, password)
         if user and user.user:
             st.success("Registration successful. Please log in.")
 
+    # Log In
     if option == "Login" and st.button("Login"):
         user = sign_in(email, password)
         if user and user.user:
@@ -68,6 +86,7 @@ def auth_screen():
 
     st.divider()
     st.write("Or")
+
     sign_in_google()
 
 # --- Session Init ---
