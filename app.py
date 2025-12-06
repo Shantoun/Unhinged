@@ -1,14 +1,14 @@
 import streamlit as st
 
-auth = None
-if st.button("Sign in with Google"):
-  auth = st.login("google")
+auth = st.login("google")
 
 if auth:
     st.write("User:", auth.user_info)
     st.success("Logged in")
 else:
     st.write("Not logged in")
+    if st.button("Sign in with Google"):
+        st.rerun()
 
 #     st.login("google")
 
