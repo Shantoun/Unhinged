@@ -1,15 +1,24 @@
 import streamlit as st
 
-auth = st.login("google")
+# Check if user is already authenticated
+if "auth" not in st.session_state:
+    st.session_state.auth = None
 
-if auth:
-    st.write("User:", auth.user_info)
+# Display current auth status
+if st.session_state.auth:
+    st.write("User:", st.session_state.auth.user_info)
     st.success("Logged in")
+    
+    if st.button("Sign out"):
+        st.session_state.auth = None
+        st.rerun()
 else:
     st.write("Not logged in")
+    
     if st.button("Sign in with Google"):
+        # Trigger the login flow
+        st.session_state.auth = st.login("google")
         st.rerun()
-
 #     st.login("google")
 
 # st.json(st.user)
