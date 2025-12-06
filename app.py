@@ -1,28 +1,28 @@
 import streamlit as st
 from supabase import create_client
 
-st.set_page_config(layout="wide")
+st.set_page_config(layout="centered")
 
+# --- CONNECT TO SUPABASE ---
 url = st.secrets["SUPABASE_URL"]
 key = st.secrets["SUPABASE_KEY"]
 sb = create_client(url, key)
 
-# create google oauth url once per rerun
+st.title("Unhinged Login")
+
+# --- GOOGLE OAUTH URL ---
+# (We generate it once. If Supabase accepts the Site URL, this will ALWAYS work.)
 google = sb.auth.sign_in_with_oauth(
     {
         "provider": "google",
-        "options": {
-            "redirect_to": "https://unhinged.streamlit.app",
-        },
+        "options": {"redirect_to": "https://unhinged.streamlit.app"},
     }
 )
+
 google_url = google.url
 
-st.title("Unhinged Login")
 
-# --- EMAIL LOGIN ---
-st.subheader("Email Login")
-
+# --- EMAIL LOGIN / SIGNUP ---
 email = st.text_input("Email")
 password = st.text_input("Password", type="password")
 
@@ -39,12 +39,14 @@ with col2:
         if res.user:
             st.success(f"Logged in as: {res.user.email}")
         else:
-            st.error("Invalid email or password")
+            st.error("Invalid email or password.")
+
 
 # --- GOOGLE LOGIN ---
-st.subheader("Or")
+st.write("---")
+st.subheader("Or Sign In With Google")
 
 if google_url:
-    st.link_button("Sign In With Google", google_url)
+    st.link_button("Continue with Google", google_url)
 else:
-    st.error("Could not create Google sign-in link.")
+    st.error("Google login is temporarily unavailable.")
