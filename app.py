@@ -1,9 +1,15 @@
 import streamlit as st
 
 
-auth = st.login("google")
-st.write("Redirect URI being used:", auth.redirect_uri)
-# if st.button("Sign in with Google"):
+if st.button("Sign in with Google"):
+  auth = st.login("google")
+
+if auth:
+    st.write("User:", auth.user_info)
+    st.success("Logged in")
+else:
+    st.write("Not logged in")
+
 #     st.login("google")
 
 # st.json(st.user)
