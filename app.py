@@ -1,52 +1,63 @@
 import streamlit as st
-from supabase import create_client
-
-st.set_page_config(layout="centered")
-
-# --- CONNECT TO SUPABASE ---
-url = st.secrets["SUPABASE_URL"]
-key = st.secrets["SUPABASE_KEY"]
-sb = create_client(url, key)
-
-st.title("Unhinged Login")
-
-# --- GOOGLE OAUTH URL ---
-# (We generate it once. If Supabase accepts the Site URL, this will ALWAYS work.)
-google = sb.auth.sign_in_with_oauth(
-    {
-        "provider": "google",
-        "options": {"redirect_to": "https://unhinged.streamlit.app"},
-    }
-)
-
-google_url = google.url
+from supabase import create_client, Client
 
 
-# --- EMAIL LOGIN / SIGNUP ---
-email = st.text_input("Email")
-password = st.text_input("Password", type="password")
+supabase_url = st.secrets["SUPABASE_URL"]
+supabase_key = st.secrets["SUPABASE_KEY"]
 
-col1, col2 = st.columns(2)
+supabase: Client = create_client(supabase_url, supabase_key)
 
-with col1:
-    if st.button("Sign Up"):
-        sb.auth.sign_up({"email": email, "password": password})
-        st.success("Check your email to confirm your account.")
+def sign_up(email, password):
+    try:
+        user = supabase.auth.sign_up({"email": email, "password": password})
+        return user
+    except Exception as e:
+        st.error(f"Registration failed: {e}")
 
-with col2:
-    if st.button("Sign In"):
-        res = sb.auth.sign_in_with_password({"email": email, "password": password})
-        if res.user:
-            st.success(f"Logged in as: {res.user.email}")
-        else:
-            st.error("Invalid email or password.")
+def sign_in(email, password):
+    try:
+        user = supabase.auth.sign_in_with_password({"email": email, "password": password})
+        return user
+    except Exception as e:
+        st.error(f"Login failed: {e}")
 
+def sign_out():
+    try:
+        supabase.auth.sign_out()
+        st.session_state.user_email = None
+        st.rerun()
+    except Exception as e:
+        st.error(f"Logout failed: {e}")
 
-# --- GOOGLE LOGIN ---
-st.write("---")
-st.subheader("Or Sign In With Google")
+def main_app(user_email):
+    st.title("🎉 Welcome Page")
+    st.success(f"Welcome, {user_email}! 👋")
+    if st.button("Logout"):
+        sign_out()
 
-if google_url:
-    st.link_button("Continue with Google", google_url)
+def auth_screen():
+    st.title("🔐 Streamlit & Supabase Auth App")
+    option = st.selectbox("Choose an action:", ["Login", "Sign Up"])
+    email = st.text_input("Email")
+    password = st.text_input("Password", type="password")
+
+    if option == "Sign Up" and st.button("Register"):
+        user = sign_up(email, password)
+        if user and user.user:
+            st.success("Registration successful. Please log in.")
+
+    if option == "Login" and st.button("Login"):
+        user = sign_in(email, password)
+        if user and user.user:
+            st.session_state.user_email = user.user.email
+            st.success(f"Welcome back, {email}!")
+            st.rerun()
+
+if "user_email" not in st.session_state:
+    st.session_state.user_email = None
+
+if st.session_state.user_email:
+    main_app(st.session_state.user_email)
 else:
-    st.error("Google login is temporarily unavailable.")
+    auth_screen()
+
