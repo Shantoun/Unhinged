@@ -1,18 +1,13 @@
 import streamlit as st
 
-if "start_auth" not in st.session_state:
-    st.session_state.start_auth = False
+auth = st.login("google")
 
-if st.session_state.start_auth:
-    auth = st.login("google")
-    if auth:
-        st.write("User:", auth.user_info)
-        st.success("Logged in")
-        st.session_state.start_auth = False
+if auth:
+    st.write("User:", auth.user_info)
+    st.success("Logged in")
 else:
     st.write("Not logged in")
     if st.button("Sign in with Google"):
-        st.session_state.start_auth = True
         st.rerun()
 
 #     st.login("google")
