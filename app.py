@@ -11,13 +11,6 @@ session = supabase.auth.get_session()
 if session and session.user:
     st.session_state.user_email = session.user.email
 
-# --- Google Redirect Handler ---
-if "oauth_url" in st.session_state and st.session_state.oauth_url:
-    st.write(
-        f'<script>window.location.href="{st.session_state.oauth_url}";</script>',
-        unsafe_allow_html=True
-    )
-    st.stop()
 
 # --- Auth Functions ---
 def sign_up(email, password):
@@ -35,7 +28,7 @@ def sign_in(email, password):
 def sign_in_google():
     try:
         res = supabase.auth.sign_in_with_oauth({"provider": "google"})
-        st.session_state.oauth_url = res.url
+        st.experimental_redirect(res.url)
     except Exception as e:
         st.error(f"Google login failed: {e}")
 
@@ -47,12 +40,14 @@ def sign_out():
     except Exception as e:
         st.error(f"Logout failed: {e}")
 
+
 # --- Main App ---
 def main_app(user_email):
     st.title("🎉 Welcome Page")
     st.success(f"Welcome, {user_email}!")
     if st.button("Logout"):
         sign_out()
+
 
 # --- Auth Screen ---
 def auth_screen():
@@ -79,7 +74,8 @@ def auth_screen():
     if st.button("Sign in with Google"):
         sign_in_google()
 
-# --- Init Session State ---
+
+# --- Init Session ---
 if "user_email" not in st.session_state:
     st.session_state.user_email = None
 
