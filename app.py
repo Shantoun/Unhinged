@@ -1,10 +1,12 @@
 import streamlit as st
 
 
-if st.button("Sign in with Google"):
-    st.login("google")
+auth = st.login("google")
+st.write("Redirect URI being used:", auth.redirect_uri)
+# if st.button("Sign in with Google"):
+#     st.login("google")
 
-st.json(st.user)
+# st.json(st.user)
 
 # from supabase import create_client, Client
 
