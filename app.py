@@ -1,31 +1,16 @@
 import streamlit as st
 
-# Initialize session state for auth if it doesn't exist
-if "authenticated" not in st.session_state:
-    st.session_state.authenticated = False
-    st.session_state.user_info = None
-
-# Only run login if not already authenticated
-if not st.session_state.authenticated:
-    auth = st.login("google")
-    
-    if auth:
-        # Store auth info in session state
-        st.session_state.authenticated = True
-        st.session_state.user_info = auth.user_info
-        st.rerun()
-
-# Display based on authentication status
-if st.session_state.authenticated:
-    st.write("User:", st.session_state.user_info)
+if not st.user.is_logged_in:
+    st.write("Not logged in")
+    if st.button("Sign in with Google"):
+        st.login()
+else:
+    st.write(f"User: {st.user.name}")
+    st.write(f"Email: {st.user.email}")
     st.success("Logged in")
     
     if st.button("Sign out"):
-        st.session_state.authenticated = False
-        st.session_state.user_info = None
-        st.rerun()
-else:
-    st.write("Not logged in")
+        st.logout()
 #     st.login("google")
 
 # st.json(st.user)
