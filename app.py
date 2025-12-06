@@ -7,6 +7,17 @@ url = st.secrets["SUPABASE_URL"]
 key = st.secrets["SUPABASE_KEY"]
 sb = create_client(url, key)
 
+# create google oauth url once per rerun
+google = sb.auth.sign_in_with_oauth(
+    {
+        "provider": "google",
+        "options": {
+            "redirect_to": "https://unhinged.streamlit.app",
+        },
+    }
+)
+google_url = google.url
+
 st.title("Unhinged Login")
 
 # --- EMAIL LOGIN ---
@@ -15,14 +26,14 @@ st.subheader("Email Login")
 email = st.text_input("Email")
 password = st.text_input("Password", type="password")
 
-c1, c2 = st.columns(2)
+col1, col2 = st.columns(2)
 
-with c1:
+with col1:
     if st.button("Sign Up"):
         sb.auth.sign_up({"email": email, "password": password})
         st.success("Check your email to confirm your account.")
 
-with c2:
+with col2:
     if st.button("Sign In"):
         res = sb.auth.sign_in_with_password({"email": email, "password": password})
         if res.user:
@@ -31,15 +42,9 @@ with c2:
             st.error("Invalid email or password")
 
 # --- GOOGLE LOGIN ---
-# Create the redirect URL ONCE, not inside button click
-google = sb.auth.sign_in_with_oauth(
-    {
-        "provider": "google",
-        "options": {
-            "redirect_to": "http://localhost:8501"   # must match Supabase dashboard
-        }
-    }
-)
+st.subheader("Or")
 
-if google and google.url:
-    st.link_button("Sign In with Google", google.url)
+if google_url:
+    st.link_button("Sign In With Google", google_url)
+else:
+    st.error("Could not create Google sign-in link.")
