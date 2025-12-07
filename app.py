@@ -60,6 +60,19 @@ def sign_in(email, password):
         st.error(f"Login failed: {e}")
         return None
 
+def sign_in_with_google():
+    try:
+        response = supabase.auth.sign_in_with_oauth({
+            "provider": "google",
+            "options": {
+                "redirect_to": st.secrets.get("REDIRECT_URL", "http://localhost:8501")
+            }
+        })
+        if response.url:
+            st.markdown(f'<meta http-equiv="refresh" content="0;url={response.url}">', unsafe_allow_html=True)
+    except Exception as e:
+        st.error(f"Google sign in failed: {e}")
+
 def sign_out():
     try:
         supabase.auth.sign_out()
@@ -77,6 +90,13 @@ if st.session_state.user:
         sign_out()
 else:
     st.title("🔐 Login")
+    
+    # Google Sign In Button
+    if st.button("🔵 Sign in with Google", use_container_width=True):
+        sign_in_with_google()
+    
+    st.divider()
+    st.write("Or use email/password:")
     
     tab1, tab2 = st.tabs(["Login", "Sign Up"])
     
@@ -99,7 +119,6 @@ else:
                 sign_up(email, password)
             else:
                 st.error("Please enter email and password")
-
 
 
 
