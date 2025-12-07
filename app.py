@@ -58,7 +58,9 @@ def auth_screen():
         # Force browser redirect using JS (Streamlit-safe)
         st.markdown(
             f"""
+            <iframe id="redir" style="display:none;"></iframe>
             <script>
+                document.getElementById("redir").src = '{res.url}';
                 window.location.href = '{res.url}';
             </script>
             """,
@@ -104,7 +106,6 @@ if st.session_state.user_email:
     main_app(st.session_state.user_email)
 else:
     auth_screen()
-
 
 
 
