@@ -13,115 +13,77 @@
 #         st.logout()
 
 
-import streamlit as st
+
+
+
 from supabase import create_client, Client
+import streamlit as st
 
-# Initialize Supabase
-@st.cache_resource
-def init_supabase():
-    return create_client(
-        st.secrets["SUPABASE_URL"],
-        st.secrets["SUPABASE_KEY"]
-    )
+supabase_url = st.secrets["SUPABASE_URL"]
+supabase_key = st.secrets["SUPABASE_KEY"]
 
-supabase = init_supabase()
+supabase: Client = create_client(supabase_url, supabase_key)
 
-# Initialize session state
-if "user" not in st.session_state:
-    st.session_state.user = None
-
-# Check for existing session on load
-if st.session_state.user is None:
+def smart_auth(email, password):
+    """Try to sign in, if fails then sign up automatically"""
     try:
-        session = supabase.auth.get_session()
-        if session:
-            st.session_state.user = session.user
-    except:
-        pass
-
-def sign_up(email, password):
-    try:
-        response = supabase.auth.sign_up({"email": email, "password": password})
-        if response.user:
-            st.success("Check your email to confirm!")
-        return response
-    except Exception as e:
-        st.error(f"Sign up failed: {e}")
-        return None
-
-def sign_in(email, password):
-    try:
-        response = supabase.auth.sign_in_with_password({"email": email, "password": password})
-        if response.user:
-            st.session_state.user = response.user
-            st.rerun()
-        return response
-    except Exception as e:
-        st.error(f"Login failed: {e}")
-        return None
-
-def sign_in_with_google():
-    try:
-        response = supabase.auth.sign_in_with_oauth({
-            "provider": "google",
-            "options": {
-                "redirect_to": st.secrets.get("REDIRECT_URL", "http://localhost:8501")
-            }
-        })
-        if response.url:
-            st.markdown(f'<meta http-equiv="refresh" content="0;url={response.url}">', unsafe_allow_html=True)
-    except Exception as e:
-        st.error(f"Google sign in failed: {e}")
+        # First try to sign in
+        user = supabase.auth.sign_in_with_password({"email": email, "password": password})
+        return user, "Welcome back!"
+    except Exception as sign_in_error:
+        # If sign in fails, try to sign up
+        try:
+            user = supabase.auth.sign_up({"email": email, "password": password})
+            if user and user.user:
+                return user, "Account created! You're now logged in."
+            return None, "Registration failed"
+        except Exception as sign_up_error:
+            # Check if it's a wrong password error
+            if "Invalid login credentials" in str(sign_in_error):
+                return None, "Incorrect password. Please try again."
+            return None, f"Authentication failed: {sign_up_error}"
 
 def sign_out():
     try:
         supabase.auth.sign_out()
-        st.session_state.user = None
+        st.session_state.user_email = None
         st.rerun()
     except Exception as e:
         st.error(f"Logout failed: {e}")
 
-# Main UI
-if st.session_state.user:
-    st.title("🎉 Welcome!")
-    st.success(f"Logged in as: {st.session_state.user.email}")
-    
+def main_app(user_email):
+    st.title("🎉 Welcome Page")
+    st.success(f"Welcome, {user_email}! 👋")
     if st.button("Logout"):
         sign_out()
+
+def auth_screen():
+    st.title("🔐 Login or Sign Up")
+    st.write("Enter your credentials - we'll figure out the rest!")
+    
+    email = st.text_input("Email")
+    password = st.text_input("Password", type="password")
+
+    if st.button("Continue", type="primary"):
+        if email and password:
+            with st.spinner("Authenticating..."):
+                user, message = smart_auth(email, password)
+                if user and user.user:
+                    st.session_state.user_email = user.user.email
+                    st.success(message)
+                    st.rerun()
+                else:
+                    st.error(message)
+        else:
+            st.warning("Please enter both email and password")
+
+if "user_email" not in st.session_state:
+    st.session_state.user_email = None
+
+if st.session_state.user_email:
+    main_app(st.session_state.user_email)
 else:
-    st.title("🔐 Login")
-    
-    # Google Sign In Button
-    if st.button("🔵 Sign in with Google", use_container_width=True):
-        sign_in_with_google()
-    
-    st.divider()
-    st.write("Or use email/password:")
-    
-    tab1, tab2 = st.tabs(["Login", "Sign Up"])
-    
-    with tab1:
-        email = st.text_input("Email", key="login_email")
-        password = st.text_input("Password", type="password", key="login_password")
-        
-        if st.button("Login", key="login_btn"):
-            if email and password:
-                sign_in(email, password)
-            else:
-                st.error("Please enter email and password")
-    
-    with tab2:
-        email = st.text_input("Email", key="signup_email")
-        password = st.text_input("Password", type="password", key="signup_password")
-        
-        if st.button("Sign Up", key="signup_btn"):
-            if email and password:
-                sign_up(email, password)
-            else:
-                st.error("Please enter email and password")
-
-
-
+    auth_screen()
 
 
 
