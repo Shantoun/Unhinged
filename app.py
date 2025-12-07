@@ -18,87 +18,87 @@
 
 from supabase import create_client, Client
 import streamlit as st
-import urllib.parse
 
-# ------------------------------------------------------
-# SUPABASE INITIALIZATION
-# ------------------------------------------------------
 supabase_url = st.secrets["SUPABASE_URL"]
 supabase_key = st.secrets["SUPABASE_KEY"]
 supabase: Client = create_client(supabase_url, supabase_key)
 
-# ------------------------------------------------------
-# HANDLE GOOGLE OAUTH REDIRECT (SUPABASE ONLY)
-# ------------------------------------------------------
-params = st.experimental_get_query_params()
+# Handle OAuth callback
+params = st.query_params
+if "code" in params:
+    code = params["code"]
+    try:
+        session = supabase.auth.exchange_code_for_session({"code": code})
+        st.session_state.user_email = session.user.email
+        st.query_params.clear()
+        st.rerun()
+    except Exception as e:
+        st.error(f"OAuth failed: {e}")
+        st.query_params.clear()
 
-# Supabase returns tokens in the URL fragment (#), but Streamlit exposes them via query params
-if "access_token" in params:
-    token = params["access_token"][0]
-    data = supabase.auth.get_session_from_url(f"#access_token={token}")
-    st.session_state.user_email = data.session.user.email
-    st.experimental_set_query_params()  # clear params
-    st.rerun()
+def smart_auth(email, password):
+    """Try login first, if it fails try signup"""
+    try:
+        user = supabase.auth.sign_in_with_password({"email": email, "password": password})
+        return user, "success", "Welcome back!"
+    except:
+        try:
+            user = supabase.auth.sign_up({"email": email, "password": password})
+            if user and user.user:
+                if user.user.email_confirmed_at is None:
+                    return None, "check_email", f"Check your email ({email}) to confirm your account, then log in again."
+                return user, "success", "Account created!"
+        except Exception as e:
+            if "already registered" in str(e).lower():
+                return None, "error", "Wrong password."
+            return None, "error", f"Error: {e}"
+    return None, "error", "Authentication failed."
 
-# ------------------------------------------------------
-# AUTH SCREEN (EMAIL + GOOGLE)
-# ------------------------------------------------------
 def auth_screen():
-    st.title("Login")
-
-    # Google OAuth button
-    if st.button("Sign in with Google", type="primary"):
-        res = supabase.auth.sign_in_with_oauth(
-            {
-                "provider": "google",
-                "redirect_to": "https://unhinged.streamlit.app/"
+    st.title("🔐 Login or Sign Up")
+    
+    # Google Sign In
+    if st.button("🔵 Continue with Google", use_container_width=True):
+        res = supabase.auth.sign_in_with_oauth({
+            "provider": "google",
+            "options": {
+                "redirect_to": "https://unhinged.streamlit.app/",
+                "flow_type": "pkce"
             }
-        )
-
-        # Force browser redirect using JS (Streamlit-safe)
-        st.markdown(
-            f"""
-            <iframe id="redir" style="display:none;"></iframe>
-            <script>
-                document.getElementById("redir").src = '{res.url}';
-                window.location.href = '{res.url}';
-            </script>
-            """,
-            unsafe_allow_html=True,
-        )
-
+        })
+        auth_url = res.url
+        st.markdown(f'<meta http-equiv="refresh" content="0;url={auth_url}">', unsafe_allow_html=True)
+        st.stop()
+    
     st.divider()
-
-    # --- OPTIONAL: EMAIL / PASSWORD LOGIN ---
+    st.write("Or use email and password:")
+    
+    # Email/Password
     email = st.text_input("Email")
     password = st.text_input("Password", type="password")
 
-    if st.button("Continue"):
+    if st.button("Continue", type="primary"):
         if email and password:
-            try:
-                user = supabase.auth.sign_in_with_password({"email": email, "password": password})
+            user, status, msg = smart_auth(email, password)
+            if status == "success":
                 st.session_state.user_email = user.user.email
+                st.success(msg)
                 st.rerun()
-            except Exception as e:
-                st.error("Login failed.")
+            elif status == "check_email":
+                st.info(msg)
+            else:
+                st.error(msg)
         else:
-            st.warning("Enter email and password.")
+            st.warning("Enter email and password")
 
-# ------------------------------------------------------
-# MAIN APP (AFTER LOGIN)
-# ------------------------------------------------------
 def main_app(user_email):
-    st.title("Welcome")
-    st.success(f"Logged in as {user_email}")
-
+    st.title("🎉 Welcome")
+    st.success(f"Welcome, {user_email}!")
     if st.button("Logout"):
         supabase.auth.sign_out()
         st.session_state.user_email = None
         st.rerun()
 
-# ------------------------------------------------------
-# STATE & ROUTING
-# ------------------------------------------------------
 if "user_email" not in st.session_state:
     st.session_state.user_email = None
 
@@ -106,73 +106,6 @@ if st.session_state.user_email:
     main_app(st.session_state.user_email)
 else:
     auth_screen()
-
-
-
-
-
-
-
-# from supabase import create_client, Client
-# import streamlit as st
-
-# supabase_url = st.secrets["SUPABASE_URL"]
-# supabase_key = st.secrets["SUPABASE_KEY"]
-# supabase: Client = create_client(supabase_url, supabase_key)
-
-# def smart_auth(email, password):
-#     """Try login first, if it fails try signup"""
-#     try:
-#         user = supabase.auth.sign_in_with_password({"email": email, "password": password})
-#         return user, "success", "Welcome back!"
-#     except:
-#         try:
-#             user = supabase.auth.sign_up({"email": email, "password": password})
-#             if user and user.user:
-#                 if user.user.email_confirmed_at is None:
-#                     return None, "check_email", f"Check your email ({email}) to confirm your account, then log in again."
-#                 return user, "success", "Account created!"
-#         except Exception as e:
-#             if "already registered" in str(e).lower():
-#                 return None, "error", "Wrong password."
-#             return None, "error", f"Error: {e}"
-#     return None, "error", "Authentication failed."
-
-# def auth_screen():
-#     st.title("🔐 Login or Sign Up")
-#     email = st.text_input("Email")
-#     password = st.text_input("Password", type="password")
-
-#     if st.button("Continue", type="primary"):
-#         if email and password:
-#             user, status, msg = smart_auth(email, password)
-#             if status == "success":
-#                 st.session_state.user_email = user.user.email
-#                 st.success(msg)
-#                 st.rerun()
-#             elif status == "check_email":
-#                 st.info(msg)
-#             else:
-#                 st.error(msg)
-#         else:
-#             st.warning("Enter email and password")
-
-# def main_app(user_email):
-#     st.title("🎉 Welcome")
-#     st.success(f"Welcome, {user_email}!")
-#     if st.button("Logout"):
-#         supabase.auth.sign_out()
-#         st.session_state.user_email = None
-#         st.rerun()
-
-# if "user_email" not in st.session_state:
-#     st.session_state.user_email = None
-
-# if st.session_state.user_email:
-#     main_app(st.session_state.user_email)
-# else:
-#     auth_screen()
-
 
 
 
