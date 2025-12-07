@@ -115,10 +115,17 @@ if "user_email" not in st.session_state:
 
 # Handle email confirmation callback
 query_params = st.query_params
+
+# DEBUG: Show what parameters we received
+if len(query_params) > 0:
+    st.warning(f"DEBUG - URL Parameters received: {dict(query_params)}")
+
 if "token_hash" in query_params and "type" in query_params:
     try:
         token_hash = query_params["token_hash"]
         token_type = query_params["type"]
+        
+        st.info(f"Attempting to verify OTP with type: {token_type}")
         
         # Verify the OTP token
         response = supabase.auth.verify_otp({
@@ -133,14 +140,12 @@ if "token_hash" in query_params and "type" in query_params:
             st.rerun()
     except Exception as e:
         st.error(f"Confirmation failed: {e}")
-        st.query_params.clear()
+        st.info("You can still log in manually with your email and password below.")
 
 if st.session_state.user_email:
     main_app(st.session_state.user_email)
 else:
     auth_screen()
-
-
 
 
 
