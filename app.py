@@ -17,6 +17,8 @@
 
 
 
+
+
 from supabase import create_client, Client
 import streamlit as st
 
@@ -41,7 +43,15 @@ def smart_auth(email, password):
         # For "Invalid login credentials", try to sign up (could be new user or wrong password)
         if "Invalid login credentials" in error_msg or "Invalid" in error_msg:
             try:
-                user = supabase.auth.sign_up({"email": email, "password": password})
+                # Sign up with redirect URL
+                redirect_url = st.secrets.get("SITE_URL", "http://localhost:8501")
+                user = supabase.auth.sign_up({
+                    "email": email, 
+                    "password": password,
+                    "options": {
+                        "email_redirect_to": redirect_url
+                    }
+                })
                 if user and user.user:
                     # Check if email confirmation is required
                     if user.user.email_confirmed_at is None:
@@ -103,25 +113,27 @@ def auth_screen():
 if "user_email" not in st.session_state:
     st.session_state.user_email = None
 
-# Check for email confirmation tokens in URL
-if not st.session_state.user_email:
+# Handle email confirmation callback
+query_params = st.query_params
+if "token_hash" in query_params and "type" in query_params:
     try:
-        # Get query parameters from URL
-        query_params = st.query_params
+        token_hash = query_params["token_hash"]
+        token_type = query_params["type"]
         
-        # Check if there's an access token (from email confirmation)
-        if "access_token" in query_params or "token_hash" in query_params:
-            # Exchange the token for a session
-            user = supabase.auth.get_user()
-            if user and user.user:
-                st.session_state.user_email = user.user.email
-                # Clear URL parameters
-                st.query_params.clear()
-                st.success("Email confirmed! You're now logged in. 🎉")
-                st.rerun()
+        # Verify the OTP token
+        response = supabase.auth.verify_otp({
+            "token_hash": token_hash,
+            "type": token_type
+        })
+        
+        if response and response.user:
+            st.session_state.user_email = response.user.email
+            st.query_params.clear()
+            st.success("Email confirmed! You're now logged in. 🎉")
+            st.rerun()
     except Exception as e:
-        # If token exchange fails, just continue to login screen
-        pass
+        st.error(f"Confirmation failed: {e}")
+        st.query_params.clear()
 
 if st.session_state.user_email:
     main_app(st.session_state.user_email)
@@ -223,74 +235,28 @@ else:
 # if "user_email" not in st.session_state:
 #     st.session_state.user_email = None
 
+# # Check for email confirmation tokens in URL
+# if not st.session_state.user_email:
+#     try:
+#         # Get query parameters from URL
+#         query_params = st.query_params
+        
+#         # Check if there's an access token (from email confirmation)
+#         if "access_token" in query_params or "token_hash" in query_params:
+#             # Exchange the token for a session
+#             user = supabase.auth.get_user()
+#             if user and user.user:
+#                 st.session_state.user_email = user.user.email
+#                 # Clear URL parameters
+#                 st.query_params.clear()
+#                 st.success("Email confirmed! You're now logged in. 🎉")
+#                 st.rerun()
+#     except Exception as e:
+#         # If token exchange fails, just continue to login screen
+#         pass
+
 # if st.session_state.user_email:
 #     main_app(st.session_state.user_email)
 # else:
 #     auth_screen()
 
-
-
-
-
-
-# from supabase import create_client, Client
-
-
-# supabase_url = st.secrets["SUPABASE_URL"]
-# supabase_key = st.secrets["SUPABASE_KEY"]
-
-# supabase: Client = create_client(supabase_url, supabase_key)
-
-# def sign_up(email, password):
-#     try:
-#         user = supabase.auth.sign_up({"email": email, "password": password})
-#         return user
-#     except Exception as e:
-#         st.error(f"Registration failed: {e}")
-
-# def sign_in(email, password):
-#     try:
-#         user = supabase.auth.sign_in_with_password({"email": email, "password": password})
-#         return user
-#     except Exception as e:
-#         st.error(f"Login failed: {e}")
-
-# def sign_out():
-#     try:
-#         supabase.auth.sign_out()
-#         st.session_state.user_email = None
-#         st.rerun()
-#     except Exception as e:
-#         st.error(f"Logout failed: {e}")
-
-# def main_app(user_email):
-#     st.title("🎉 Welcome Page")
-#     st.success(f"Welcome, {user_email}! 👋")
-#     if st.button("Logout"):
-#         sign_out()
-
-# def auth_screen():
-#     st.title("🔐 Streamlit & Supabase Auth App")
-#     option = st.selectbox("Choose an action:", ["Login", "Sign Up"])
-#     email = st.text_input("Email")
-#     password = st.text_input("Password", type="password")
-
-#     if option == "Sign Up" and st.button("Register"):
-#         user = sign_up(email, password)
-#         if user and user.user:
-#             st.success("Registration successful. Please log in.")
-
-#     if option == "Login" and st.button("Login"):
-#         user = sign_in(email, password)
-#         if user and user.user:
-#             st.session_state.user_email = user.user.email
-#             st.success(f"Welcome back, {email}!")
-#             st.rerun()
-
-# if "user_email" not in st.session_state:
-#     st.session_state.user_email = None
-
-# if st.session_state.user_email:
-#     main_app(st.session_state.user_email)
-# else:
-#     auth_screen()
