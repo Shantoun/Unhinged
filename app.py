@@ -85,11 +85,10 @@ def auth_screen():
 
     # Google button
     if st.button("Sign in with Google"):
-        redirect_url = "https://unhinged.streamlit.app/oauth2callback"
         res = supabase.auth.sign_in_with_oauth(
             {
                 "provider": "google",
-                "redirect_to": redirect_url
+                "redirect_to": "https://unhinged.streamlit.app/"
             }
         )
         st.markdown(
