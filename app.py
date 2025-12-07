@@ -91,7 +91,11 @@ def auth_screen():
                 "redirect_to": "https://unhinged.streamlit.app/"
             }
         )
-        st.navigation(res.url)
+        st.markdown(f"""
+        <script>
+            window.location.href = '{res.url}';
+        </script>
+        """, unsafe_allow_html=True)
 
 # -------------------------
 # Logged-in main app
@@ -114,6 +118,7 @@ if st.session_state.user_email:
     main_app(st.session_state.user_email)
 else:
     auth_screen()
+
 
 
 
