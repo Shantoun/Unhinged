@@ -43,13 +43,9 @@ def auth_screen():
     st.title("🔐 Login or Sign Up")
     
     # Google Sign In
-    redirect_url = st.secrets.get("SITE_URL", "http://localhost:8501")
     if st.button("🔵 Continue with Google", use_container_width=True):
         try:
-            response = supabase.auth.sign_in_with_oauth({
-                "provider": "google",
-                "options": {"redirect_to": redirect_url}
-            })
+            response = supabase.auth.sign_in_with_oauth({"provider": "google"})
             st.link_button("Click here to sign in with Google", response.url, use_container_width=True)
         except Exception as e:
             st.error(f"Google sign-in failed: {e}")
@@ -90,7 +86,6 @@ if st.session_state.user_email:
     main_app(st.session_state.user_email)
 else:
     auth_screen()
-
 
 
 
