@@ -14,30 +14,12 @@
 
 
 
-
-
 from supabase import create_client, Client
 import streamlit as st
 
 supabase_url = st.secrets["SUPABASE_URL"]
 supabase_key = st.secrets["SUPABASE_KEY"]
 supabase: Client = create_client(supabase_url, supabase_key)
-
-# Handle OAuth callback
-params = st.query_params
-if "access_token" in params:
-    try:
-        # Set session from URL params
-        access_token = params["access_token"]
-        refresh_token = params.get("refresh_token", access_token)
-        supabase.auth.set_session(access_token, refresh_token)
-        user = supabase.auth.get_user()
-        st.session_state.user_email = user.user.email
-        st.query_params.clear()
-        st.rerun()
-    except Exception as e:
-        st.error(f"OAuth failed: {e}")
-        st.query_params.clear()
 
 def smart_auth(email, password):
     """Try login first, if it fails try signup"""
@@ -59,23 +41,6 @@ def smart_auth(email, password):
 
 def auth_screen():
     st.title("🔐 Login or Sign Up")
-    
-    # Google Sign In
-    if st.button("🔵 Continue with Google", use_container_width=True):
-        res = supabase.auth.sign_in_with_oauth({
-            "provider": "google",
-            "options": {
-                "redirect_to": "https://unhinged.streamlit.app/"
-            }
-        })
-        auth_url = res.url
-        st.markdown(f'<meta http-equiv="refresh" content="0;url={auth_url}">', unsafe_allow_html=True)
-        st.stop()
-    
-    st.divider()
-    st.write("Or use email and password:")
-    
-    # Email/Password
     email = st.text_input("Email")
     password = st.text_input("Password", type="password")
 
@@ -108,8 +73,3 @@ if st.session_state.user_email:
     main_app(st.session_state.user_email)
 else:
     auth_screen()
-
-
-
-
-
