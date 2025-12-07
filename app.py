@@ -91,10 +91,7 @@ def auth_screen():
                 "redirect_to": "https://unhinged.streamlit.app/"
             }
         )
-        st.markdown(
-            f"<meta http-equiv='refresh' content='0; url={res.url}'>",
-            unsafe_allow_html=True
-        )
+        st.navigation(res.url)
 
 # -------------------------
 # Logged-in main app
