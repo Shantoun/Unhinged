@@ -25,11 +25,14 @@ supabase: Client = create_client(supabase_url, supabase_key)
 
 # Handle OAuth callback
 params = st.query_params
-if "code" in params:
-    code = params["code"]
+if "access_token" in params:
     try:
-        session = supabase.auth.exchange_code_for_session({"code": code})
-        st.session_state.user_email = session.user.email
+        # Set session from URL params
+        access_token = params["access_token"]
+        refresh_token = params.get("refresh_token", access_token)
+        supabase.auth.set_session(access_token, refresh_token)
+        user = supabase.auth.get_user()
+        st.session_state.user_email = user.user.email
         st.query_params.clear()
         st.rerun()
     except Exception as e:
@@ -62,8 +65,7 @@ def auth_screen():
         res = supabase.auth.sign_in_with_oauth({
             "provider": "google",
             "options": {
-                "redirect_to": "https://unhinged.streamlit.app/",
-                "flow_type": "pkce"
+                "redirect_to": "https://unhinged.streamlit.app/"
             }
         })
         auth_url = res.url
