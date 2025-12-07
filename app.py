@@ -16,53 +16,94 @@
 
 
 
-import streamlit as st
 from supabase import create_client, Client
-import uuid
+import streamlit as st
+import urllib.parse
 
+# ------------------------------------------------------
+# SUPABASE INITIALIZATION
+# ------------------------------------------------------
 supabase_url = st.secrets["SUPABASE_URL"]
 supabase_key = st.secrets["SUPABASE_KEY"]
 supabase: Client = create_client(supabase_url, supabase_key)
 
-def ensure_supabase_user(email):
-    # Generate a random internal password for Supabase
-    internal_password = str(uuid.uuid4())
+# ------------------------------------------------------
+# HANDLE GOOGLE OAUTH REDIRECT (SUPABASE ONLY)
+# ------------------------------------------------------
+params = st.experimental_get_query_params()
 
-    # Try login first
-    try:
-        user = supabase.auth.sign_in_with_password({
-            "email": email,
-            "password": internal_password
-        })
-        return user
-    except:
-        # Create them silently if not found
-        user = supabase.auth.sign_up({
-            "email": email,
-            "password": internal_password
-        })
-        return user
+# Supabase returns tokens in the URL fragment (#), but Streamlit exposes them via query params
+if "access_token" in params:
+    token = params["access_token"][0]
+    data = supabase.auth.get_session_from_url(f"#access_token={token}")
+    st.session_state.user_email = data.session.user.email
+    st.experimental_set_query_params()  # clear params
+    st.rerun()
 
+# ------------------------------------------------------
+# AUTH SCREEN (EMAIL + GOOGLE)
+# ------------------------------------------------------
+def auth_screen():
+    st.title("Login")
 
-# ---- STREAMLIT AUTH ----
+    # Google OAuth button
+    if st.button("Sign in with Google", type="primary"):
+        res = supabase.auth.sign_in_with_oauth(
+            {
+                "provider": "google",
+                "redirect_to": "https://unhinged.streamlit.app/"
+            }
+        )
 
-if not st.user.is_logged_in:
-    st.title("Sign in")
-    
-    if st.button("Sign in with Google"):
-        st.login("google")
+        # Force browser redirect using JS (Streamlit-safe)
+        st.markdown(
+            f"""
+            <script>
+                window.location.href = '{res.url}';
+            </script>
+            """,
+            unsafe_allow_html=True,
+        )
 
+    st.divider()
+
+    # --- OPTIONAL: EMAIL / PASSWORD LOGIN ---
+    email = st.text_input("Email")
+    password = st.text_input("Password", type="password")
+
+    if st.button("Continue"):
+        if email and password:
+            try:
+                user = supabase.auth.sign_in_with_password({"email": email, "password": password})
+                st.session_state.user_email = user.user.email
+                st.rerun()
+            except Exception as e:
+                st.error("Login failed.")
+        else:
+            st.warning("Enter email and password.")
+
+# ------------------------------------------------------
+# MAIN APP (AFTER LOGIN)
+# ------------------------------------------------------
+def main_app(user_email):
+    st.title("Welcome")
+    st.success(f"Logged in as {user_email}")
+
+    if st.button("Logout"):
+        supabase.auth.sign_out()
+        st.session_state.user_email = None
+        st.rerun()
+
+# ------------------------------------------------------
+# STATE & ROUTING
+# ------------------------------------------------------
+if "user_email" not in st.session_state:
+    st.session_state.user_email = None
+
+if st.session_state.user_email:
+    main_app(st.session_state.user_email)
 else:
-    st.title("Logged in through Google")
-    st.write(f"Google Email: {st.user.email}")
-
-    # Sync to Supabase
-    supa_user = ensure_supabase_user(st.user.email)
-
-    st.success(f"Supabase synced as: {supa_user.user.email}")
-
-    if st.button("Sign out"):
-        st.logout()
+    auth_screen()
 
 
 
