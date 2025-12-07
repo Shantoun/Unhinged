@@ -103,27 +103,31 @@ def smart_auth(email, password):
     except Exception as sign_in_error:
         error_msg = str(sign_in_error)
         
-        # Check if it's a wrong password for existing user
-        if "Invalid login credentials" in error_msg or "Invalid" in error_msg:
-            return None, "error", "Incorrect password. Please try again."
-        
         # Check if email not confirmed
         if "Email not confirmed" in error_msg or "not confirmed" in error_msg:
             return None, "unconfirmed", "Please check your email and click the confirmation link before logging in."
         
-        # If sign in fails for other reasons, try to sign up
-        try:
-            user = supabase.auth.sign_up({"email": email, "password": password})
-            if user and user.user:
-                # Check if email confirmation is required
-                if user.user.email_confirmed_at is None:
-                    return user, "confirmation_sent", f"Account created! Check your email ({email}) for a confirmation link."
-                else:
-                    # Email confirmation disabled in Supabase
-                    return user, "logged_in", "Account created! You're now logged in."
-            return None, "error", "Registration failed"
-        except Exception as sign_up_error:
-            return None, "error", f"Authentication failed: {sign_up_error}"
+        # For "Invalid login credentials", try to sign up (could be new user or wrong password)
+        if "Invalid login credentials" in error_msg or "Invalid" in error_msg:
+            try:
+                user = supabase.auth.sign_up({"email": email, "password": password})
+                if user and user.user:
+                    # Check if email confirmation is required
+                    if user.user.email_confirmed_at is None:
+                        return user, "confirmation_sent", f"Account created! Check your email ({email}) for a confirmation link."
+                    else:
+                        # Email confirmation disabled in Supabase
+                        return user, "logged_in", "Account created! You're now logged in."
+                return None, "error", "Registration failed"
+            except Exception as sign_up_error:
+                signup_error_msg = str(sign_up_error)
+                # If signup fails because user already exists, it means wrong password
+                if "already registered" in signup_error_msg or "already exists" in signup_error_msg:
+                    return None, "error", "Incorrect password. Please try again."
+                return None, "error", f"Authentication failed: {sign_up_error}"
+        
+        # Other errors
+        return None, "error", f"Authentication failed: {sign_in_error}"
 
 def sign_out():
     try:
