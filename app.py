@@ -17,6 +17,7 @@
 
 import streamlit as st
 from supabase import create_client, Client
+import streamlit.components.v1 as components
 
 # Initialize Supabase client
 @st.cache_resource
@@ -30,40 +31,62 @@ supabase = init_supabase()
 # Initialize session state
 if 'user' not in st.session_state:
     st.session_state.user = None
-if 'access_token' not in st.session_state:
-    st.session_state.access_token = None
+if 'auth_checked' not in st.session_state:
+    st.session_state.auth_checked = False
+
+def capture_url_fragment():
+    """Capture URL fragment (tokens after #) using JavaScript"""
+    fragment_script = """
+    <script>
+        // Get the URL fragment (everything after #)
+        const fragment = window.location.hash.substring(1);
+        
+        if (fragment) {
+            // Parse the fragment into key-value pairs
+            const params = new URLSearchParams(fragment);
+            const accessToken = params.get('access_token');
+            const refreshToken = params.get('refresh_token');
+            
+            if (accessToken) {
+                // Convert fragment to query params so Streamlit can read them
+                const newUrl = window.location.pathname + '?access_token=' + accessToken + 
+                              (refreshToken ? '&refresh_token=' + refreshToken : '');
+                window.location.replace(newUrl);
+            }
+        }
+    </script>
+    """
+    components.html(fragment_script, height=0)
 
 def handle_oauth_callback():
     """Handle the OAuth callback from Supabase"""
     query_params = st.query_params
     
-    # Check for access_token in URL fragment (after #)
-    if 'access_token' in query_params:
+    if 'access_token' in query_params and not st.session_state.auth_checked:
         access_token = query_params['access_token']
         refresh_token = query_params.get('refresh_token', '')
         
         try:
             # Set the session with the tokens
-            session = supabase.auth.set_session(access_token, refresh_token)
+            supabase.auth.set_session(access_token, refresh_token)
             
             # Get user info
-            user = supabase.auth.get_user(access_token)
-            st.session_state.user = user.user
-            st.session_state.access_token = access_token
+            user_response = supabase.auth.get_user(access_token)
+            st.session_state.user = user_response.user
+            st.session_state.auth_checked = True
             
-            # Clear query params and rerun
+            # Clear query params
             st.query_params.clear()
             st.rerun()
         except Exception as e:
             st.error(f"Authentication error: {str(e)}")
+            st.session_state.auth_checked = True
 
 def login_with_google():
     """Initiate Google OAuth login"""
     try:
-        # Use your Streamlit Community Cloud URL
         redirect_url = "https://unhinged.streamlit.app/"
         
-        # Generate the OAuth URL
         response = supabase.auth.sign_in_with_oauth({
             "provider": "google",
             "options": {
@@ -71,9 +94,11 @@ def login_with_google():
             }
         })
         
-        # Redirect user to Google OAuth
-        st.markdown(f'<meta http-equiv="refresh" content="0;url={response.url}">', 
-                   unsafe_allow_html=True)
+        # Open OAuth URL in same window
+        st.markdown(f"""
+            <meta http-equiv="refresh" content="0;url={response.url}">
+            <p>Redirecting to Google...</p>
+        """, unsafe_allow_html=True)
         st.stop()
     except Exception as e:
         st.error(f"Error initiating login: {str(e)}")
@@ -83,7 +108,7 @@ def logout():
     try:
         supabase.auth.sign_out()
         st.session_state.user = None
-        st.session_state.access_token = None
+        st.session_state.auth_checked = False
         st.rerun()
     except Exception as e:
         st.error(f"Logout error: {str(e)}")
@@ -92,7 +117,11 @@ def logout():
 def main():
     st.title("Google OAuth with Supabase")
     
-    # Check for OAuth callback first
+    # First, capture any URL fragments (tokens from OAuth)
+    if not st.session_state.get('user'):
+        capture_url_fragment()
+    
+    # Then handle the callback
     handle_oauth_callback()
     
     # Check if user is logged in
