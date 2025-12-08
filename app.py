@@ -19,9 +19,7 @@ def main_app(user_email):
     st.title("🎉 Welcome")
     st.success(f"Welcome, {user_email}!")
     if st.button("Logout"):
-        supabase.auth.sign_out()
-        st.session_state.user_email = None
-        st.rerun()
+        auth.sign_out()
 
 if "user_email" not in st.session_state:
     st.session_state.user_email = None
