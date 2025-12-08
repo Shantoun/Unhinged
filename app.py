@@ -4,6 +4,7 @@ import functions.authentification as auth
 
 
 def main_app(user_email):
+    st.set_page_config(layout="wide")
     st.title("Unhinged")
     st.caption("Analyze your game")
     if st.button("Logout"):
