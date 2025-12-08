@@ -1,9 +1,17 @@
 from supabase import create_client, Client
 import streamlit as st
 
+
 supabase_url = st.secrets["SUPABASE_URL"]
 supabase_key = st.secrets["SUPABASE_KEY"]
 supabase: Client = create_client(supabase_url, supabase_key)
+
+
+def sign_out():
+        supabase.auth.sign_out()
+        st.session_state.user_email = None
+        st.rerun()
+    
 
 def smart_auth(email, password):
     """Try login first, if it fails try signup"""
