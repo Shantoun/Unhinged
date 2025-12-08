@@ -7,11 +7,6 @@ supabase_key = st.secrets["SUPABASE_KEY"]
 supabase: Client = create_client(supabase_url, supabase_key)
 
 
-def sign_out():
-        supabase.auth.sign_out()
-        st.session_state.user_email = None
-        st.rerun()
-    
 
 def smart_auth(email, password):
     """Try login first, if it fails try signup"""
@@ -31,6 +26,9 @@ def smart_auth(email, password):
             return None, "error", f"Error: {e}"
     return None, "error", "Authentication failed."
 
+
+
+
 def auth_screen():
     st.header("Login or Sign Up")
     email = st.text_input("Email")
@@ -49,3 +47,28 @@ def auth_screen():
                 st.error(msg)
         else:
             st.warning("Enter email and password")
+
+
+
+
+def sign_out():
+        supabase.auth.sign_out()
+        st.session_state.user_email = None
+        st.rerun()
+
+
+
+# import streamlit as st
+
+# if not st.user.is_logged_in:
+#     st.write("Not logged in")
+#     if st.button("Sign in with Google"):
+#         st.login("google")
+# else:
+#     st.write(f"User: {st.user.name}")
+#     st.write(f"Email: {st.user.email}")
+#     st.success("Logged in")
+    
+#     if st.button("Sign out"):
+#         st.logout()
+
