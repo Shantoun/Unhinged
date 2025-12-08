@@ -7,8 +7,10 @@ def main_app(user_email):
     st.set_page_config(layout="wide")
     st.title("Unhinged")
     st.caption("Analyze your game")
-    if st.button("Logout"):
-        auth.sign_out()
+
+    with st.sidebar:
+        if st.button("Logout"):
+            auth.sign_out()
 
 if "user_email" not in st.session_state:
     st.session_state.user_email = None
