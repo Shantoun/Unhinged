@@ -14,8 +14,6 @@
 
 
 
-
-
 from supabase import create_client, Client
 import streamlit as st
 
@@ -42,9 +40,9 @@ def smart_auth(email, password):
     return None, "error", "Authentication failed."
 
 def auth_screen():
-    st.title("🔐 Login or Sign Up")
+    st.header("Login or Sign Up")
     email = st.text_input("Email")
-    password = st.text_input("Password", type="password")
+    password = st.text_input("Password", type="password", help="Must be at least 8 characters")
 
     if st.button("Continue", type="primary"):
         if email and password:
