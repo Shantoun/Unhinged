@@ -4,8 +4,8 @@ import functions.authentification as auth
 
 
 def main_app(user_email):
-    st.title("🎉 Welcome")
-    st.success(f"Welcome, {user_email}!")
+    st.title("Unhinged")
+    st.caption("Analyze your game")
     if st.button("Logout"):
         auth.sign_out()
 
