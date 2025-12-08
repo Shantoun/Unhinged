@@ -9,7 +9,7 @@ def main_app(user_email):
     st.caption("Analyze your game")
 
     with st.sidebar:
-        if st.button("Logout", width="stretch"):
+        if st.button("Sign Out", width="stretch"):
             auth.sign_out()
 
 if "user_email" not in st.session_state:
