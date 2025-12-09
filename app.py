@@ -1,7 +1,6 @@
 import streamlit as st
 import functions.authentification as auth
-import main.main as main
-
+from main import main
 
 
 main()
