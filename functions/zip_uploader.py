@@ -5,11 +5,6 @@ import os
 import json
 
 
-import streamlit as st
-import zipfile
-import tempfile
-import os
-import json
 
 def uploader():
     uploaded = st.file_uploader("Upload ZIP file", type=["zip"], accept_multiple_files=False)
