@@ -24,7 +24,10 @@ if st.session_state.user_id:
         json_data = result["json"]
 
         with st.spinner("Reading your match data..."):
+            st.write(json_data)
+            st.write(st.session_state.user_id)
             ingest.matches_ingest(json_data, st.session_state.user_id)
+
 
         st.success("Your data has been uploaded ✔️")
 
