@@ -15,29 +15,29 @@ supabase: Client = create_client(supabase_url, supabase_key)
 # --- MATCHES INGEST ----------------------------------------------------------
 
 def matches_ingest(json_data, user_id):
-    """
-    json_data: uploader()["json"]
-    user_id:   Supabase authenticated user's ID
-    """
-
-    matches = json_data.get(var.matches)
+    matches = json_data.get(var.json_matches)
     if not matches:
         return
 
     rows = []
 
     for m in matches:
-        match_id = m.get(var.match_id)
-        ts       = m.get(var.timestamp)
+        match_id = m.get(var.json_match_id)
+        ts = m.get(var.json_timestamp)
 
         if not match_id or not ts:
             continue
 
         rows.append({
-            var.match_id: match_id,
-            var.match_timestamp: ts,
-            var.user_id: user_id
+            var.col_match_id: match_id,
+            var.col_match_timestamp: ts,
+            var.col_user_id: user_id
         })
 
     if rows:
-        supabase.table(var.matches_table).upsert(rows).execute()
+        supabase.table(var.table_matches).upsert(rows).execute()
+
+
+
+
+
