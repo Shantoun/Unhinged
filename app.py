@@ -1,9 +1,9 @@
 import streamlit as st
 import functions.authentification as auth
-from main import main
+from zip_uploader import uploader
 
 
-main()
+uploader()
 
 # def main_app(user_email):
 #     st.set_page_config(layout="wide")
