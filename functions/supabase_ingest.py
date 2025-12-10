@@ -1,6 +1,7 @@
 from supabase import create_client, Client
 import streamlit as st
 import variables as var
+from datetime import datetime
 
 
 # --- SUPABASE INIT -----------------------------------------------------------
@@ -14,19 +15,26 @@ supabase: Client = create_client(supabase_url, supabase_key)
 
 # --- MATCHES INGEST ----------------------------------------------------------
 
-def matches_ingest(json_data, user_id):
-    matches = json_data.get(var.json_matches)
-    if not matches:
-        return
 
+
+def ingest_matches(json_data, user_id):
+    supabase = create_client(var.supabase_url, var.supabase_key)
+
+    matches = json_data.get(var.json_matches, [])
     rows = []
 
     for m in matches:
-        ts = m.get(var.json_timestamp)
-        if not ts:
+        # pull the match timestamp from nested structure
+        match_event = m.get("match")
+        if not match_event or len(match_event) == 0:
             continue
 
-        # create match_id using your rule
+        ts_str = match_event[0].get("timestamp")
+        if not ts_str:
+            continue
+
+        ts = int(datetime.fromisoformat(ts_str).timestamp())
+
         match_id = f"match_{user_id}_{ts}"
 
         rows.append({
@@ -38,6 +46,6 @@ def matches_ingest(json_data, user_id):
     if rows:
         supabase.table(var.table_matches).upsert(rows).execute()
 
-
+    return len(rows)
 
 
