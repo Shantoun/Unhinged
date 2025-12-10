@@ -1,10 +1,14 @@
+####################################################### json keys
+json_matches = "matches"
+json_match_id = "match_id"
+json_timestamp = "timestamp"
+
+
 ####################################################### table names
-matches = "matches"
-
-
+table_matches = "matches"
 
 
 ####################################################### column names
-match_id = "match_id"
-match_timestamp = "match_timestamp"
-uid = "user_id"
+col_match_id = "match_id"
+col_match_timestamp = "match_timestamp"
+col_user_id = "user_id"
