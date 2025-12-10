@@ -12,10 +12,9 @@ if "user_id" not in st.session_state:
 # if logged in → main app
 if st.session_state.user_id:
 
-    # --- SIDEBAR SIGN OUT ---
-    with st.sidebar:
-        if st.button("Sign Out", width="stretch"):
-            auth.sign_out()
+    # SIGN OUT FIRST — always evaluated before anything else
+    if st.sidebar.button("Sign Out", width="stretch"):
+        auth.sign_out()
 
     # --- MAIN APP LOGIC ---
     result = uploader()
@@ -24,9 +23,7 @@ if st.session_state.user_id:
         json_data = result["json"]
 
         with st.spinner("Reading your match data..."):
-            st.write(st.session_state.user_id)
             ingest.matches_ingest(json_data, st.session_state.user_id)
-
 
         st.success("Your data has been uploaded ✔️")
 
