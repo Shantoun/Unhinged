@@ -17,7 +17,7 @@ supabase: Client = create_client(supabase_url, supabase_key)
 
 
 
-def ingest_matches(json_data, user_id):
+def matches_ingest(json_data, user_id):
     supabase = create_client(var.supabase_url, var.supabase_key)
 
     matches = json_data.get(var.json_matches, [])
