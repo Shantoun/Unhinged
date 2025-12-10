@@ -22,11 +22,12 @@ def matches_ingest(json_data, user_id):
     rows = []
 
     for m in matches:
-        match_id = m.get(var.json_match_id)
         ts = m.get(var.json_timestamp)
-
-        if not match_id or not ts:
+        if not ts:
             continue
+
+        # create match_id using your rule
+        match_id = f"match_{user_id}_{ts}"
 
         rows.append({
             var.col_match_id: match_id,
@@ -36,7 +37,6 @@ def matches_ingest(json_data, user_id):
 
     if rows:
         supabase.table(var.table_matches).upsert(rows).execute()
-
 
 
 
