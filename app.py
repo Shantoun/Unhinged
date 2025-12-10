@@ -1,6 +1,6 @@
 import streamlit as st
 import functions.authentification as auth
-from zip_uploader import uploader
+from functions.zip_uploader import uploader
 
 
 result = uploader()
