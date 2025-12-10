@@ -1,7 +1,7 @@
 import streamlit as st
 import functions.authentification as auth
 from functions.zip_uploader import uploader
-import supabase_ingest as ingest
+import functions.supabase_ingest as ingest
 
 
 # initialize the key so it always exists
