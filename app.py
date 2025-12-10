@@ -3,7 +3,9 @@ import functions.authentification as auth
 from zip_uploader import uploader
 
 
-uploader()
+result = uploader()
+if result:
+    st.write(result["json"].keys())
 
 # def main_app(user_email):
 #     st.set_page_config(layout="wide")
