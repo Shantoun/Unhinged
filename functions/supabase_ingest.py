@@ -1,20 +1,13 @@
 from supabase import create_client, Client
 import streamlit as st
 import variables as var
+from datetime import datetime
+from functions.authentification import supabase
 
-
-# --- SUPABASE CLIENT (GLOBAL) ----------------------------------------------
-
-supabase_url = st.secrets["SUPABASE_URL"]
-supabase_key = st.secrets["SUPABASE_KEY"]
-supabase: Client = create_client(supabase_url, supabase_key)
 
 
 
 # --- MATCHES INGEST ---------------------------------------------------------
-
-from datetime import datetime
-
 def matches_ingest(json_data, user_id):
 
     matches = json_data.get(var.json_matches, [])
