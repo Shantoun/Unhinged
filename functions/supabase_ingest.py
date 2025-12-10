@@ -5,8 +5,8 @@ import variables as var
 
 # --- SUPABASE INIT -----------------------------------------------------------
 
-supabase_url = st.secrets[var.supabase_url]      # e.g. "SUPABASE_URL"
-supabase_key = st.secrets[var.supabase_key]      # e.g. "SUPABASE_KEY"
+supabase_url = st.secrets["SUPABASE_URL"]      # e.g. "SUPABASE_URL"
+supabase_key = st.secrets["SUPABASE_KEY"]      # e.g. "SUPABASE_KEY"
 
 supabase: Client = create_client(supabase_url, supabase_key)
 
