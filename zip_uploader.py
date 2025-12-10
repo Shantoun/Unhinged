@@ -5,7 +5,7 @@ import os
 import json
 
 
-def main():
+def uploader():
   st.title("Upload Your Hinge Export")
   
   uploaded = st.file_uploader("Upload ZIP file", type=["zip"], accept_multiple_files=False)
