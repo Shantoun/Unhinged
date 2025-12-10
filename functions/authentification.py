@@ -39,6 +39,7 @@ def auth_screen():
             user, status, msg = smart_auth(email, password)
             if status == "success":
                 st.session_state.user_email = user.user.email
+                st.session_state.user_id = user.user.id      # <-- THIS LINE
                 st.success(msg)
                 st.rerun()
             elif status == "check_email":
@@ -47,7 +48,6 @@ def auth_screen():
                 st.error(msg)
         else:
             st.warning("Enter email and password")
-
 
 
 
