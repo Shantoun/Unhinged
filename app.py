@@ -15,6 +15,7 @@ if st.session_state.user_id:
     # SIGN OUT FIRST — always evaluated before anything else
     if st.sidebar.button("Sign Out", width="stretch"):
         auth.sign_out()
+        st.rerun()
 
     # --- MAIN APP LOGIC ---
     result = uploader()
