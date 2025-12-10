@@ -54,6 +54,7 @@ def auth_screen():
 def sign_out():
         supabase.auth.sign_out()
         st.session_state.user_email = None
+        st.session_state.user_id = None 
         st.rerun()
 
 
