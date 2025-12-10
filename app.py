@@ -1,11 +1,42 @@
 import streamlit as st
 import functions.authentification as auth
 from functions.zip_uploader import uploader
+import supabase_ingest as ingest
 
 
-result = uploader()
-if result:
-    st.write(result["json"].keys())
+# initialize the key so it always exists
+if "user_id" not in st.session_state:
+    st.session_state.user_id = None
+
+
+# if logged in → main app
+if st.session_state.user_id:
+
+    # --- SIDEBAR SIGN OUT ---
+    with st.sidebar:
+        if st.button("Sign Out", width="stretch"):
+            auth.sign_out()
+
+    # --- MAIN APP LOGIC ---
+    result = uploader()
+
+    if result:
+        json_data = result["json"]
+
+        with st.spinner("Reading your match data..."):
+            ingest.matches_ingest(json_data, st.session_state.user_id)
+
+        st.success("Your data has been uploaded ✔️")
+
+
+# if not logged in → show login screen
+else:
+    auth.auth_screen()
+
+
+
+
+
 
 # def main_app(user_email):
 #     st.set_page_config(layout="wide")
