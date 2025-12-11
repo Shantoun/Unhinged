@@ -19,7 +19,8 @@ table_matches  = "matches"
 table_blocks   = "blocks"
 table_likes    = "likes"
 table_messages = "messages"
-
+table_user_profile = "user_profile"
+table_media         = "media"
 
 ####################################################### shared column names
 col_user_id  = "user_id"
@@ -54,8 +55,6 @@ json_media_type     = "type"
 json_media_url      = "url"
 json_media_social   = "from_social_media"
 
-####################################################### media table
-table_media         = "media"
 
 
 ####################################################### media columns
@@ -110,7 +109,7 @@ col_subscription_price     = "price"
 
 
 ####################################################### user profile
-table_user_profile = "user_profile"
+
 
 col_upload_count = "upload_count"
 
@@ -119,4 +118,10 @@ col_location     = "location"
 col_identity     = "identity"
 col_profile      = "profile"
 col_account      = "account"
+
+json_user_preferences = "preferences"
+json_user_location    = "location"
+json_user_identity    = "identity"
+json_user_profile     = "profile"
+json_user_account     = "account"
 
