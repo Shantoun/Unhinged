@@ -35,48 +35,7 @@ def auth_screen():
     email = st.text_input("Email")
     password = st.text_input("Password", type="password")
 
-    # ---- Forgot password link ----
-    # Looks like a normal hyperlink, but acts like a function trigger.
-    forgot = st.markdown(
-        "<p style='text-align:right;color:#4B9CFF;cursor:pointer;text-decoration:underline;' id='forgot'>"
-        "Forgot password?"
-        "</p>",
-        unsafe_allow_html=True
-    )
-
-    # Capture click on the link using JS event -> rerun with a variable set
-    st.write(
-        """
-        <script>
-        const forgotEl = window.parent.document.getElementById('forgot');
-        if (forgotEl) {
-            forgotEl.onclick = () => {
-                window.parent.postMessage({forgetClick: true}, "*");
-            };
-        }
-        </script>
-        """,
-        unsafe_allow_html=True,
-    )
-
-    # Streamlit listens for the click
-    forget_click = st.experimental_get_query_params().get("forget", None)
-
-    # ---- Triggered when clicking the link ----
-    if forget_click is not None:
-        if email:
-            auth.supabase.auth.reset_password_for_email(
-                email,
-                options={"redirect_to": "https://your-app-url/reset"}
-            )
-            st.success(f"Reset link sent to {email}")
-        else:
-            st.warning("Enter your email to reset your password")
-        return
-
-
-
-    # ---- Continue / Login / Signup flow ----
+    # --- Continue button ---
     if st.button("Continue", type="primary", use_container_width=True):
         if email and password:
             user, status, msg = smart_auth(email, password)
@@ -89,12 +48,46 @@ def auth_screen():
 
             elif status == "check_email":
                 st.info(msg)
-
             else:
                 st.error(msg)
-
         else:
             st.warning("Enter email and password")
+
+
+    # --- Forgot password (link style) ---
+    st.markdown(
+        "<p style='text-align:center;margin-top:0.5rem;'>"
+        "<a href='javascript:void(0)' id='forgot-link' style='color:#4B9CFF;text-decoration:underline;'>"
+        "Forgot password?"
+        "</a></p>",
+        unsafe_allow_html=True
+    )
+
+    # JS to capture click and notify Streamlit
+    st.write("""
+        <script>
+        const link = window.parent.document.getElementById('forgot-link');
+        if (link) {
+            link.onclick = () => {
+                window.parent.postMessage({ forgot_pw: true }, "*");
+            };
+        }
+        </script>
+    """, unsafe_allow_html=True)
+
+    # Streamlit receives message
+    msg = st.experimental_get_query_params().get("forgot_pw")
+
+    if msg is not None:
+        if email:
+            auth.supabase.auth.reset_password_for_email(
+                email,
+                options={"redirect_to": "https://yourappurl.com/reset"}
+            )
+            st.success(f"Password reset link sent to {email}")
+        else:
+            st.warning("Enter your email to reset your password")
+
 
 
 
