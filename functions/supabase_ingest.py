@@ -44,10 +44,15 @@ def blocks_ingest(json_data, user_id):
 
     rows = []
 
-    # json_data is a LIST, same thing matches_ingest already handles correctly
+    # handle wrong input shape safely
+    if isinstance(json_data, dict):
+        json_data = json_data.get(var.json_matches, [])
+
     for m in json_data:
 
-        # --- reconstruct match_id EXACTLY how your matches_ingest already does ---
+        if not isinstance(m, dict):
+            continue
+
         match_event = m.get(var.json_match_event)
         if not match_event:
             continue
@@ -59,7 +64,6 @@ def blocks_ingest(json_data, user_id):
         match_ts = int(datetime.fromisoformat(ts_str).timestamp())
         match_id = f"match_{user_id}_{match_ts}"
 
-        # --- now extract block events under "block" ---
         block_events = m.get(var.json_block_event, [])
         if not block_events:
             continue
