@@ -1,32 +1,46 @@
 ####################################################### json keys
 json_matches      = "matches"
 json_blocks       = "blocks"
+json_like_key     = "like"
+json_chats        = "chats"
 
-json_match_event  = "match"      # nested array inside each match
-json_block_event  = "block"      # nested array inside each block
-json_like_key     = "like"       # used for both outer + inner like lists
+json_match_event  = "match"
+json_block_event  = "block"
 
 json_timestamp    = "timestamp"
-json_match_id     = "match_id"
 json_block_type   = "block_type"
+json_body         = "body"       # for chat messages
+json_comment      = "comment"    # for like comments
+
 
 ####################################################### table names
-table_matches = "matches"
-table_blocks  = "blocks"
-table_likes   = "likes"
+table_matches  = "matches"
+table_blocks   = "blocks"
+table_likes    = "likes"
+table_messages = "messages"
+
 
 ####################################################### shared column names
-col_user_id   = "user_id"
-col_match_id  = "match_id"
+col_user_id  = "user_id"
+col_match_id = "match_id"
+col_like_id  = "like_id"
+
 
 ####################################################### matches column names
 col_match_timestamp = "match_timestamp"
+
 
 ####################################################### blocks column names
 col_block_id        = "block_id"
 col_block_timestamp = "block_timestamp"
 col_block_type      = "block_type"
 
+
 ####################################################### likes column names
-col_like_id         = "like_id"
 col_like_timestamp  = "like_timestamp"
+
+
+####################################################### messages column names
+col_message_id        = "message_id"
+col_message_timestamp = "message_timestamp"
+col_message_body      = "body"
