@@ -170,6 +170,10 @@ def likes_ingest(json_data, user_id):
 
 
 
+
+
+
+# --- MESSAGES INGEST ---------------------------------------------------------
 def messages_ingest(json_data, user_id):
 
     rows = []
