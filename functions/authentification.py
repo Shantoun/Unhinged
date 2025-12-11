@@ -35,7 +35,7 @@ def auth_screen():
     email = st.text_input("Email")
     password = st.text_input("Password", type="password")
 
-    # --- Continue button ---
+    # ---- Continue Button ----
     if st.button("Continue", type="primary", use_container_width=True):
         if email and password:
             user, status, msg = smart_auth(email, password)
@@ -48,40 +48,36 @@ def auth_screen():
 
             elif status == "check_email":
                 st.info(msg)
+
             else:
                 st.error(msg)
         else:
             st.warning("Enter email and password")
 
-
-    # --- Forgot password (left aligned link) ---
+    # ---- Link-Style Forgot Password Button ----
+    # Styled to look like a link, but behaves like a reliable button.
     st.markdown(
-        "<p style='text-align:left;margin-top:0.3rem;'>"
-        "<a href='javascript:void(0)' id='forgot-link' "
-        "style='color:#4B9CFF;text-decoration:underline;'>"
-        "Forgot password?"
-        "</a></p>",
+        """
+        <style>
+            button[kind="secondary"] {
+                background: none !important;
+                border: none !important;
+                box-shadow: none !important;
+                padding-left: 0px !important;
+                text-align: left !important;
+                color: #4B9CFF !important;
+                text-decoration: underline !important;
+            }
+        </style>
+        """,
         unsafe_allow_html=True
     )
 
-    # JS listener
-    st.write("""
-        <script>
-        const link = window.parent.document.getElementById('forgot-link');
-        if (link) {
-            link.onclick = () => {
-                window.parent.postMessage({ forgot_pw: true }, "*");
-            };
-        }
-        </script>
-    """, unsafe_allow_html=True)
-
-    # Check for click
-    if st.experimental_get_query_params().get("forgot_pw") is not None:
+    if st.button("Forgot password?", key="forgot_pw_link", type="secondary"):
         if email:
             auth.supabase.auth.reset_password_for_email(
                 email,
-                options={"redirect_to": "https://yourappurl.com/reset"}
+                options={"redirect_to": "https://yourappurl.com/reset"}  # update this
             )
             st.success(f"Password reset link sent to {email}")
         else:
