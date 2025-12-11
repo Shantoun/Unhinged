@@ -1,12 +1,9 @@
 from supabase import create_client, Client
 import streamlit as st
 
-
 supabase_url = st.secrets["SUPABASE_URL"]
 supabase_key = st.secrets["SUPABASE_KEY"]
 supabase: Client = create_client(supabase_url, supabase_key)
-
-
 
 def smart_auth(email, password):
     """Try login first, if it fails try signup"""
@@ -26,23 +23,25 @@ def smart_auth(email, password):
             return None, "error", f"Error: {e}"
     return None, "error", "Authentication failed."
 
-
-
-
-
-
+def reset_password(email):
+    """Send password reset email"""
+    try:
+        supabase.auth.reset_password_email(email)
+        return True, "Password reset email sent! Check your inbox."
+    except Exception as e:
+        return False, f"Error: {e}"
 
 def auth_screen():
     st.header("Login or Sign Up")
     email = st.text_input("Email")
     password = st.text_input("Password", type="password", help="Must be at least 8 characters")
-
+    
     if st.button("Continue", type="primary"):
         if email and password:
             user, status, msg = smart_auth(email, password)
             if status == "success":
                 st.session_state.user_email = user.user.email
-                st.session_state.user_id = user.user.id      # <-- THIS LINE
+                st.session_state.user_id = user.user.id
                 st.success(msg)
                 st.rerun()
             elif status == "check_email":
@@ -51,27 +50,36 @@ def auth_screen():
                 st.error(msg)
         else:
             st.warning("Enter email and password")
-
-
+    
+    # Forgot password link
+    if st.button("Forgot password?", type="secondary"):
+        st.session_state.show_reset = True
+        st.rerun()
+    
+    # Show password reset form if triggered
+    if st.session_state.get("show_reset", False):
+        st.divider()
+        st.subheader("Reset Password")
+        reset_email = st.text_input("Enter your email", key="reset_email")
+        col1, col2 = st.columns(2)
+        with col1:
+            if st.button("Send Reset Link"):
+                if reset_email:
+                    success, msg = reset_password(reset_email)
+                    if success:
+                        st.success(msg)
+                        st.session_state.show_reset = False
+                    else:
+                        st.error(msg)
+                else:
+                    st.warning("Enter your email")
+        with col2:
+            if st.button("Cancel"):
+                st.session_state.show_reset = False
+                st.rerun()
 
 def sign_out():
-        supabase.auth.sign_out()
-        st.session_state.user_email = None
-        st.session_state.user_id = None 
-        st.rerun()
-
-
-
-# import streamlit as st
-
-# if not st.user.is_logged_in:
-#     st.write("Not logged in")
-#     if st.button("Sign in with Google"):
-#         st.login("google")
-# else:
-#     st.write(f"User: {st.user.name}")
-#     st.write(f"Email: {st.user.email}")
-#     st.success("Logged in")
-    
-#     if st.button("Sign out"):
-#         st.logout()
+    supabase.auth.sign_out()
+    st.session_state.user_email = None
+    st.session_state.user_id = None 
+    st.rerun()
