@@ -4,28 +4,18 @@ from functions.zip_uploader import uploader
 import variables as var
 
 
-st.navbar(
-    pages = [
-        st.Page("app.py", title="Home"),
-        st.Page("pages/reset_password.py", title="reset_password"),
-    ]
-)
-
-# ---- MUST BE FIRST: Recovery Mode Check ----
-if st.session_state.get("_page") == "reset_password":
-    st.stop()
-
-
-# ---- initialize user_id ----
+# initialize the key so it always exists
 if var.col_user_id not in st.session_state:
     st.session_state.user_id = None
 
 user_id = st.session_state.user_id
 
 
-# ---- if logged in → main app ----
+
+# if logged in → main app
 if user_id:
 
+    
     res = auth.supabase.table(var.table_user_profile) \
         .select("*") \
         .eq(var.col_user_id, user_id) \
@@ -38,18 +28,26 @@ if user_id:
         done = uploader()
         if done:
             st.rerun()
-
+    
+    
     if not has_profile:
         hinge_sync_dialog()
+    
     else:
         if st.sidebar.button("Upload Data", width="stretch"):
             hinge_sync_dialog()
+            
 
+
+
+
+    
+    # Sign out
     if st.sidebar.button("Sign Out", width="stretch"):
         auth.sign_out()
         st.rerun()
 
 
-# ---- if not logged in → login screen ----
+# if not logged in → show login screen
 else:
     auth.auth_screen()
