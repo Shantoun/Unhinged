@@ -87,3 +87,26 @@ col_prompt_created_ts = "created_timestamp"
 col_prompt_updated_ts = "updated_timestamp"
 
 
+####################################################### subscriptions json keys
+json_subscriptions        = "subscriptions"
+json_sub_id               = "id"
+json_sub_duration         = "subscription_duration"
+json_sub_price            = "price"
+json_sub_currency         = "currency"
+json_sub_start_date       = "start_date"
+json_sub_end_date         = "end_date"
+json_sub_type             = "subscription_type"
+
+####################################################### table name
+table_subscriptions = "subscriptions"
+
+####################################################### subscriptions column names
+col_subscription_id        = "subscription_id"
+col_subscription_start_ts  = "start_timestamp"
+col_subscription_end_ts    = "end_timestamp"
+col_subscription_currency  = "currency"
+col_subscription_type      = "subscription_type"
+col_subscription_price     = "price"
+
+
+
