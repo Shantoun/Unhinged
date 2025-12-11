@@ -38,7 +38,7 @@ if user_id:
         hinge_sync_dialog()
     
     else:
-        if st.button("Upload Data"):
+        if st.sidebar.button("Upload Data", width="stretch"):
             hinge_sync_dialog()
             
     # # --- MAIN APP LOGIC ---
