@@ -44,3 +44,21 @@ col_like_timestamp  = "like_timestamp"
 col_message_id        = "message_id"
 col_message_timestamp = "message_timestamp"
 col_message_body      = "body"
+
+
+
+####################################################### json keys (media)
+json_media_list     = "media"         # or whatever your file key is
+json_media_type     = "type"
+json_media_url      = "url"
+json_media_social   = "from_social_media"
+
+####################################################### media table
+table_media         = "media"
+
+
+####################################################### media columns
+col_media_id        = "media_id"
+col_media_url       = "media_url"
+col_media_type      = "media_type"
+col_media_social    = "from_social_media"
