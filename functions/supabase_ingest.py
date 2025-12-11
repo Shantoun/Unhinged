@@ -98,40 +98,41 @@ def blocks_ingest(json_data, user_id):
 
 # --- LIKES INGEST ---------------------------------------------------------
 def likes_ingest(json_data, user_id):
-
     rows = []
 
     for m in json_data:
         if not isinstance(m, dict):
             continue
 
-        # optional match_id (same construction as matches_ingest)
+        # build match_id if available
         match_id = None
         match_event = m.get(var.json_match_event)
         if match_event:
-            ts_str_match = match_event[0].get(var.json_timestamp)
-            if ts_str_match:
-                match_ts = int(datetime.fromisoformat(ts_str_match).timestamp())
+            ts_str = match_event[0].get(var.json_timestamp)
+            if ts_str:
+                match_ts = int(datetime.fromisoformat(ts_str).timestamp())
                 match_id = f"match_{user_id}_{match_ts}"
 
-        like_events = m.get(var.json_likes, [])
-        if not like_events:
-            continue
+        # real like events are inside: m["like"][0]["like"]
+        outer_like_events = m.get(var.json_likes, [])
+        for outer in outer_like_events:
 
-        for le in like_events:
-            ts_str = le.get(var.json_timestamp)
-            if not ts_str:
-                continue
+            inner_like_events = outer.get(var.json_likes, [])
+            for inner in inner_like_events:
 
-            ts = int(datetime.fromisoformat(ts_str).timestamp())
-            like_id = f"like_{user_id}_{ts}"
+                ts_str = inner.get(var.json_timestamp)
+                if not ts_str:
+                    continue
 
-            rows.append({
-                var.col_like_id:        like_id,
-                var.col_like_timestamp: ts,
-                var.col_user_id:        user_id,
-                var.col_match_id:       match_id
-            })
+                ts = int(datetime.fromisoformat(ts_str).timestamp())
+                like_id = f"like_{user_id}_{ts}"
+
+                rows.append({
+                    var.col_like_id:        like_id,
+                    var.col_like_timestamp: ts,
+                    var.col_user_id:        user_id,
+                    var.col_match_id:       match_id
+                })
 
     if rows:
         supabase.table(var.table_likes).upsert(rows).execute()
