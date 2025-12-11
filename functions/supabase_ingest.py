@@ -397,15 +397,14 @@ def subscriptions_ingest(json_data, user_id):
 
 # --- USER PROFILE INGEST ---------------------------------------------------------
 def user_profile_ingest(json_data, user_id):
-    # DEBUG: Check what json_data actually contains
-    st.write("DEBUG json_data keys:", json_data.keys() if isinstance(json_data, dict) else "NOT A DICT")
-    st.write("DEBUG preferences value:", json_data.get(var.json_user_preferences))
+    # Extract the user object first
+    user_data = json_data.get("user", {})
     
-    prefs = json_data.get(var.json_user_preferences)
-    loc   = json_data.get(var.json_user_location)
-    ident = json_data.get(var.json_user_identity)
-    prof  = json_data.get(var.json_user_profile)
-    acct  = json_data.get(var.json_user_account)
+    prefs = user_data.get(var.json_user_preferences)
+    loc   = user_data.get(var.json_user_location)
+    ident = user_data.get(var.json_user_identity)
+    prof  = user_data.get(var.json_user_profile)
+    acct  = user_data.get(var.json_user_account)
 
     # current upload_count
     current = (
