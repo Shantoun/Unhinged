@@ -28,6 +28,9 @@ if st.session_state.user_id:
 
         with st.spinner("Uploading matches..."):
             ingest.matches_ingest(json_data, st.session_state.user_id)
+
+        with st.spinner("Uploading messages..."):
+            ingest.messages_ingest(json_data, st.session_state.user_id)        
         
         with st.spinner("Uploading blocks..."):
             ingest.blocks_ingest(json_data, st.session_state.user_id)
