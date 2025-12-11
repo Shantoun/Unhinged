@@ -90,3 +90,54 @@ def blocks_ingest(json_data, user_id):
 
     if rows:
         supabase.table(var.table_blocks).upsert(rows).execute()
+
+
+
+
+
+
+# --- LIKES INGEST ---------------------------------------------------------
+def likes_ingest(json_data, user_id):
+
+    rows = []
+
+    for m in json_data:
+        if not isinstance(m, dict):
+            continue
+
+        # match_id (optional)
+        match_event = m.get(var.json_match_event)
+        if match_event:
+            ts_str_match = match_event[0].get(var.json_timestamp)
+            if ts_str_match:
+                match_ts = int(datetime.fromisoformat(ts_str_match).timestamp())
+                match_id = f"match_{user_id}_{match_ts}"
+            else:
+                match_id = None
+        else:
+            match_id = None
+
+        like_events = m.get(var.json_likes, [])
+        if not like_events:
+            continue
+
+        for le in like_events:
+
+            ts_str = le.get(var.json_timestamp)
+            if not ts_str:
+                continue
+
+            ts = int(datetime.fromisoformat(ts_str).timestamp())
+            like_id = f"like_{user_id}_{ts}"
+
+            rows.append({
+                var.col_like_id:        like_id,
+                var.col_like_timestamp: ts,
+                var.col_user_id:        user_id,
+                var.col_match_id:       match_id
+            })
+
+    if rows:
+        supabase.table(var.table_likes).upsert(rows).execute()
+
+
