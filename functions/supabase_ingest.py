@@ -420,11 +420,11 @@ def user_profile_ingest(json_data, user_id):
     row = {
         var.col_user_id: user_id,
         var.col_upload_count: new_count,
-        var.col_preferences: prefs,
-        var.col_location: loc,
-        var.col_identity: ident,
-        var.col_profile: prof,
-        var.col_account: acct,
+        var.col_preferences: prefs if prefs is not None else {},
+        var.col_location: loc if loc is not None else {},
+        var.col_identity: ident if ident is not None else {},
+        var.col_profile: prof if prof is not None else {},
+        var.col_account: acct if acct is not None else {},
     }
 
     supabase.table(var.table_user_profile).upsert(
