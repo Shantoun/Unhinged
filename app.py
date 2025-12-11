@@ -20,7 +20,7 @@ if user_id:
         st.rerun()
 
     
-    res = supabase.table(var.table_user_profile) \
+    res = auth.supabase.table(var.table_user_profile) \
         .select("*") \
         .eq(var.col_user_id, user_id) \
         .execute()
