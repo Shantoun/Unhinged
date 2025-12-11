@@ -397,30 +397,29 @@ def subscriptions_ingest(json_data, user_id):
 
 # --- USER PROFILE INGEST ---------------------------------------------------------
 def user_profile_ingest(json_data, user_id):
+    prefs    = json_data.get(var.json_user_preferences)
+    loc      = json_data.get(var.json_user_location)
+    ident    = json_data.get(var.json_user_identity)
+    profile  = json_data.get(var.json_user_profile)
+    account  = json_data.get(var.json_user_account)
 
-    # --- SAFE FETCH EXISTING ROW ---
-    resp = (
-        supabase.table(var.table_user_profile)
-        .select("*")
-        .eq(var.col_user_id, user_id)
-        .maybe_single()
-        .execute()
-    )
+    # fetch current upload_count
+    existing = supabase.table(var.table_user_profile).select("*").eq(var.col_user_id, user_id).execute()
+    
+    if existing.data:
+        prev = existing.data[0].get(var.col_upload_count, 0)
+        new_count = prev + 1
+    else:
+        new_count = 1
 
-    existing = resp.data if resp and hasattr(resp, "data") else None
-    old_count = existing.get(var.col_upload_count, 0) if existing else 0
-    new_count = old_count + 1
-
-    # --- BUILD ROW ---
     row = {
-        var.col_user_id:      user_id,
+        var.col_user_id:     user_id,
         var.col_upload_count: new_count,
-        var.col_preferences:  json_data.get("preferences"),
-        var.col_location:     json_data.get("location"),
-        var.col_identity:     json_data.get("identity"),
-        var.col_profile:      json_data.get("profile"),
-        var.col_account:      json_data.get("account"),
+        var.col_preferences: prefs,
+        var.col_location:    loc,
+        var.col_identity:    ident,
+        var.col_profile:     profile,
+        var.col_account:     account
     }
 
-    # --- UPSERT ---
     supabase.table(var.table_user_profile).upsert(row).execute()
