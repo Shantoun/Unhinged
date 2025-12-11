@@ -261,8 +261,16 @@ def messages_ingest(json_data, user_id):
 def media_ingest(json_data, user_id):
     rows = []
 
-    # json_data is already the list in your media.json
-    for item in json_data:
+    # json_data is the global export (matches + blocks + media + ...)
+    # pull the media list safely
+    media_list = json_data.get(var.json_media, [])
+    if not isinstance(media_list, list):
+        return
+
+    for item in media_list:
+        if not isinstance(item, dict):
+            continue
+
         url = item.get(var.json_media_url)
         if not url:
             continue
@@ -270,7 +278,7 @@ def media_ingest(json_data, user_id):
         media_type = item.get(var.json_media_type)
         from_social = item.get(var.json_media_social, False)
 
-        # extract basename: https://.../abc123.jpg → abc123
+        # extract basename: https://.../abc123.jpg -> abc123
         try:
             basename = url.split("/")[-1].split(".")[0]
         except:
@@ -279,13 +287,12 @@ def media_ingest(json_data, user_id):
         media_id = f"media_{user_id}_{basename}"
 
         rows.append({
-            var.col_media_id:    media_id,
-            var.col_media_url:   url,
-            var.col_media_type:  media_type,
+            var.col_media_id:     media_id,
+            var.col_media_url:    url,
+            var.col_media_type:   media_type,
             var.col_media_social: from_social,
-            var.col_user_id:     user_id
+            var.col_user_id:      user_id
         })
 
     if rows:
         supabase.table(var.table_media).upsert(rows).execute()
-
