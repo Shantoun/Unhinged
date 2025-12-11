@@ -75,7 +75,7 @@ def auth_screen():
 
     if st.button("Forgot password?", key="forgot_pw_link", type="secondary"):
         if email:
-            auth.supabase.auth.reset_password_for_email(
+            supabase.auth.reset_password_for_email(
                 email,
                 options={"redirect_to": "https://yourappurl.com/reset"}  # update this
             )
