@@ -63,3 +63,27 @@ col_media_id        = "media_id"
 col_media_url       = "media_url"
 col_media_type      = "media_type"
 col_media_social    = "from_social_media"
+
+
+
+####################################################### prompts json keys
+json_prompts        = "prompts"
+json_prompt_id      = "id"
+json_prompt_label   = "prompt"
+json_prompt_type    = "type"
+json_prompt_text    = "text"
+json_prompt_created = "created"
+json_prompt_updated = "user_updated"
+
+####################################################### table name
+table_prompts = "prompts"
+
+####################################################### prompts column names
+col_prompt_id         = "prompt_id"
+col_prompt_type       = "prompt_type"
+col_prompt_label      = "prompt"
+col_prompt_text       = "prompt_text"
+col_prompt_created_ts = "created_timestamp"
+col_prompt_updated_ts = "updated_timestamp"
+
+
