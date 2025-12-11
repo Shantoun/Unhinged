@@ -403,13 +403,16 @@ def user_profile_ingest(json_data, user_id):
     prof  = json_data.get(var.json_user_profile)
     acct  = json_data.get(var.json_user_account)
 
-    # increment upload_count
-    current = supabase.table(var.table_user_profile) \
-        .select(var.col_upload_count) \
-        .eq(var.col_user_id, user_id) \
+    # get current upload_count
+    current = (
+        supabase.table(var.table_user_profile)
+        .select(var.col_upload_count)
+        .eq(var.col_user_id, user_id)
         .maybe_single()
+        .execute()
+    )
 
-    if current and current.data and var.col_upload_count in current.data:
+    if current.data and var.col_upload_count in current.data:
         new_count = (current.data[var.col_upload_count] or 0) + 1
     else:
         new_count = 1
