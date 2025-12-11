@@ -257,14 +257,12 @@ def messages_ingest(json_data, user_id):
 
 
 
-# --- MESSAGES INGEST ---------------------------------------------------------
+# --- MEDIA INGEST ---------------------------------------------------------
 def media_ingest(json_data, user_id):
     rows = []
 
-    # json_data is the top-level export (dict)
-    if not isinstance(json_data, dict):
-        return
-
+    # json_data is the global export (matches + blocks + media + ...)
+    # pull the media list safely
     media_list = json_data.get(var.json_media, [])
     if not isinstance(media_list, list):
         return
@@ -277,11 +275,14 @@ def media_ingest(json_data, user_id):
         if not url:
             continue
 
-        media_type  = item.get(var.json_media_type)
+        media_type = item.get(var.json_media_type)
         from_social = item.get(var.json_media_social, False)
 
-        # extract basename: /xxx/yyy.jpg → yyy
-        basename = url.split("/")[-1].split(".")[0]
+        # extract basename: https://.../abc123.jpg -> abc123
+        try:
+            basename = url.split("/")[-1].split(".")[0]
+        except:
+            continue
 
         media_id = f"media_{user_id}_{basename}"
 
@@ -295,3 +296,58 @@ def media_ingest(json_data, user_id):
 
     if rows:
         supabase.table(var.table_media).upsert(rows).execute()
+
+
+
+
+
+
+# --- PROMPTS INGEST ---------------------------------------------------------
+def prompts_ingest(json_data, user_id):
+    rows = []
+
+    # pull correct list depending on shape
+    if isinstance(json_data, dict):
+        prompts_list = json_data.get(var.json_prompts, [])
+    else:
+        prompts_list = json_data
+
+    for p in prompts_list:
+        prompt_raw_id = p.get(var.json_prompt_id)
+        if prompt_raw_id is None:
+            continue
+
+        created = p.get(var.json_prompt_created)
+        updated = p.get(var.json_prompt_updated)
+
+        try:
+            created_ts = int(datetime.fromisoformat(created).timestamp()) if created else None
+        except:
+            created_ts = None
+
+        try:
+            updated_ts = int(datetime.fromisoformat(updated).timestamp()) if updated else None
+        except:
+            updated_ts = created_ts
+
+        prompt_type  = p.get(var.json_prompt_type)
+        prompt_label = p.get(var.json_prompt_label)
+        prompt_text  = p.get(var.json_prompt_text)
+
+        # id format: prompt_userid_promptid_createdtimestamp
+        base = created_ts if created_ts else 0
+        prompt_id = f"prompt_{user_id}_{prompt_raw_id}_{base}"
+
+        rows.append({
+            var.col_prompt_id:         prompt_id,
+            var.col_user_id:           user_id,
+            var.col_prompt_type:       prompt_type,
+            var.col_prompt_label:      prompt_label,
+            var.col_prompt_text:       prompt_text,
+            var.col_prompt_created_ts: created_ts,
+            var.col_prompt_updated_ts: updated_ts
+        })
+
+    if rows:
+        supabase.table(var.table_prompts).upsert(rows).execute()
+
