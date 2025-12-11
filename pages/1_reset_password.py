@@ -1,7 +1,7 @@
 import streamlit as st
 from functions.authentification import supabase
 
-st.set_page_config(page_title="reset password")
+st.set_page_config(page_title="reset_password")
 
 def reset_password_screen():
     st.header("Reset Your Password")
