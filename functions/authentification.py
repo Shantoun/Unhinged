@@ -54,16 +54,17 @@ def auth_screen():
             st.warning("Enter email and password")
 
 
-    # --- Forgot password (link style) ---
+    # --- Forgot password (left aligned link) ---
     st.markdown(
-        "<p style='text-align:center;margin-top:0.5rem;'>"
-        "<a href='javascript:void(0)' id='forgot-link' style='color:#4B9CFF;text-decoration:underline;'>"
+        "<p style='text-align:left;margin-top:0.3rem;'>"
+        "<a href='javascript:void(0)' id='forgot-link' "
+        "style='color:#4B9CFF;text-decoration:underline;'>"
         "Forgot password?"
         "</a></p>",
         unsafe_allow_html=True
     )
 
-    # JS to capture click and notify Streamlit
+    # JS listener
     st.write("""
         <script>
         const link = window.parent.document.getElementById('forgot-link');
@@ -75,10 +76,8 @@ def auth_screen():
         </script>
     """, unsafe_allow_html=True)
 
-    # Streamlit receives message
-    msg = st.experimental_get_query_params().get("forgot_pw")
-
-    if msg is not None:
+    # Check for click
+    if st.experimental_get_query_params().get("forgot_pw") is not None:
         if email:
             auth.supabase.auth.reset_password_for_email(
                 email,
@@ -87,7 +86,6 @@ def auth_screen():
             st.success(f"Password reset link sent to {email}")
         else:
             st.warning("Enter your email to reset your password")
-
 
 
 
