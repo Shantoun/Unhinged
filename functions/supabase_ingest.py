@@ -398,19 +398,20 @@ def subscriptions_ingest(json_data, user_id):
 # --- USER PROFILE INGEST ---------------------------------------------------------
 def user_profile_ingest(json_data, user_id):
 
-    # fetch existing row (to increment upload_count)
-    existing = (
+    # --- SAFE FETCH EXISTING ROW ---
+    resp = (
         supabase.table(var.table_user_profile)
         .select("*")
         .eq(var.col_user_id, user_id)
         .maybe_single()
         .execute()
-        .data
     )
 
+    existing = resp.data if resp and hasattr(resp, "data") else None
     old_count = existing.get(var.col_upload_count, 0) if existing else 0
     new_count = old_count + 1
 
+    # --- BUILD ROW ---
     row = {
         var.col_user_id:      user_id,
         var.col_upload_count: new_count,
@@ -421,5 +422,5 @@ def user_profile_ingest(json_data, user_id):
         var.col_account:      json_data.get("account"),
     }
 
+    # --- UPSERT ---
     supabase.table(var.table_user_profile).upsert(row).execute()
-
