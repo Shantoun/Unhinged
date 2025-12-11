@@ -1,19 +1,25 @@
 import streamlit as st
-from supabase import create_client, Client
-from authentification import supabase
-
+from authentication import supabase
 
 st.set_page_config(page_title="Reset Password", page_icon="🔑")
 
 st.header("🔑 Reset Your Password")
 
-# Get the access token from URL parameters
-access_token = st.query_params.get("access_token")
+# Try to get tokens from query params
+access_token = None
+refresh_token = None
 
+# Check query params
+if "access_token" in st.query_params:
+    access_token = st.query_params["access_token"]
+    refresh_token = st.query_params.get("refresh_token", "")
+
+# If not in query params, show error
 if not access_token:
-    st.error("Invalid or expired reset link. Please request a new password reset.")
+    st.error("No reset token found in the URL.")
+    st.info("Please click the reset link from your email again. Make sure you're clicking the full link.")
     if st.button("Back to Login"):
-        st.switch_page("app.py")  # Replace with your main app file name
+        st.switch_page("app.py")
     st.stop()
 
 st.write("Enter your new password below:")
@@ -31,7 +37,7 @@ if st.button("Reset Password", type="primary"):
     else:
         try:
             # Set the session with the access token
-            supabase.auth.set_session(access_token, st.query_params.get("refresh_token", ""))
+            supabase.auth.set_session(access_token, refresh_token)
             
             # Update the password
             supabase.auth.update_user({"password": new_password})
@@ -44,7 +50,7 @@ if st.button("Reset Password", type="primary"):
             
             import time
             time.sleep(2)
-            st.switch_page("app.py")  # Replace with your main app file name
+            st.switch_page("app.py")
             
         except Exception as e:
             st.error(f"Error resetting password: {e}")
