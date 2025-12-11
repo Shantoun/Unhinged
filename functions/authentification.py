@@ -29,83 +29,28 @@ def smart_auth(email, password):
 
 
 
+
+
+
 def auth_screen():
     st.header("Login or Sign Up")
-
     email = st.text_input("Email")
-    password = st.text_input("Password", type="password")
+    password = st.text_input("Password", type="password", help="Must be at least 8 characters")
 
-    # ---- Continue Button ----
-    if st.button("Continue", type="primary", use_container_width=True):
+    if st.button("Continue", type="primary"):
         if email and password:
             user, status, msg = smart_auth(email, password)
-
             if status == "success":
                 st.session_state.user_email = user.user.email
-                st.session_state.user_id = user.user.id
+                st.session_state.user_id = user.user.id      # <-- THIS LINE
                 st.success(msg)
                 st.rerun()
-
             elif status == "check_email":
                 st.info(msg)
-
             else:
                 st.error(msg)
         else:
             st.warning("Enter email and password")
-
-    # ---- Link-Style Forgot Password Button ----
-    # Styled to look like a link, but behaves like a reliable button.
-    st.markdown(
-        """
-        <style>
-            button[kind="secondary"] {
-                background: none !important;
-                border: none !important;
-                box-shadow: none !important;
-                padding-left: 0px !important;
-                text-align: left !important;
-                color: #4B9CFF !important;
-                text-decoration: underline !important;
-            }
-        </style>
-        """,
-        unsafe_allow_html=True
-    )
-
-    if st.button("Forgot password?", key="forgot_pw_link", type="secondary"):
-        if email:
-            supabase.auth.reset_password_for_email(
-                email,
-                options={"redirect_to": "https://yourappurl.com/reset"}  # update this
-            )
-            st.success(f"Password reset link sent to {email}")
-        else:
-            st.warning("Enter your email to reset your password")
-
-
-
-
-
-# def auth_screen():
-#     st.header("Login or Sign Up")
-#     email = st.text_input("Email")
-#     password = st.text_input("Password", type="password", help="Must be at least 8 characters")
-
-#     if st.button("Continue", type="primary"):
-#         if email and password:
-#             user, status, msg = smart_auth(email, password)
-#             if status == "success":
-#                 st.session_state.user_email = user.user.email
-#                 st.session_state.user_id = user.user.id      # <-- THIS LINE
-#                 st.success(msg)
-#                 st.rerun()
-#             elif status == "check_email":
-#                 st.info(msg)
-#             else:
-#                 st.error(msg)
-#         else:
-#             st.warning("Enter email and password")
 
 
 
