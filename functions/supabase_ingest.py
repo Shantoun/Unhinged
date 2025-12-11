@@ -398,8 +398,8 @@ def subscriptions_ingest(json_data, user_id):
 # --- USER PROFILE INGEST ---------------------------------------------------------
 def user_profile_ingest(json_data, user_id):
     # DEBUG: Check what json_data actually contains
-    print("DEBUG json_data keys:", json_data.keys() if isinstance(json_data, dict) else "NOT A DICT")
-    print("DEBUG preferences value:", json_data.get(var.json_user_preferences))
+    st.write("DEBUG json_data keys:", json_data.keys() if isinstance(json_data, dict) else "NOT A DICT")
+    st.write("DEBUG preferences value:", json_data.get(var.json_user_preferences))
     
     prefs = json_data.get(var.json_user_preferences)
     loc   = json_data.get(var.json_user_location)
