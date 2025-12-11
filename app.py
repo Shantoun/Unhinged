@@ -27,21 +27,20 @@ if user_id:
     
     has_profile = len(res.data) > 0
 
+    @st.dialog("Sync Your Hinge Data")
+    def hinge_sync_dialog():
+        done = uploader()
+        if done:
+            st.rerun()
+    
+    
     if not has_profile:
-        # Mandatory: show dialog until upload completes
-        with st.dialog("Sync Your Hinge Data"):
-            done = uploader()
-            if done:
-                st.rerun()   # closes dialog immediately
+        hinge_sync_dialog()
     
     else:
-        # Optional update
         if st.button("Upload Data"):
-            with st.dialog("Sync Your Hinge Data"):
-                done = uploader()
-                if done:
-                    st.rerun()
-        
+            hinge_sync_dialog()
+            
     # # --- MAIN APP LOGIC ---
     # uploader()
 
