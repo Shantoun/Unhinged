@@ -257,3 +257,35 @@ def messages_ingest(json_data, user_id):
 
 
 
+# --- MESSAGES INGEST ---------------------------------------------------------
+def media_ingest(json_data, user_id):
+    rows = []
+
+    # json_data is already the list in your media.json
+    for item in json_data:
+        url = item.get(var.json_media_url)
+        if not url:
+            continue
+
+        media_type = item.get(var.json_media_type)
+        from_social = item.get(var.json_media_social, False)
+
+        # extract basename: https://.../abc123.jpg → abc123
+        try:
+            basename = url.split("/")[-1].split(".")[0]
+        except:
+            continue
+
+        media_id = f"media_{user_id}_{basename}"
+
+        rows.append({
+            var.col_media_id:    media_id,
+            var.col_media_url:   url,
+            var.col_media_type:  media_type,
+            var.col_media_social: from_social,
+            var.col_user_id:     user_id
+        })
+
+    if rows:
+        supabase.table(var.table_media).upsert(rows).execute()
+
