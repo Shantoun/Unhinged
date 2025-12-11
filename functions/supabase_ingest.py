@@ -44,17 +44,28 @@ def blocks_ingest(json_data, user_id):
 
     rows = []
 
-    for m in json_data:
+    # make sure json_data is a parsed object
+    if isinstance(json_data, str):
+        json_data = json.loads(json_data)
 
+    # match shape used by matches_ingest
+    if isinstance(json_data, dict):
+        items = json_data.get(var.json_matches, [])
+    else:
+        items = json_data or []
+
+    for m in items:
+        if not isinstance(m, dict):
+            continue
+
+        # try to reconstruct match_id (may be None for orphan blocks)
+        match_id = None
         match_event = m.get(var.json_match_event)
         if match_event:
-            ts_str = match_event[0].get(var.json_timestamp)
-            if not ts_str:
-                continue
-            match_ts = int(datetime.fromisoformat(ts_str).timestamp())
-            match_id = f"match_{user_id}_{match_ts}"
-        else:
-            match_id = None
+            ts_str_match = match_event[0].get(var.json_timestamp)
+            if ts_str_match:
+                match_ts = int(datetime.fromisoformat(ts_str_match).timestamp())
+                match_id = f"match_{user_id}_{match_ts}"
 
         block_events = m.get(var.json_block_event, [])
         if not block_events:
@@ -73,10 +84,9 @@ def blocks_ingest(json_data, user_id):
                 var.col_block_id:        block_id,
                 var.col_block_timestamp: ts,
                 var.col_user_id:         user_id,
-                var.col_match_id:        match_id,
+                var.col_match_id:        match_id,      # can be None for orphan blocks
                 var.col_block_type:      block_type,
             })
 
     if rows:
         supabase.table(var.table_blocks).upsert(rows).execute()
-
