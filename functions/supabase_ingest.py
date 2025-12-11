@@ -105,24 +105,20 @@ def likes_ingest(json_data, user_id):
         if not isinstance(m, dict):
             continue
 
-        # match_id (optional)
+        # optional match_id (same construction as matches_ingest)
+        match_id = None
         match_event = m.get(var.json_match_event)
         if match_event:
             ts_str_match = match_event[0].get(var.json_timestamp)
             if ts_str_match:
                 match_ts = int(datetime.fromisoformat(ts_str_match).timestamp())
                 match_id = f"match_{user_id}_{match_ts}"
-            else:
-                match_id = None
-        else:
-            match_id = None
 
         like_events = m.get(var.json_likes, [])
         if not like_events:
             continue
 
         for le in like_events:
-
             ts_str = le.get(var.json_timestamp)
             if not ts_str:
                 continue
