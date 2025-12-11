@@ -23,6 +23,9 @@ if st.session_state.user_id:
     if result:
         json_data = result["json"]
 
+        with st.spinner("Uploading likes..."):
+            ingest.likes_ingest(json_data, st.session_state.user_id)
+
         with st.spinner("Uploading matches..."):
             ingest.matches_ingest(json_data, st.session_state.user_id)
         
