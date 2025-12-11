@@ -100,7 +100,7 @@ json_sub_type             = "subscription_type"
 ####################################################### table name
 table_subscriptions = "subscriptions"
 
-####################################################### subscriptions column names
+####################################################### subscriptions
 col_subscription_id        = "subscription_id"
 col_subscription_start_ts  = "start_timestamp"
 col_subscription_end_ts    = "end_timestamp"
@@ -109,4 +109,15 @@ col_subscription_type      = "subscription_type"
 col_subscription_price     = "price"
 
 
+####################################################### user profile
+table_user_profile = "user_profile"
+
+col_user_id      = "user_id"
+col_upload_count = "upload_count"
+
+col_preferences  = "preferences"
+col_location     = "location"
+col_identity     = "identity"
+col_profile      = "profile"
+col_account      = "account"
 
