@@ -37,6 +37,7 @@ if st.session_state.user_id:
 
         with st.spinner("Uploading user info..."):
             ingest.media_ingest(json_data, st.session_state.user_id)
+            ingest.prompt_ingest(json_data, st.session_state.user_id)
 
         st.success("Your data has been uploaded ✔️")
 
