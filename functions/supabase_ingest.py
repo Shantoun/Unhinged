@@ -397,22 +397,35 @@ def subscriptions_ingest(json_data, user_id):
 
 # --- USER PROFILE INGEST ---------------------------------------------------------
 def user_profile_ingest(json_data, user_id):
+    prefs = json_data.get(var.json_user_preferences)
+    loc   = json_data.get(var.json_user_location)
+    ident = json_data.get(var.json_user_identity)
+    prof  = json_data.get(var.json_user_profile)
+    acct  = json_data.get(var.json_user_account)
+
+    # increment upload_count
+    current = supabase.table(var.table_user_profile) \
+        .select(var.col_upload_count) \
+        .eq(var.col_user_id, user_id) \
+        .maybe_single()
+
+    if current and current.data and var.col_upload_count in current.data:
+        new_count = (current.data[var.col_upload_count] or 0) + 1
+    else:
+        new_count = 1
 
     row = {
-        var.col_user_id:     user_id,
-        var.col_preferences: json_data.get(var.json_user_preferences),
-        var.col_location:    json_data.get(var.json_user_location),
-        var.col_identity:    json_data.get(var.json_user_identity),
-        var.col_profile:     json_data.get(var.json_user_profile),
-        var.col_account:     json_data.get(var.json_user_account)
+        var.col_user_id: user_id,
+        var.col_upload_count: new_count,
+        var.col_preferences: prefs,
+        var.col_location: loc,
+        var.col_identity: ident,
+        var.col_profile: prof,
+        var.col_account: acct,
     }
 
-    existing = supabase.table(var.table_user_profile).select("*").eq(var.col_user_id, user_id).execute()
-
-    if existing.data:
-        prev = existing.data[0].get(var.col_upload_count, 0)
-        row[var.col_upload_count] = prev + 1
-    else:
-        row[var.col_upload_count] = 1
-
-    supabase.table(var.table_user_profile).upsert(row).execute()
+    supabase.table(var.table_user_profile).upsert(
+        row,
+        on_conflict=var.col_user_id,
+        ignore_update=False
+    ).execute()
