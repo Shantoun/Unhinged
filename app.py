@@ -14,10 +14,6 @@ user_id = st.session_state.user_id
 
 # if logged in → main app
 if user_id:
-    # Sign out
-    if st.sidebar.button("Sign Out", width="stretch"):
-        auth.sign_out()
-        st.rerun()
 
     
     res = auth.supabase.table(var.table_user_profile) \
@@ -41,9 +37,15 @@ if user_id:
         if st.sidebar.button("Upload Data", width="stretch"):
             hinge_sync_dialog()
             
-    # # --- MAIN APP LOGIC ---
-    # uploader()
 
+
+
+
+    
+    # Sign out
+    if st.sidebar.button("Sign Out", width="stretch"):
+        auth.sign_out()
+        st.rerun()
 
 
 # if not logged in → show login screen
@@ -53,25 +55,3 @@ else:
 
 
 
-
-
-# def main_app(user_email):
-#     st.set_page_config(layout="wide")
-#     st.title("Unhinged")
-#     st.caption("Analyze your game")
-    
-#     with st.sidebar:
-#         if st.button("Sign Out", width="stretch"):
-#             auth.sign_out()
-
-    
-
-
-
-# if "user_email" not in st.session_state:
-#     st.session_state.user_email = None
-
-# if st.session_state.user_email:
-#     main_app(st.session_state.user_email)
-# else:
-#     auth.auth_screen()
