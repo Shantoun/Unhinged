@@ -3,6 +3,7 @@ json_matches      = "matches"
 json_blocks       = "blocks"
 json_like_key     = "like"
 json_chats        = "chats"
+json_media         = "media"
 
 json_match_event  = "match"
 json_block_event  = "block"
