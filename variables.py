@@ -1,13 +1,14 @@
 ####################################################### json keys
-json_matches       = "matches"
-json_blocks        = "blocks"
-json_likes         = "like"
+json_matches      = "matches"
+json_blocks       = "blocks"
+json_likes        = "like"
 
-json_match_event   = "match"
-json_block_event   = "block"
-json_like_event    = "like"      # inner like array
+json_match_event  = "match"      # nested array inside each match
+json_block_event  = "block"      # nested array inside each block
 
-json_timestamp     = "timestamp"
+json_timestamp    = "timestamp"
+json_match_id     = "match_id"
+json_block_type   = "block_type"
 
 
 ####################################################### table names
@@ -21,7 +22,16 @@ col_user_id   = "user_id"
 col_match_id  = "match_id"
 
 
+####################################################### matches column names
+col_match_timestamp = "match_timestamp"
+
+
+####################################################### blocks column names
+col_block_id        = "block_id"
+col_block_timestamp = "block_timestamp"
+col_block_type      = "block_type"
+
+
 ####################################################### likes column names
 col_like_id        = "like_id"
-col_match_timestamp = "match_timestamp"
 col_like_timestamp = "like_timestamp"
