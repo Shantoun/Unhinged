@@ -6,6 +6,7 @@ import variables as var
 
 # ---- PASSWORD RESET MODE CHECK (must be first!) ----
 session = auth.supabase.auth.get_session()
+
 if session and session.get("type") == "recovery":
     from pages.reset_password import reset_password_screen
     reset_password_screen()
