@@ -3,10 +3,10 @@ import zipfile
 import tempfile
 import os
 import json
+import functions.supabase_ingest as ingest
 
 
-
-def uploader():
+def zip_uploader():
     uploaded = st.file_uploader("Upload ZIP file", type=["zip"], accept_multiple_files=False)
     if not uploaded:
         return None
@@ -33,30 +33,28 @@ def uploader():
 
 
 
+def uploader():
+    result = zip_uploader()
 
+    if result:
+        json_data = result["json"]
 
+        with st.spinner("Syncing likes..."):
+            ingest.likes_ingest(json_data, st.session_state.user_id)
 
+        with st.spinner("Syncing matches..."):
+            ingest.matches_ingest(json_data, st.session_state.user_id)
 
-# def uploader():
-#   st.title("Upload Your Hinge Export")
-  
-#   uploaded = st.file_uploader("Upload ZIP file", type=["zip"], accept_multiple_files=False)
-  
-#   if uploaded:
-#       tmpdir = tempfile.mkdtemp()
-#       zip_path = os.path.join(tmpdir, "hinge.zip")
-#       with open(zip_path, "wb") as f:
-#           f.write(uploaded.getbuffer())
-      
-#       with zipfile.ZipFile(zip_path, "r") as z:
-#           z.extractall(tmpdir)
-  
-#       json_files = []
-#       for root, dirs, files in os.walk(tmpdir):
-#           for file in files:
-#               if file.endswith(".json"):
-#                   json_files.append(os.path.join(root, file))
-  
-#       # just print the names, not the contents
-#       file_names = [os.path.basename(p) for p in json_files]
-#       st.write("Found JSON files:", file_names)
+        with st.spinner("Syncing messages..."):
+            ingest.messages_ingest(json_data, st.session_state.user_id)        
+        
+        with st.spinner("Syncing blocks..."):
+            ingest.blocks_ingest(json_data, st.session_state.user_id)
+
+        with st.spinner("Syncing user profile..."):
+            ingest.user_profile_ingest(json_data, st.session_state.user_id)
+            ingest.media_ingest(json_data, st.session_state.user_id)
+            ingest.prompts_ingest(json_data, st.session_state.user_id)
+            ingest.subscriptions_ingest(json_data, st.session_state.user_id)
+
+        st.success("Your data has been uploaded")
