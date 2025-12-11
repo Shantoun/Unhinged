@@ -23,8 +23,11 @@ if st.session_state.user_id:
     if result:
         json_data = result["json"]
 
-        with st.spinner("Reading your match data..."):
+        with st.spinner("Uploading matches..."):
             ingest.matches_ingest(json_data, st.session_state.user_id)
+        
+        with st.spinner("Uploading blocks..."):
+            ingest.blocks_ingest(json_data, st.session_state.user_id)
 
         st.success("Your data has been uploaded ✔️")
 
