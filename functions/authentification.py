@@ -70,13 +70,19 @@ def auth_screen():
 
     if st.button("Forgot password?", key="forgot_pw", type="secondary"):
         if email:
-            supabase.auth.reset_password_for_email(
-                email,
-                options={"redirect_to": "https://unhinged.streamlit.app/reset_password?type=recovery"} # <- Your reset page
-            )
-            st.success(f"Reset link sent to {email}")
+            try:
+                supabase.auth.reset_password_for_email(
+                    email,
+                    options={"redirect_to": "https://unhinged.streamlit.app/reset_password?type=recovery"}
+                )
+                st.success(f"Reset link sent to {email}")
+            except Exception as e:
+                if "only request this" in str(e).lower():
+                    st.error("You just requested a reset link. Please wait one minute before trying again.")
+                else:
+                    st.error("Couldn't send reset link. Try again later.")
         else:
-            st.warning("Enter your email to reset your password")
+            st.warning("Enter your email to reset your password.")
 
 
 # -------------------- SIGN OUT --------------------
