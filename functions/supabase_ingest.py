@@ -398,7 +398,7 @@ def subscriptions_ingest(json_data, user_id):
 # --- USER PROFILE INGEST ---------------------------------------------------------
 def user_profile_ingest(json_data, user_id):
     # Extract the user object first
-    user_data = json_data.get("user", {})
+    user_data = json_data.get(var.json_user, {})
     
     prefs = user_data.get(var.json_user_preferences)
     loc   = user_data.get(var.json_user_location)
