@@ -112,7 +112,6 @@ col_subscription_price     = "price"
 ####################################################### user profile
 table_user_profile = "user_profile"
 
-col_user_id      = "user_id"
 col_upload_count = "upload_count"
 
 col_preferences  = "preferences"
