@@ -1,24 +1,49 @@
 import streamlit as st
 import functions.authentification as auth
 from functions.zip_uploader import uploader
-
+import variables as var
 
 
 # initialize the key so it always exists
-if "user_id" not in st.session_state:
+if var.col_user_id not in st.session_state:
     st.session_state.user_id = None
+
+user_id = st.session_state.user_id
+
 
 
 # if logged in → main app
-if st.session_state.user_id:
-
-    # SIGN OUT FIRST — always evaluated before anything else
+if user_id:
+    # Sign out
     if st.sidebar.button("Sign Out", width="stretch"):
         auth.sign_out()
         st.rerun()
 
-    # --- MAIN APP LOGIC ---
-    uploader()
+    
+    res = supabase.table(var.table_user_profile) \
+        .select("*") \
+        .eq(var.col_user_id, user_id) \
+        .execute()
+    
+    has_profile = len(res.data) > 0
+
+    if not has_profile:
+        # Mandatory: show dialog until upload completes
+        with st.dialog("Sync Your Hinge Data"):
+            done = uploader()
+            if done:
+                st.rerun()   # closes dialog immediately
+    
+    else:
+        # Optional update
+        if st.button("Upload Data"):
+            with st.dialog("Sync Your Hinge Data"):
+                done = uploader()
+                if done:
+                    st.rerun()
+        
+    # # --- MAIN APP LOGIC ---
+    # uploader()
 
 
 
