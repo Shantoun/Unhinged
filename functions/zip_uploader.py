@@ -37,7 +37,7 @@ def uploader():
     result = zip_uploader()
 
     if result:
-        if st.button("Continue", type="Primary", width="stretch"):
+        if st.button("Continue", type="primary", width="stretch"):
             json_data = result["json"]
     
             with st.spinner("Syncing likes..."):
