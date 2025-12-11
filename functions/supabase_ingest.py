@@ -403,7 +403,7 @@ def user_profile_ingest(json_data, user_id):
     prof  = json_data.get(var.json_user_profile)
     acct  = json_data.get(var.json_user_account)
 
-    # get current upload_count
+    # current upload_count
     current = (
         supabase.table(var.table_user_profile)
         .select(var.col_upload_count)
@@ -429,6 +429,5 @@ def user_profile_ingest(json_data, user_id):
 
     supabase.table(var.table_user_profile).upsert(
         row,
-        on_conflict=var.col_user_id,
-        ignore_update=False
+        on_conflict=var.col_user_id
     ).execute()
