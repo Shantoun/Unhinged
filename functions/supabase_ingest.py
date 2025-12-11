@@ -351,3 +351,44 @@ def prompts_ingest(json_data, user_id):
     if rows:
         supabase.table(var.table_prompts).upsert(rows).execute()
 
+
+
+# --- SUBSCRIPTIONS INGEST ---------------------------------------------------------
+def subscriptions_ingest(json_data, user_id):
+    rows = []
+
+    subs = json_data.get(var.json_subscriptions, [])
+    if not isinstance(subs, list):
+        return
+
+    for s in subs:
+        sid        = s.get(var.json_sub_id)
+        duration   = s.get(var.json_sub_duration)
+        price      = s.get(var.json_sub_price)
+        currency   = s.get(var.json_sub_currency)
+        start_str  = s.get(var.json_sub_start_date)
+        end_str    = s.get(var.json_sub_end_date)
+        sub_type   = s.get(var.json_sub_type)
+
+        if not sid or not start_str:
+            continue
+
+        start_ts = int(datetime.fromisoformat(start_str.replace("Z", "")).timestamp())
+        end_ts   = int(datetime.fromisoformat(end_str.replace("Z", "")).timestamp()) if end_str else None
+
+        sub_id = f"subscription_{user_id}_{sid}_{start_ts}"
+
+        row = {
+            var.col_subscription_id:       sub_id,
+            var.col_subscription_start_ts: start_ts,
+            var.col_subscription_end_ts:   end_ts,
+            var.col_subscription_price:    price,
+            var.col_subscription_currency: currency,
+            var.col_subscription_type:     sub_type,
+            var.col_user_id:               user_id
+        }
+
+        rows.append(row)
+
+    if rows:
+        supabase.table(var.table_subscriptions).upsert(rows).execute()
