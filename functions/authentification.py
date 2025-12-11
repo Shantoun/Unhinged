@@ -72,7 +72,7 @@ def auth_screen():
         if email:
             supabase.auth.reset_password_for_email(
                 email,
-                options={"redirect_to": "https://unhinged.streamlit.app/reset_password"} # <- Your reset page
+                options={"redirect_to": "https://unhinged.streamlit.app/reset_password?type=recovery"} # <- Your reset page
             )
             st.success(f"Reset link sent to {email}")
         else:
