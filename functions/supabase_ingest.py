@@ -98,43 +98,73 @@ def blocks_ingest(json_data, user_id):
 
 # --- LIKES INGEST ---------------------------------------------------------
 def likes_ingest(json_data, user_id):
+
     rows = []
+
+    # safety: if someone ever passes the top-level dict
+    if isinstance(json_data, dict):
+        json_data = json_data.get(var.json_matches, [])
 
     for m in json_data:
         if not isinstance(m, dict):
             continue
 
-        # build match_id if available
+        # ---------- build match_id if there is a match ----------
         match_id = None
         match_event = m.get(var.json_match_event)
-        if match_event:
-            ts_str = match_event[0].get(var.json_timestamp)
-            if ts_str:
-                match_ts = int(datetime.fromisoformat(ts_str).timestamp())
+        if isinstance(match_event, list) and match_event:
+            ts_match_str = match_event[0].get(var.json_timestamp)
+            if ts_match_str:
+                match_ts = int(datetime.fromisoformat(ts_match_str).timestamp())
                 match_id = f"match_{user_id}_{match_ts}"
 
-        # real like events are inside: m["like"][0]["like"]
-        outer_like_events = m.get(var.json_likes, [])
-        for outer in outer_like_events:
+        # ---------- likes (works for matched + standalone likes) ----------
+        outer_likes = m.get(var.json_like_key, [])
+        if not isinstance(outer_likes, list):
+            continue
 
-            inner_like_events = outer.get(var.json_likes, [])
-            for inner in inner_like_events:
+        for outer in outer_likes:
+            if not isinstance(outer, dict):
+                continue
 
-                ts_str = inner.get(var.json_timestamp)
+            inner_likes = outer.get(var.json_like_key)
+
+            # case 1: real likes in inner list (your JSON)
+            if isinstance(inner_likes, list) and inner_likes:
+                for inner in inner_likes:
+                    if not isinstance(inner, dict):
+                        continue
+
+                    ts_str = inner.get(var.json_timestamp)
+                    if not ts_str:
+                        continue
+
+                    ts_int = int(datetime.fromisoformat(ts_str).timestamp())
+                    like_id = f"like_{user_id}_{ts_int}"
+
+                    rows.append({
+                        var.col_like_id:         like_id,
+                        var.col_like_timestamp:  ts_int,
+                        var.col_user_id:         user_id,
+                        var.col_match_id:        match_id,   # None for pure-like rows
+                    })
+
+            # case 2: fallback if outer itself is the like event
+            else:
+                ts_str = outer.get(var.json_timestamp)
                 if not ts_str:
                     continue
 
-                ts = int(datetime.fromisoformat(ts_str).timestamp())
-                like_id = f"like_{user_id}_{ts}"
+                ts_int = int(datetime.fromisoformat(ts_str).timestamp())
+                like_id = f"like_{user_id}_{ts_int}"
 
                 rows.append({
-                    var.col_like_id:        like_id,
-                    var.col_like_timestamp: ts,
-                    var.col_user_id:        user_id,
-                    var.col_match_id:       match_id
+                    var.col_like_id:         like_id,
+                    var.col_like_timestamp:  ts_int,
+                    var.col_user_id:         user_id,
+                    var.col_match_id:        match_id,
                 })
 
     if rows:
         supabase.table(var.table_likes).upsert(rows).execute()
-
 
