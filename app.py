@@ -4,13 +4,10 @@ from functions.zip_uploader import uploader
 import variables as var
 
 # ---- MUST BE FIRST: Recovery Mode Check ----
-session = auth.supabase.auth.get_session()
-if session and session.get("type") == "recovery":
+if st.navigation.get_current_page().url == "/reset_password":
     from pages.reset_password import reset_password_screen
     reset_password_screen()
     st.stop()
-
-
 
 # ---- initialize user_id ----
 if var.col_user_id not in st.session_state:
