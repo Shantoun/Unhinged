@@ -3,12 +3,10 @@ import functions.authentification as auth
 from functions.zip_uploader import uploader
 import variables as var
 
-
-# ---- PASSWORD RESET MODE CHECK (must be first!) ----
+# --- MUST BE FIRST: Recovery Mode Check ---
 session = auth.supabase.auth.get_session()
-
 if session and session.get("type") == "recovery":
-    from pages.reset_password import reset_password_screen
+    from pages.1_reset_password import reset_password_screen
     reset_password_screen()
     st.stop()
 
