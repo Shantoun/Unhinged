@@ -261,8 +261,10 @@ def messages_ingest(json_data, user_id):
 def media_ingest(json_data, user_id):
     rows = []
 
-    # json_data is the global export (matches + blocks + media + ...)
-    # pull the media list safely
+    # json_data is the top-level export (dict)
+    if not isinstance(json_data, dict):
+        return
+
     media_list = json_data.get(var.json_media, [])
     if not isinstance(media_list, list):
         return
@@ -275,14 +277,11 @@ def media_ingest(json_data, user_id):
         if not url:
             continue
 
-        media_type = item.get(var.json_media_type)
+        media_type  = item.get(var.json_media_type)
         from_social = item.get(var.json_media_social, False)
 
-        # extract basename: https://.../abc123.jpg -> abc123
-        try:
-            basename = url.split("/")[-1].split(".")[0]
-        except:
-            continue
+        # extract basename: /xxx/yyy.jpg → yyy
+        basename = url.split("/")[-1].split(".")[0]
 
         media_id = f"media_{user_id}_{basename}"
 
