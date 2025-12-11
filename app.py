@@ -3,6 +3,12 @@ import functions.authentification as auth
 from functions.zip_uploader import uploader
 import variables as var
 
+
+import os
+st.write("cwd:", os.getcwd())
+st.write("files:", os.listdir())
+
+
 # ---- MUST BE FIRST: Recovery Mode Check ----
 if st.session_state.get("_page") == "reset_password":
     st.stop()
