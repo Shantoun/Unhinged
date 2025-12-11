@@ -31,23 +31,94 @@ def smart_auth(email, password):
 
 def auth_screen():
     st.header("Login or Sign Up")
-    email = st.text_input("Email")
-    password = st.text_input("Password", type="password", help="Must be at least 8 characters")
 
-    if st.button("Continue", type="primary"):
+    email = st.text_input("Email")
+    password = st.text_input("Password", type="password")
+
+    # ---- Forgot password link ----
+    # Looks like a normal hyperlink, but acts like a function trigger.
+    forgot = st.markdown(
+        "<p style='text-align:right;color:#4B9CFF;cursor:pointer;text-decoration:underline;' id='forgot'>"
+        "Forgot password?"
+        "</p>",
+        unsafe_allow_html=True
+    )
+
+    # Capture click on the link using JS event -> rerun with a variable set
+    st.write(
+        """
+        <script>
+        const forgotEl = window.parent.document.getElementById('forgot');
+        if (forgotEl) {
+            forgotEl.onclick = () => {
+                window.parent.postMessage({forgetClick: true}, "*");
+            };
+        }
+        </script>
+        """,
+        unsafe_allow_html=True,
+    )
+
+    # Streamlit listens for the click
+    forget_click = st.experimental_get_query_params().get("forget", None)
+
+    # ---- Triggered when clicking the link ----
+    if forget_click is not None:
+        if email:
+            auth.supabase.auth.reset_password_for_email(
+                email,
+                options={"redirect_to": "https://your-app-url/reset"}
+            )
+            st.success(f"Reset link sent to {email}")
+        else:
+            st.warning("Enter your email to reset your password")
+        return
+
+
+
+    # ---- Continue / Login / Signup flow ----
+    if st.button("Continue", type="primary", use_container_width=True):
         if email and password:
             user, status, msg = smart_auth(email, password)
+
             if status == "success":
                 st.session_state.user_email = user.user.email
-                st.session_state.user_id = user.user.id      # <-- THIS LINE
+                st.session_state.user_id = user.user.id
                 st.success(msg)
                 st.rerun()
+
             elif status == "check_email":
                 st.info(msg)
+
             else:
                 st.error(msg)
+
         else:
             st.warning("Enter email and password")
+
+
+
+
+
+# def auth_screen():
+#     st.header("Login or Sign Up")
+#     email = st.text_input("Email")
+#     password = st.text_input("Password", type="password", help="Must be at least 8 characters")
+
+#     if st.button("Continue", type="primary"):
+#         if email and password:
+#             user, status, msg = smart_auth(email, password)
+#             if status == "success":
+#                 st.session_state.user_email = user.user.email
+#                 st.session_state.user_id = user.user.id      # <-- THIS LINE
+#                 st.success(msg)
+#                 st.rerun()
+#             elif status == "check_email":
+#                 st.info(msg)
+#             else:
+#                 st.error(msg)
+#         else:
+#             st.warning("Enter email and password")
 
 
 
