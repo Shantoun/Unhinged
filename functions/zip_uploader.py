@@ -37,24 +37,25 @@ def uploader():
     result = zip_uploader()
 
     if result:
-        json_data = result["json"]
-
-        with st.spinner("Syncing likes..."):
-            ingest.likes_ingest(json_data, st.session_state.user_id)
-
-        with st.spinner("Syncing matches..."):
-            ingest.matches_ingest(json_data, st.session_state.user_id)
-
-        with st.spinner("Syncing messages..."):
-            ingest.messages_ingest(json_data, st.session_state.user_id)        
-        
-        with st.spinner("Syncing blocks..."):
-            ingest.blocks_ingest(json_data, st.session_state.user_id)
-
-        with st.spinner("Syncing user profile..."):
-            ingest.user_profile_ingest(json_data, st.session_state.user_id)
-            ingest.media_ingest(json_data, st.session_state.user_id)
-            ingest.prompts_ingest(json_data, st.session_state.user_id)
-            ingest.subscriptions_ingest(json_data, st.session_state.user_id)
-
-        st.success("Your data has been uploaded")
+        if st.button("Continue", type="Primary", width="stretch"):
+            json_data = result["json"]
+    
+            with st.spinner("Syncing likes..."):
+                ingest.likes_ingest(json_data, st.session_state.user_id)
+    
+            with st.spinner("Syncing matches..."):
+                ingest.matches_ingest(json_data, st.session_state.user_id)
+    
+            with st.spinner("Syncing messages..."):
+                ingest.messages_ingest(json_data, st.session_state.user_id)        
+            
+            with st.spinner("Syncing blocks..."):
+                ingest.blocks_ingest(json_data, st.session_state.user_id)
+    
+            with st.spinner("Syncing user profile..."):
+                ingest.user_profile_ingest(json_data, st.session_state.user_id)
+                ingest.media_ingest(json_data, st.session_state.user_id)
+                ingest.prompts_ingest(json_data, st.session_state.user_id)
+                ingest.subscriptions_ingest(json_data, st.session_state.user_id)
+    
+            st.success("Done!")
