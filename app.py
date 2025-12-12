@@ -1,13 +1,45 @@
+
 import streamlit as st
 import functions.authentification as auth
 from functions.zip_uploader import uploader
 import variables as var
 
-# Check for password reset first
-auth.check_for_reset_tokens()
+# Check if this is a password reset callback first
+# Supabase adds fragment params like #access_token=...&type=recovery
+# We need to handle the fragment with JavaScript since Streamlit can't access it directly
+if "password_reset_mode" not in st.session_state:
+    st.session_state.password_reset_mode = False
 
-# If in reset mode, show reset screen
-if st.session_state.get("password_reset_mode", False):
+# Inject JavaScript to check for recovery token in URL fragment
+st.markdown("""
+<script>
+    // Check if URL has recovery token in fragment
+    const hash = window.location.hash;
+    if (hash.includes('type=recovery') || hash.includes('type=magiclink')) {
+        // Extract access_token and refresh_token from fragment
+        const params = new URLSearchParams(hash.substring(1));
+        const accessToken = params.get('access_token');
+        const refreshToken = params.get('refresh_token');
+        
+        if (accessToken) {
+            // Send tokens to Streamlit
+            window.parent.postMessage({
+                type: 'streamlit:setComponentValue',
+                key: 'recovery_tokens',
+                value: {
+                    access_token: accessToken,
+                    refresh_token: refreshToken
+                }
+            }, '*');
+        }
+    }
+</script>
+""", unsafe_allow_html=True)
+
+# Check for recovery tokens from JavaScript
+recovery_data = st.query_params.get("access_token")
+if recovery_data or st.session_state.password_reset_mode:
+    st.session_state.password_reset_mode = True
     auth.password_reset_screen()
     st.stop()
 
