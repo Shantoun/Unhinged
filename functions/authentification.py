@@ -159,8 +159,9 @@ def auth_screen():
     
     st.header("Login or Sign Up")
     
-    email = st.text_input("Email")
-    password = st.text_input("Password", type="password", help="Must be at least 8 characters")
+    # Main login form
+    email = st.text_input("Email", key="login_email")
+    password = st.text_input("Password", type="password", help="Must be at least 8 characters", key="login_password")
     
     if st.button("Continue", type="primary", use_container_width=True):
         if email and password:
@@ -177,4 +178,25 @@ def auth_screen():
         else:
             st.warning("Enter email and password")
     
-    # Forgot password link
+    # Forgot password section
+    st.divider()
+    
+    with st.expander("🔐 Forgot your password?"):
+        st.write("Enter your email address and we'll send you a link to reset your password.")
+        forgot_email = st.text_input("Email address", key="forgot_email")
+        
+        if st.button("Send Reset Link", use_container_width=True):
+            if forgot_email:
+                success, message = send_password_reset(forgot_email)
+                if success:
+                    st.success(message)
+                else:
+                    st.error(message)
+            else:
+                st.warning("Please enter your email address")
+
+def sign_out():
+    supabase.auth.sign_out()
+    st.session_state.user_email = None
+    st.session_state.user_id = None
+    st.rerun()
