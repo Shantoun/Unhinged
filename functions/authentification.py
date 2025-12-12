@@ -23,24 +23,26 @@ def smart_auth(email, password):
             return None, "error", f"Error: {e}"
     return None, "error", "Authentication failed."
 
-def reset_password(email):
-    """Send password reset email with proper redirect"""
+def send_reset_email(email):
+    """Send password reset email"""
     try:
-        # Point to the HTML redirect page that converts hash to query params
-        redirect_to = "https://unhinged.streamlit.app/reset_redirect.html"
-        
-        supabase.auth.reset_password_email(email, options={"redirect_to": redirect_to})
-        return True, "Password reset email sent! Check your inbox."
+        supabase.auth.reset_password_email(email)
+        return True, "Password reset link sent! Check your email."
     except Exception as e:
         return False, f"Error: {e}"
 
 def auth_screen():
     st.header("Login or Sign Up")
-    email = st.text_input("Email")
-    password = st.text_input("Password", type="password", help="Must be at least 8 characters")
     
-    col1, col2 = st.columns([3, 1])
-    with col1:
+    # Toggle between login and reset
+    if "show_reset" not in st.session_state:
+        st.session_state.show_reset = False
+    
+    if not st.session_state.show_reset:
+        # Normal login/signup
+        email = st.text_input("Email")
+        password = st.text_input("Password", type="password", help="Must be at least 8 characters")
+        
         if st.button("Continue", type="primary", use_container_width=True):
             if email and password:
                 user, status, msg = smart_auth(email, password)
@@ -55,17 +57,33 @@ def auth_screen():
                     st.error(msg)
             else:
                 st.warning("Enter email and password")
+        
+        st.write("")
+        if st.button("Forgot password?"):
+            st.session_state.show_reset = True
+            st.rerun()
     
-    with col2:
-        if st.button("Forgot password?", use_container_width=True):
-            if email:
-                success, msg = reset_password(email)
-                if success:
-                    st.success(msg)
+    else:
+        # Password reset form
+        st.info("Enter your email to receive a password reset link")
+        reset_email = st.text_input("Email")
+        
+        col1, col2 = st.columns(2)
+        with col1:
+            if st.button("Send Reset Link", type="primary", use_container_width=True):
+                if reset_email:
+                    success, msg = send_reset_email(reset_email)
+                    if success:
+                        st.success(msg)
+                    else:
+                        st.error(msg)
                 else:
-                    st.error(msg)
-            else:
-                st.warning("Enter your email first")
+                    st.warning("Enter your email")
+        
+        with col2:
+            if st.button("Back to Login", use_container_width=True):
+                st.session_state.show_reset = False
+                st.rerun()
 
 def sign_out():
     supabase.auth.sign_out()
