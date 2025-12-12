@@ -1,42 +1,10 @@
 from supabase import create_client, Client
 import streamlit as st
-import streamlit.components.v1 as components
+from urllib.parse import urlparse, parse_qs
 
 supabase_url = st.secrets["SUPABASE_URL"]
 supabase_key = st.secrets["SUPABASE_KEY"]
 supabase: Client = create_client(supabase_url, supabase_key)
-
-def check_for_reset_tokens():
-    """Check if URL contains password reset tokens and extract them"""
-    
-    fragment_script = """
-    <script>
-        const hash = window.location.hash;
-        if (hash && hash.includes('type=recovery')) {
-            const params = new URLSearchParams(hash.substring(1));
-            const accessToken = params.get('access_token');
-            const refreshToken = params.get('refresh_token');
-            const type = params.get('type');
-            
-            if (type === 'recovery' && accessToken && refreshToken) {
-                const url = new URL(window.location.href);
-                url.search = `?access_token=${accessToken}&refresh_token=${refreshToken}&type=recovery`;
-                url.hash = '';
-                window.location.href = url.toString();
-            }
-        }
-    </script>
-    """
-    components.html(fragment_script, height=0)
-    
-    if st.query_params.get("type") == "recovery":
-        access_token = st.query_params.get("access_token")
-        refresh_token = st.query_params.get("refresh_token")
-        
-        if access_token and refresh_token:
-            st.session_state.reset_access_token = access_token
-            st.session_state.reset_refresh_token = refresh_token
-            st.session_state.password_reset_mode = True
 
 def smart_auth(email, password):
     """Try login first, if it fails try signup"""
@@ -59,8 +27,13 @@ def smart_auth(email, password):
 def send_password_reset(email):
     """Send password reset email"""
     try:
+        # Get your app's URL
         redirect_url = st.secrets.get("APP_URL", "http://localhost:8501")
-        supabase.auth.reset_password_email(email, options={"redirect_to": redirect_url})
+        
+        supabase.auth.reset_password_email(
+            email,
+            options={"redirect_to": redirect_url}
+        )
         return True, "Check your email for a password reset link"
     except Exception as e:
         return False, f"Error sending reset email: {e}"
@@ -69,19 +42,19 @@ def password_reset_screen():
     """Screen for resetting password after clicking email link"""
     st.header("Reset Your Password")
     
-    access_token = st.session_state.get("reset_access_token")
-    refresh_token = st.session_state.get("reset_refresh_token")
+    # Try to get tokens from URL
+    access_token = st.query_params.get("access_token")
+    refresh_token = st.query_params.get("refresh_token")
     
-    if not access_token or not refresh_token:
+    if not access_token:
         st.error("Invalid or expired reset link. Please request a new one.")
         if st.button("Back to Login"):
-            # CLEAR EVERYTHING
-            for key in ["password_reset_mode", "reset_access_token", "reset_refresh_token", "recovery_session_set"]:
-                st.session_state.pop(key, None)
+            st.session_state.password_reset_mode = False
             st.query_params.clear()
             st.rerun()
         return
     
+    # Set the session with the recovery tokens
     try:
         if "recovery_session_set" not in st.session_state:
             supabase.auth.set_session(access_token, refresh_token)
@@ -89,8 +62,7 @@ def password_reset_screen():
     except Exception as e:
         st.error(f"Error setting session: {e}")
         if st.button("Back to Login"):
-            for key in ["password_reset_mode", "reset_access_token", "reset_refresh_token", "recovery_session_set"]:
-                st.session_state.pop(key, None)
+            st.session_state.password_reset_mode = False
             st.query_params.clear()
             st.rerun()
         return
@@ -103,37 +75,41 @@ def password_reset_screen():
             if new_password != confirm_password:
                 st.error("Passwords don't match")
                 return
+            
             if len(new_password) < 8:
                 st.error("Password must be at least 8 characters")
                 return
             
             try:
+                # Update the password
                 supabase.auth.update_user({"password": new_password})
-                st.success("Password updated successfully!")
+                st.success("Password updated successfully! Redirecting to login...")
                 
-                # CLEAR EVERYTHING
-                for key in ["password_reset_mode", "reset_access_token", "reset_refresh_token", "recovery_session_set"]:
-                    st.session_state.pop(key, None)
+                # Clear session state and query params
+                st.session_state.password_reset_mode = False
+                st.session_state.pop("recovery_session_set", None)
                 st.query_params.clear()
+                
+                # Sign out to clear the recovery session
                 supabase.auth.sign_out()
                 
-                import time
-                time.sleep(2)
                 st.rerun()
             except Exception as e:
                 st.error(f"Error updating password: {e}")
         else:
             st.warning("Please enter and confirm your new password")
+    
+    if st.button("Cancel"):
+        st.session_state.password_reset_mode = False
+        st.session_state.pop("recovery_session_set", None)
+        st.query_params.clear()
+        st.rerun()
 
 def auth_screen():
-    if st.session_state.get("password_reset_mode", False):
-        password_reset_screen()
-        return
-    
     st.header("Login or Sign Up")
     
-    email = st.text_input("Email", key="login_email")
-    password = st.text_input("Password", type="password", help="Must be at least 8 characters", key="login_password")
+    email = st.text_input("Email")
+    password = st.text_input("Password", type="password", help="Must be at least 8 characters")
     
     if st.button("Continue", type="primary", use_container_width=True):
         if email and password:
@@ -150,26 +126,23 @@ def auth_screen():
         else:
             st.warning("Enter email and password")
     
-    st.divider()
+    # Forgot password link
+    st.markdown("---")
+    st.markdown("### Forgot your password?")
+    forgot_email = st.text_input("Enter your email:", key="forgot_email")
     
-    with st.expander("🔐 Forgot your password?"):
-        st.write("Enter your email address and we'll send you a link to reset your password.")
-        forgot_email = st.text_input("Email address", key="forgot_email")
-        
-        if st.button("Send Reset Link", use_container_width=True):
-            if forgot_email:
-                success, message = send_password_reset(forgot_email)
-                if success:
-                    st.success(message)
-                else:
-                    st.error(message)
+    if st.button("Send Reset Link"):
+        if forgot_email:
+            success, message = send_password_reset(forgot_email)
+            if success:
+                st.success(message)
             else:
-                st.warning("Please enter your email address")
+                st.error(message)
+        else:
+            st.warning("Please enter your email address")
 
 def sign_out():
     supabase.auth.sign_out()
     st.session_state.user_email = None
     st.session_state.user_id = None
-    for key in ["password_reset_mode", "reset_access_token", "reset_refresh_token", "recovery_session_set"]:
-        st.session_state.pop(key, None)
     st.rerun()
