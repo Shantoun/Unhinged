@@ -31,16 +31,19 @@ def check_for_reset_tokens():
     """
     components.html(fragment_script, height=0)
     
-    # Now check query params
-    if st.query_params.get("type") == "recovery":
+    # Check query params - fresh check each time
+    type_param = st.query_params.get("type")
+    if type_param == "recovery":
         access_token = st.query_params.get("access_token")
         refresh_token = st.query_params.get("refresh_token")
         
         if access_token and refresh_token:
-            # Store in session state
+            # Always update session state with fresh tokens
             st.session_state.reset_access_token = access_token
             st.session_state.reset_refresh_token = refresh_token
             st.session_state.password_reset_mode = True
+            # Clear the recovery session set flag for a fresh start
+            st.session_state.pop("recovery_session_set", None)
 
 def smart_auth(email, password):
     """Try login first, if it fails try signup"""
@@ -78,6 +81,16 @@ def password_reset_screen():
     """Screen for resetting password after clicking email link"""
     st.header("Reset Your Password")
     
+    # Debug info (remove this after testing)
+    with st.expander("Debug Info"):
+        st.write("Session state:", {
+            "password_reset_mode": st.session_state.get("password_reset_mode"),
+            "has_access_token": bool(st.session_state.get("reset_access_token")),
+            "has_refresh_token": bool(st.session_state.get("reset_refresh_token")),
+            "recovery_session_set": st.session_state.get("recovery_session_set")
+        })
+        st.write("Query params:", dict(st.query_params))
+    
     # Get tokens from session state
     access_token = st.session_state.get("reset_access_token")
     refresh_token = st.session_state.get("reset_refresh_token")
@@ -86,6 +99,8 @@ def password_reset_screen():
         st.error("Invalid or expired reset link. Please request a new one.")
         if st.button("Back to Login"):
             st.session_state.password_reset_mode = False
+            st.session_state.pop("reset_access_token", None)
+            st.session_state.pop("reset_refresh_token", None)
             st.query_params.clear()
             st.rerun()
         return
@@ -93,6 +108,7 @@ def password_reset_screen():
     # Set the session with the recovery tokens
     try:
         if "recovery_session_set" not in st.session_state:
+            st.info("Setting up session...")
             supabase.auth.set_session(access_token, refresh_token)
             st.session_state.recovery_session_set = True
             st.success("Session verified. Please enter your new password.")
@@ -102,6 +118,7 @@ def password_reset_screen():
             st.session_state.password_reset_mode = False
             st.session_state.pop("reset_access_token", None)
             st.session_state.pop("reset_refresh_token", None)
+            st.session_state.pop("recovery_session_set", None)
             st.query_params.clear()
             st.rerun()
         return
@@ -109,47 +126,51 @@ def password_reset_screen():
     new_password = st.text_input("New Password", type="password", help="Must be at least 8 characters")
     confirm_password = st.text_input("Confirm New Password", type="password")
     
-    if st.button("Reset Password", type="primary"):
-        if new_password and confirm_password:
-            if new_password != confirm_password:
-                st.error("Passwords don't match")
-                return
-            
-            if len(new_password) < 8:
-                st.error("Password must be at least 8 characters")
-                return
-            
-            try:
-                # Update the password
-                result = supabase.auth.update_user({"password": new_password})
-                st.success("Password updated successfully! You can now log in with your new password.")
-                
-                # Clear everything
-                st.session_state.password_reset_mode = False
-                st.session_state.pop("recovery_session_set", None)
-                st.session_state.pop("reset_access_token", None)
-                st.session_state.pop("reset_refresh_token", None)
-                st.query_params.clear()
-                
-                # Sign out to clear the recovery session
-                supabase.auth.sign_out()
-                
-                # Wait a moment before rerunning
-                import time
-                time.sleep(1)
-                st.rerun()
-            except Exception as e:
-                st.error(f"Error updating password: {e}")
-        else:
-            st.warning("Please enter and confirm your new password")
+    col1, col2 = st.columns([3, 1])
     
-    if st.button("Cancel"):
-        st.session_state.password_reset_mode = False
-        st.session_state.pop("recovery_session_set", None)
-        st.session_state.pop("reset_access_token", None)
-        st.session_state.pop("reset_refresh_token", None)
-        st.query_params.clear()
-        st.rerun()
+    with col1:
+        if st.button("Reset Password", type="primary", use_container_width=True):
+            if new_password and confirm_password:
+                if new_password != confirm_password:
+                    st.error("Passwords don't match")
+                    return
+                
+                if len(new_password) < 8:
+                    st.error("Password must be at least 8 characters")
+                    return
+                
+                try:
+                    # Update the password
+                    result = supabase.auth.update_user({"password": new_password})
+                    st.success("Password updated successfully! You can now log in with your new password.")
+                    
+                    # Clear everything
+                    st.session_state.password_reset_mode = False
+                    st.session_state.pop("recovery_session_set", None)
+                    st.session_state.pop("reset_access_token", None)
+                    st.session_state.pop("reset_refresh_token", None)
+                    st.query_params.clear()
+                    
+                    # Sign out to clear the recovery session
+                    supabase.auth.sign_out()
+                    
+                    # Wait a moment before rerunning
+                    import time
+                    time.sleep(1)
+                    st.rerun()
+                except Exception as e:
+                    st.error(f"Error updating password: {e}")
+            else:
+                st.warning("Please enter and confirm your new password")
+    
+    with col2:
+        if st.button("Cancel", use_container_width=True):
+            st.session_state.password_reset_mode = False
+            st.session_state.pop("recovery_session_set", None)
+            st.session_state.pop("reset_access_token", None)
+            st.session_state.pop("reset_refresh_token", None)
+            st.query_params.clear()
+            st.rerun()
 
 def auth_screen():
     # Check if we're in password reset mode
@@ -199,4 +220,9 @@ def sign_out():
     supabase.auth.sign_out()
     st.session_state.user_email = None
     st.session_state.user_id = None
+    # Also clear any reset-related state
+    st.session_state.pop("password_reset_mode", None)
+    st.session_state.pop("reset_access_token", None)
+    st.session_state.pop("reset_refresh_token", None)
+    st.session_state.pop("recovery_session_set", None)
     st.rerun()
