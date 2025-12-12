@@ -26,9 +26,8 @@ def smart_auth(email, password):
 def reset_password(email):
     """Send password reset email with proper redirect"""
     try:
-        # Get your Streamlit app URL - update this with your actual URL
-        app_url = "https://your-app-name.streamlit.app"  # ← CHANGE THIS
-        redirect_to = f"{app_url}/reset_password"
+        # Point to the HTML redirect page that converts hash to query params
+        redirect_to = "https://unhinged.streamlit.app/reset_redirect.html"
         
         supabase.auth.reset_password_email(email, options={"redirect_to": redirect_to})
         return True, "Password reset email sent! Check your inbox."
