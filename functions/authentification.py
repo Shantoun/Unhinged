@@ -1,49 +1,9 @@
 from supabase import create_client, Client
 import streamlit as st
-import streamlit.components.v1 as components
 
 supabase_url = st.secrets["SUPABASE_URL"]
 supabase_key = st.secrets["SUPABASE_KEY"]
 supabase: Client = create_client(supabase_url, supabase_key)
-
-def check_for_reset_tokens():
-    """Check if URL contains password reset tokens and extract them"""
-    
-    # Use a hidden component to extract fragment data
-    fragment_script = """
-    <script>
-        const hash = window.location.hash;
-        if (hash) {
-            const params = new URLSearchParams(hash.substring(1));
-            const accessToken = params.get('access_token');
-            const refreshToken = params.get('refresh_token');
-            const type = params.get('type');
-            
-            if (type === 'recovery' && accessToken && refreshToken) {
-                // Redirect to query params so Streamlit can see them
-                const url = new URL(window.location.href);
-                url.search = `?access_token=${accessToken}&refresh_token=${refreshToken}&type=recovery`;
-                url.hash = '';
-                window.location.href = url.toString();
-            }
-        }
-    </script>
-    """
-    components.html(fragment_script, height=0)
-    
-    # Check query params - fresh check each time
-    type_param = st.query_params.get("type")
-    if type_param == "recovery":
-        access_token = st.query_params.get("access_token")
-        refresh_token = st.query_params.get("refresh_token")
-        
-        if access_token and refresh_token:
-            # Always update session state with fresh tokens
-            st.session_state.reset_access_token = access_token
-            st.session_state.reset_refresh_token = refresh_token
-            st.session_state.password_reset_mode = True
-            # Clear the recovery session set flag for a fresh start
-            st.session_state.pop("recovery_session_set", None)
 
 def smart_auth(email, password):
     """Try login first, if it fails try signup"""
@@ -81,16 +41,6 @@ def password_reset_screen():
     """Screen for resetting password after clicking email link"""
     st.header("Reset Your Password")
     
-    # Debug info (remove this after testing)
-    with st.expander("Debug Info"):
-        st.write("Session state:", {
-            "password_reset_mode": st.session_state.get("password_reset_mode"),
-            "has_access_token": bool(st.session_state.get("reset_access_token")),
-            "has_refresh_token": bool(st.session_state.get("reset_refresh_token")),
-            "recovery_session_set": st.session_state.get("recovery_session_set")
-        })
-        st.write("Query params:", dict(st.query_params))
-    
     # Get tokens from session state
     access_token = st.session_state.get("reset_access_token")
     refresh_token = st.session_state.get("reset_refresh_token")
@@ -114,6 +64,7 @@ def password_reset_screen():
             st.success("Session verified. Please enter your new password.")
     except Exception as e:
         st.error(f"Error setting session: {e}")
+        st.code(f"Access token: {access_token[:20]}...")
         if st.button("Back to Login"):
             st.session_state.password_reset_mode = False
             st.session_state.pop("reset_access_token", None)
