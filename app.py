@@ -3,8 +3,13 @@ import functions.authentification as auth
 from functions.zip_uploader import uploader
 import variables as var
 
-# Check for password reset tokens early
+# CRITICAL: Check for password reset tokens FIRST, before any auth checks
 auth.check_for_reset_tokens()
+
+# If we're in password reset mode, show that screen and stop
+if st.session_state.get("password_reset_mode", False):
+    auth.password_reset_screen()
+    st.stop()
 
 # initialize the key so it always exists
 if var.col_user_id not in st.session_state:
