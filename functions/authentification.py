@@ -1,5 +1,6 @@
 from supabase import create_client, Client
 import streamlit as st
+from urllib.parse import urlparse, parse_qs
 
 supabase_url = st.secrets["SUPABASE_URL"]
 supabase_key = st.secrets["SUPABASE_KEY"]
@@ -26,12 +27,12 @@ def smart_auth(email, password):
 def send_password_reset(email):
     """Send password reset email"""
     try:
-        # Get your app's URL - adjust this to your actual deployment URL
+        # Get your app's URL
         redirect_url = st.secrets.get("APP_URL", "http://localhost:8501")
         
         supabase.auth.reset_password_email(
             email,
-            options={"redirect_to": f"{redirect_url}?type=recovery"}
+            options={"redirect_to": redirect_url}
         )
         return True, "Check your email for a password reset link"
     except Exception as e:
@@ -40,6 +41,31 @@ def send_password_reset(email):
 def password_reset_screen():
     """Screen for resetting password after clicking email link"""
     st.header("Reset Your Password")
+    
+    # Try to get tokens from URL
+    access_token = st.query_params.get("access_token")
+    refresh_token = st.query_params.get("refresh_token")
+    
+    if not access_token:
+        st.error("Invalid or expired reset link. Please request a new one.")
+        if st.button("Back to Login"):
+            st.session_state.password_reset_mode = False
+            st.query_params.clear()
+            st.rerun()
+        return
+    
+    # Set the session with the recovery tokens
+    try:
+        if "recovery_session_set" not in st.session_state:
+            supabase.auth.set_session(access_token, refresh_token)
+            st.session_state.recovery_session_set = True
+    except Exception as e:
+        st.error(f"Error setting session: {e}")
+        if st.button("Back to Login"):
+            st.session_state.password_reset_mode = False
+            st.query_params.clear()
+            st.rerun()
+        return
     
     new_password = st.text_input("New Password", type="password", help="Must be at least 8 characters")
     confirm_password = st.text_input("Confirm New Password", type="password")
@@ -59,13 +85,25 @@ def password_reset_screen():
                 supabase.auth.update_user({"password": new_password})
                 st.success("Password updated successfully! Redirecting to login...")
                 
-                # Clear query params and redirect
+                # Clear session state and query params
+                st.session_state.password_reset_mode = False
+                st.session_state.pop("recovery_session_set", None)
                 st.query_params.clear()
+                
+                # Sign out to clear the recovery session
+                supabase.auth.sign_out()
+                
                 st.rerun()
             except Exception as e:
                 st.error(f"Error updating password: {e}")
         else:
             st.warning("Please enter and confirm your new password")
+    
+    if st.button("Cancel"):
+        st.session_state.password_reset_mode = False
+        st.session_state.pop("recovery_session_set", None)
+        st.query_params.clear()
+        st.rerun()
 
 def auth_screen():
     st.header("Login or Sign Up")
@@ -73,27 +111,25 @@ def auth_screen():
     email = st.text_input("Email")
     password = st.text_input("Password", type="password", help="Must be at least 8 characters")
     
-    col1, col2 = st.columns([3, 1])
-    
-    with col1:
-        if st.button("Continue", type="primary", use_container_width=True):
-            if email and password:
-                user, status, msg = smart_auth(email, password)
-                if status == "success":
-                    st.session_state.user_email = user.user.email
-                    st.session_state.user_id = user.user.id
-                    st.success(msg)
-                    st.rerun()
-                elif status == "check_email":
-                    st.info(msg)
-                else:
-                    st.error(msg)
+    if st.button("Continue", type="primary", use_container_width=True):
+        if email and password:
+            user, status, msg = smart_auth(email, password)
+            if status == "success":
+                st.session_state.user_email = user.user.email
+                st.session_state.user_id = user.user.id
+                st.success(msg)
+                st.rerun()
+            elif status == "check_email":
+                st.info(msg)
             else:
-                st.warning("Enter email and password")
+                st.error(msg)
+        else:
+            st.warning("Enter email and password")
     
     # Forgot password link
     st.markdown("---")
-    forgot_email = st.text_input("Forgot your password? Enter your email:", key="forgot_email")
+    st.markdown("### Forgot your password?")
+    forgot_email = st.text_input("Enter your email:", key="forgot_email")
     
     if st.button("Send Reset Link"):
         if forgot_email:
