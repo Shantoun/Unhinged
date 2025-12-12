@@ -5,19 +5,13 @@ st.set_page_config(page_title="Reset Password", page_icon="🔑")
 
 st.header("🔑 Reset Your Password")
 
-# Try to get tokens from query params
-access_token = None
-refresh_token = None
+# Get tokens from query params (converted from hash by redirect page)
+access_token = st.query_params.get("access_token")
+refresh_token = st.query_params.get("refresh_token", "")
 
-# Check query params
-if "access_token" in st.query_params:
-    access_token = st.query_params["access_token"]
-    refresh_token = st.query_params.get("refresh_token", "")
-
-# If not in query params, show error
 if not access_token:
-    st.error("No reset token found in the URL.")
-    st.info("Please click the reset link from your email again. Make sure you're clicking the full link.")
+    st.error("Invalid or expired reset link.")
+    st.info("Please request a new password reset from the login page.")
     if st.button("Back to Login"):
         st.switch_page("app.py")
     st.stop()
