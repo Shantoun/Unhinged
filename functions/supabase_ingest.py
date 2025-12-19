@@ -176,117 +176,97 @@ def likes_ingest(json_data, user_id):
 
 def messages_ingest(json_data, user_id):
 
-    # message_id -> merged row
     rows = {}
 
     if isinstance(json_data, dict):
         matches = json_data.get(var.json_matches, [])
-        media_list = json_data.get(var.json_media, [])
     else:
         matches = json_data
-        media_list = []
 
-    # ------------------------------------------------
-    # Build voice note lookup: timestamp -> url
-    # ------------------------------------------------
+    # ------------------------------------
+    # Build voice lookup: timestamp_str -> url
+    # ------------------------------------
     voice_map = {}
-    for m in media_list:
-        if not isinstance(m, dict):
-            continue
-
-        url = m.get(var.json_media_url)
-        mtype = m.get(var.json_media_type)
-        ts_str = m.get(var.json_timestamp)
-
-        if not url or mtype != "voice" or not ts_str:
-            continue
-
-        ts_int = int(datetime.fromisoformat(ts_str).timestamp())
-        voice_map[ts_int] = url
-
-    # ------------------------------------------------
-    # Iterate matches
-    # ------------------------------------------------
     for m in matches:
         if not isinstance(m, dict):
             continue
 
-        # build match_id
+        for vn in m.get(var.json_voice_notes, []):
+            ts = vn.get(var.json_timestamp)
+            url = vn.get(var.json_media_url)
+            if ts and url:
+                voice_map[ts] = url
+
+    # ------------------------------------
+    # Iterate matches
+    # ------------------------------------
+    for m in matches:
+        if not isinstance(m, dict):
+            continue
+
+        # build match_id (string timestamp preserved)
         match_id = None
         match_event = m.get(var.json_match_event)
-        if isinstance(match_event, list) and match_event:
-            ts_match_str = match_event[0].get(var.json_timestamp)
-            if ts_match_str:
-                ts_match = int(datetime.fromisoformat(ts_match_str).timestamp())
+        if match_event:
+            ts_match = match_event[0].get(var.json_timestamp)
+            if ts_match:
                 match_id = f"match_{user_id}_{ts_match}"
 
         # =========================
-        # 1) CHAT MESSAGES
+        # CHAT MESSAGES
         # =========================
-        chats = m.get(var.json_chats, [])
-        for chat in chats:
-            if not isinstance(chat, dict):
+        for chat in m.get(var.json_chats, []):
+            ts = chat.get(var.json_timestamp)
+            if not ts:
                 continue
 
-            ts_str = chat.get(var.json_timestamp)
-            if not ts_str:
-                continue
-
-            ts_int = int(datetime.fromisoformat(ts_str).timestamp())
-            message_id = f"message_{user_id}_{ts_int}"
-
+            message_id = f"message_{user_id}_{ts}"
             existing = rows.get(message_id, {})
 
             body = chat.get(var.json_body)
 
             rows[message_id] = {
                 var.col_message_id: message_id,
-                var.col_message_timestamp: ts_int,
+                var.col_message_timestamp: ts,
                 var.col_user_id: user_id,
                 var.col_match_id: match_id,
                 var.col_like_id: existing.get(var.col_like_id),
                 var.col_message_body: body or existing.get(var.col_message_body),
                 var.col_message_voicenote_url: (
-                    voice_map.get(ts_int)
+                    voice_map.get(ts)
                     or existing.get(var.col_message_voicenote_url)
                 ),
             }
 
         # =========================
-        # 2) LIKE COMMENTS
+        # LIKE COMMENTS
         # =========================
-        outer_likes = m.get(var.json_like_key, [])
-        for outer in outer_likes:
-            inner_likes = outer.get(var.json_like_key, [])
-            for inner in inner_likes:
+        for outer in m.get(var.json_like_key, []):
+            for inner in outer.get(var.json_like_key, []):
+                ts = inner.get(var.json_timestamp)
                 comment = inner.get(var.json_comment)
-                ts_str  = inner.get(var.json_timestamp)
-
-                if not ts_str or not comment:
+                if not ts or not comment:
                     continue
 
-                ts_int = int(datetime.fromisoformat(ts_str).timestamp())
-                message_id = f"message_{user_id}_{ts_int}"
-                like_id = f"like_{user_id}_{ts_int}"
-
+                message_id = f"message_{user_id}_{ts}"
+                like_id = f"like_{user_id}_{ts}"
                 existing = rows.get(message_id, {})
 
                 rows[message_id] = {
                     var.col_message_id: message_id,
-                    var.col_message_timestamp: ts_int,
+                    var.col_message_timestamp: ts,
                     var.col_user_id: user_id,
                     var.col_match_id: match_id,
                     var.col_like_id: like_id,
                     var.col_message_body: comment or existing.get(var.col_message_body),
                     var.col_message_voicenote_url: (
-                        voice_map.get(ts_int)
+                        voice_map.get(ts)
                         or existing.get(var.col_message_voicenote_url)
                     ),
                 }
 
     if rows:
         supabase.table(var.table_messages).upsert(list(rows.values())).execute()
-
 
 
 
