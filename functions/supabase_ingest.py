@@ -173,33 +173,55 @@ def likes_ingest(json_data, user_id):
 
 
 
-# --- MESSAGES INGEST ---------------------------------------------------------
+
 def messages_ingest(json_data, user_id):
 
     rows = []
 
-    # allow dict if someone passed uploader output incorrectly
     if isinstance(json_data, dict):
-        json_data = json_data.get(var.json_matches, [])
+        matches = json_data.get(var.json_matches, [])
+        media_list = json_data.get(var.json_media, [])
+    else:
+        matches = json_data
+        media_list = []
 
-    for m in json_data:
+    # ------------------------------------
+    # Build voice-note lookup: ts -> url
+    # ------------------------------------
+    voice_map = {}
+    for m in media_list:
         if not isinstance(m, dict):
             continue
 
-        # ------------------------------
-        # BUILD match_id (if exists)
-        # ------------------------------
+        url = m.get(var.json_media_url)
+        mtype = m.get(var.json_media_type)
+        ts_str = m.get(var.json_timestamp)
+
+        if not url or mtype != "voice" or not ts_str:
+            continue
+
+        ts_int = int(datetime.fromisoformat(ts_str).timestamp())
+        voice_map[ts_int] = url
+
+    # ------------------------------------
+    # Iterate matches
+    # ------------------------------------
+    for m in matches:
+        if not isinstance(m, dict):
+            continue
+
+        # build match_id
         match_id = None
         match_event = m.get(var.json_match_event)
         if isinstance(match_event, list) and match_event:
-            ts_str = match_event[0].get(var.json_timestamp)
-            if ts_str:
-                ts_int = int(datetime.fromisoformat(ts_str).timestamp())
-                match_id = f"match_{user_id}_{ts_int}"
+            ts_match_str = match_event[0].get(var.json_timestamp)
+            if ts_match_str:
+                ts_match = int(datetime.fromisoformat(ts_match_str).timestamp())
+                match_id = f"match_{user_id}_{ts_match}"
 
-        # =====================================================
-        # 1) CHAT MESSAGES (stored under "chats")
-        # =====================================================
+        # =========================
+        # 1) CHAT MESSAGES
+        # =========================
         chats = m.get(var.json_chats, [])
         for chat in chats:
             if not isinstance(chat, dict):
@@ -207,40 +229,51 @@ def messages_ingest(json_data, user_id):
 
             body = chat.get(var.json_body)
             ts_str = chat.get(var.json_timestamp)
-
-            if not body or not ts_str:
+            if not ts_str:
                 continue
 
             ts_int = int(datetime.fromisoformat(ts_str).timestamp())
             message_id = f"message_{user_id}_{ts_int}"
 
-            rows.append({
-                var.col_message_id:        message_id,
-                var.col_message_timestamp: ts_int,
-                var.col_user_id:           user_id,
-                var.col_message_body:      body,
-                var.col_match_id:          match_id,
-                var.col_like_id:           None
-            })
+            # voice note message
+            if not body and ts_int in voice_map:
+                rows.append({
+                    var.col_message_id:        message_id,
+                    var.col_message_timestamp: ts_int,
+                    var.col_user_id:           user_id,
+                    var.col_message_body:      None,
+                    var.col_message_voicenote_url: voice_map[ts_int],
+                    var.col_match_id:          match_id,
+                    var.col_like_id:           None,
+                })
+                continue
 
-        # =====================================================
-        # 2) LIKE COMMENTS (nested under "like")
-        # =====================================================
+            # normal text message
+            if body:
+                rows.append({
+                    var.col_message_id:        message_id,
+                    var.col_message_timestamp: ts_int,
+                    var.col_user_id:           user_id,
+                    var.col_message_body:      body,
+                    var.col_message_voicenote_url: None,
+                    var.col_match_id:          match_id,
+                    var.col_like_id:           None,
+                })
+
+        # =========================
+        # 2) LIKE COMMENTS
+        # =========================
         outer_likes = m.get(var.json_like_key, [])
         for outer in outer_likes:
-
             inner_likes = outer.get(var.json_like_key, [])
             for inner in inner_likes:
                 comment = inner.get(var.json_comment)
                 ts_str  = inner.get(var.json_timestamp)
-
                 if not ts_str or not comment:
                     continue
 
                 ts_int = int(datetime.fromisoformat(ts_str).timestamp())
                 message_id = f"message_{user_id}_{ts_int}"
-
-                # like_id must match likes_ingest logic
                 like_id = f"like_{user_id}_{ts_int}"
 
                 rows.append({
@@ -248,12 +281,102 @@ def messages_ingest(json_data, user_id):
                     var.col_message_timestamp: ts_int,
                     var.col_user_id:           user_id,
                     var.col_message_body:      comment,
-                    var.col_match_id:          match_id,   # often exists, sometimes None
-                    var.col_like_id:           like_id     # link comment → like
+                    var.col_message_voicenote_url: None,
+                    var.col_match_id:          match_id,
+                    var.col_like_id:           like_id,
                 })
 
     if rows:
         supabase.table(var.table_messages).upsert(rows).execute()
+
+
+
+
+
+
+
+
+# # --- MESSAGES INGEST ---------------------------------------------------------
+# def messages_ingest(json_data, user_id):
+
+#     rows = []
+
+#     # allow dict if someone passed uploader output incorrectly
+#     if isinstance(json_data, dict):
+#         json_data = json_data.get(var.json_matches, [])
+
+#     for m in json_data:
+#         if not isinstance(m, dict):
+#             continue
+
+#         # ------------------------------
+#         # BUILD match_id (if exists)
+#         # ------------------------------
+#         match_id = None
+#         match_event = m.get(var.json_match_event)
+#         if isinstance(match_event, list) and match_event:
+#             ts_str = match_event[0].get(var.json_timestamp)
+#             if ts_str:
+#                 ts_int = int(datetime.fromisoformat(ts_str).timestamp())
+#                 match_id = f"match_{user_id}_{ts_int}"
+
+#         # =====================================================
+#         # 1) CHAT MESSAGES (stored under "chats")
+#         # =====================================================
+#         chats = m.get(var.json_chats, [])
+#         for chat in chats:
+#             if not isinstance(chat, dict):
+#                 continue
+
+#             body = chat.get(var.json_body)
+#             ts_str = chat.get(var.json_timestamp)
+
+#             if not body or not ts_str:
+#                 continue
+
+#             ts_int = int(datetime.fromisoformat(ts_str).timestamp())
+#             message_id = f"message_{user_id}_{ts_int}"
+
+#             rows.append({
+#                 var.col_message_id:        message_id,
+#                 var.col_message_timestamp: ts_int,
+#                 var.col_user_id:           user_id,
+#                 var.col_message_body:      body,
+#                 var.col_match_id:          match_id,
+#                 var.col_like_id:           None
+#             })
+
+#         # =====================================================
+#         # 2) LIKE COMMENTS (nested under "like")
+#         # =====================================================
+#         outer_likes = m.get(var.json_like_key, [])
+#         for outer in outer_likes:
+
+#             inner_likes = outer.get(var.json_like_key, [])
+#             for inner in inner_likes:
+#                 comment = inner.get(var.json_comment)
+#                 ts_str  = inner.get(var.json_timestamp)
+
+#                 if not ts_str or not comment:
+#                     continue
+
+#                 ts_int = int(datetime.fromisoformat(ts_str).timestamp())
+#                 message_id = f"message_{user_id}_{ts_int}"
+
+#                 # like_id must match likes_ingest logic
+#                 like_id = f"like_{user_id}_{ts_int}"
+
+#                 rows.append({
+#                     var.col_message_id:        message_id,
+#                     var.col_message_timestamp: ts_int,
+#                     var.col_user_id:           user_id,
+#                     var.col_message_body:      comment,
+#                     var.col_match_id:          match_id,   # often exists, sometimes None
+#                     var.col_like_id:           like_id     # link comment → like
+#                 })
+
+#     if rows:
+#         supabase.table(var.table_messages).upsert(rows).execute()
 
 
 
