@@ -176,7 +176,8 @@ def likes_ingest(json_data, user_id):
 
 def messages_ingest(json_data, user_id):
 
-    rows = []
+    # message_id -> merged row
+    rows = {}
 
     if isinstance(json_data, dict):
         matches = json_data.get(var.json_matches, [])
@@ -185,9 +186,9 @@ def messages_ingest(json_data, user_id):
         matches = json_data
         media_list = []
 
-    # ------------------------------------
-    # Build voice-note lookup: ts -> url
-    # ------------------------------------
+    # ------------------------------------------------
+    # Build voice note lookup: timestamp -> url
+    # ------------------------------------------------
     voice_map = {}
     for m in media_list:
         if not isinstance(m, dict):
@@ -203,9 +204,9 @@ def messages_ingest(json_data, user_id):
         ts_int = int(datetime.fromisoformat(ts_str).timestamp())
         voice_map[ts_int] = url
 
-    # ------------------------------------
+    # ------------------------------------------------
     # Iterate matches
-    # ------------------------------------
+    # ------------------------------------------------
     for m in matches:
         if not isinstance(m, dict):
             continue
@@ -227,7 +228,6 @@ def messages_ingest(json_data, user_id):
             if not isinstance(chat, dict):
                 continue
 
-            body = chat.get(var.json_body)
             ts_str = chat.get(var.json_timestamp)
             if not ts_str:
                 continue
@@ -235,30 +235,22 @@ def messages_ingest(json_data, user_id):
             ts_int = int(datetime.fromisoformat(ts_str).timestamp())
             message_id = f"message_{user_id}_{ts_int}"
 
-            # voice note message
-            if not body and ts_int in voice_map:
-                rows.append({
-                    var.col_message_id:        message_id,
-                    var.col_message_timestamp: ts_int,
-                    var.col_user_id:           user_id,
-                    var.col_message_body:      None,
-                    var.col_message_voicenote_url: voice_map[ts_int],
-                    var.col_match_id:          match_id,
-                    var.col_like_id:           None,
-                })
-                continue
+            existing = rows.get(message_id, {})
 
-            # normal text message
-            if body:
-                rows.append({
-                    var.col_message_id:        message_id,
-                    var.col_message_timestamp: ts_int,
-                    var.col_user_id:           user_id,
-                    var.col_message_body:      body,
-                    var.col_message_voicenote_url: None,
-                    var.col_match_id:          match_id,
-                    var.col_like_id:           None,
-                })
+            body = chat.get(var.json_body)
+
+            rows[message_id] = {
+                var.col_message_id: message_id,
+                var.col_message_timestamp: ts_int,
+                var.col_user_id: user_id,
+                var.col_match_id: match_id,
+                var.col_like_id: existing.get(var.col_like_id),
+                var.col_message_body: body or existing.get(var.col_message_body),
+                var.col_message_voicenote_url: (
+                    voice_map.get(ts_int)
+                    or existing.get(var.col_message_voicenote_url)
+                ),
+            }
 
         # =========================
         # 2) LIKE COMMENTS
@@ -269,6 +261,7 @@ def messages_ingest(json_data, user_id):
             for inner in inner_likes:
                 comment = inner.get(var.json_comment)
                 ts_str  = inner.get(var.json_timestamp)
+
                 if not ts_str or not comment:
                     continue
 
@@ -276,18 +269,24 @@ def messages_ingest(json_data, user_id):
                 message_id = f"message_{user_id}_{ts_int}"
                 like_id = f"like_{user_id}_{ts_int}"
 
-                rows.append({
-                    var.col_message_id:        message_id,
+                existing = rows.get(message_id, {})
+
+                rows[message_id] = {
+                    var.col_message_id: message_id,
                     var.col_message_timestamp: ts_int,
-                    var.col_user_id:           user_id,
-                    var.col_message_body:      comment,
-                    var.col_message_voicenote_url: None,
-                    var.col_match_id:          match_id,
-                    var.col_like_id:           like_id,
-                })
+                    var.col_user_id: user_id,
+                    var.col_match_id: match_id,
+                    var.col_like_id: like_id,
+                    var.col_message_body: comment or existing.get(var.col_message_body),
+                    var.col_message_voicenote_url: (
+                        voice_map.get(ts_int)
+                        or existing.get(var.col_message_voicenote_url)
+                    ),
+                }
 
     if rows:
-        supabase.table(var.table_messages).upsert(rows).execute()
+        supabase.table(var.table_messages).upsert(list(rows.values())).execute()
+
 
 
 
