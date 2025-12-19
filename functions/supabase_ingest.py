@@ -216,3 +216,112 @@ def user_profile_ingest(json_data, user_id):
     supabase.table(var.table_user_profile).upsert(
         row, on_conflict=var.col_user_id
     ).execute()
+
+
+
+
+
+# --------------------------------------------------
+# MEDIA
+# --------------------------------------------------
+def media_ingest(json_data, user_id):
+
+    rows = []
+
+    for item in json_data.get(var.json_media, []):
+        if not isinstance(item, dict):
+            continue
+
+        url = item.get(var.json_media_url)
+        if not url:
+            continue
+
+        media_type = item.get(var.json_media_type)
+        from_social = item.get(var.json_media_social, False)
+
+        try:
+            basename = url.split("/")[-1].split(".")[0]
+        except:
+            continue
+
+        media_id = f"media_{user_id}_{basename}"
+
+        rows.append({
+            var.col_media_id:     media_id,
+            var.col_media_url:    url,
+            var.col_media_type:   media_type,
+            var.col_media_social: from_social,
+            var.col_user_id:      user_id,
+        })
+
+    if rows:
+        supabase.table(var.table_media).upsert(rows).execute()
+
+
+# --------------------------------------------------
+# PROMPTS
+# --------------------------------------------------
+def prompts_ingest(json_data, user_id):
+
+    rows = []
+
+    prompts = (
+        json_data.get(var.json_prompts, [])
+        if isinstance(json_data, dict)
+        else json_data
+    )
+
+    for p in prompts:
+        prompt_raw_id = p.get(var.json_prompt_id)
+        if not prompt_raw_id:
+            continue
+
+        created = p.get(var.json_prompt_created)
+        updated = p.get(var.json_prompt_updated) or created
+
+        if not created:
+            continue
+
+        prompt_id = f"prompt_{user_id}_{prompt_raw_id}_{norm(created)}"
+
+        rows.append({
+            var.col_prompt_id:         prompt_id,
+            var.col_user_id:           user_id,
+            var.col_prompt_type:       p.get(var.json_prompt_type),
+            var.col_prompt_label:      p.get(var.json_prompt_label),
+            var.col_prompt_text:       p.get(var.json_prompt_text),
+            var.col_prompt_created_ts: created,
+            var.col_prompt_updated_ts: updated,
+        })
+
+    if rows:
+        supabase.table(var.table_prompts).upsert(rows).execute()
+
+
+# --------------------------------------------------
+# SUBSCRIPTIONS
+# --------------------------------------------------
+def subscriptions_ingest(json_data, user_id):
+
+    rows = []
+
+    for s in json_data.get(var.json_subscriptions, []):
+        sid = s.get(var.json_sub_id)
+        start = s.get(var.json_sub_start_date)
+        if not sid or not start:
+            continue
+
+        sub_id = f"subscription_{user_id}_{sid}_{norm(start)}"
+
+        rows.append({
+            var.col_subscription_id:       sub_id,
+            var.col_subscription_start_ts: start,
+            var.col_subscription_end_ts:   s.get(var.json_sub_end_date),
+            var.col_subscription_price:    s.get(var.json_sub_price),
+            var.col_subscription_currency: s.get(var.json_sub_currency),
+            var.col_subscription_type:     s.get(var.json_sub_type),
+            var.col_user_id:               user_id,
+        })
+
+    if rows:
+        supabase.table(var.table_subscriptions).upsert(rows).execute()
