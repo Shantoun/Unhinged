@@ -198,7 +198,10 @@ def user_profile_ingest(json_data, user_id):
         .execute()
     )
 
-    upload_count = (current.data or {}).get(var.col_upload_count, 0) + 1
+    upload_count = (
+        (current.data[var.col_upload_count] if current and current.data else 0)
+        + 1
+    )
 
     row = {
         var.col_user_id: user_id,
