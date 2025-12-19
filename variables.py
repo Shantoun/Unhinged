@@ -27,7 +27,7 @@ table_media         = "media"
 col_user_id  = "user_id"
 col_match_id = "match_id"
 col_like_id  = "like_id"
-
+col_message_voicenote_url = "voicenote_url"
 
 ####################################################### matches column names
 col_match_timestamp = "match_timestamp"
