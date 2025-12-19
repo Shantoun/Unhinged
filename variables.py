@@ -13,14 +13,15 @@ json_timestamp    = "timestamp"
 json_block_type   = "block_type"
 json_body         = "body"       # for chat messages
 json_comment      = "comment"    # for like comments
+json_voice_notes  = "voice_notes"    # JSON key
 
 
 ####################################################### table names
-table_matches  = "matches"
-table_blocks   = "blocks"
-table_likes    = "likes"
-table_messages = "messages"
-table_user_profile = "user_profile"
+table_matches       = "matches"
+table_blocks        = "blocks"
+table_likes         = "likes"
+table_messages      = "messages"
+table_user_profile  = "user_profile"
 table_media         = "media"
 
 ####################################################### shared column names
