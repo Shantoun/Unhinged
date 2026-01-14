@@ -238,6 +238,7 @@ def media_ingest(json_data, user_id):
 
         media_type = item.get(var.json_media_type)
         from_social = item.get(var.json_media_social, False)
+        prompt = item.get(var.json_prompt_text)
 
         try:
             basename = url.split("/")[-1].split(".")[0]
