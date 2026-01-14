@@ -333,8 +333,8 @@ def prompts_ingest(json_data, user_id):
             var.col_prompt_updated_ts: updated,
 
             # optional / nullable
-            "options":   p.get("options"),     # jsonb
-            "media_url": p.get("media_url"),   # text
+            "prompt_options":   p.get("options"),     # jsonb
+            "prompt_media_url": p.get("media_url"),   # text
         })
 
     if rows:
