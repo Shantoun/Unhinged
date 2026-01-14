@@ -58,7 +58,7 @@ json_media_list     = "media"         # or whatever your file key is
 json_media_type     = "type"
 json_media_url      = "url"
 json_media_social   = "from_social_media"
-json_prompt_text = "prompt"
+json_media_prompt = "prompt"
 
 
 ####################################################### media columns
