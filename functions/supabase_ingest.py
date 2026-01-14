@@ -260,9 +260,47 @@ def media_ingest(json_data, user_id):
         supabase.table(var.table_media).upsert(rows).execute()
 
 
-# --------------------------------------------------
-# PROMPTS
-# --------------------------------------------------
+# # --------------------------------------------------
+# # PROMPTS
+# # --------------------------------------------------
+# def prompts_ingest(json_data, user_id):
+
+#     rows = []
+
+#     prompts = (
+#         json_data.get(var.json_prompts, [])
+#         if isinstance(json_data, dict)
+#         else json_data
+#     )
+
+#     for p in prompts:
+#         prompt_raw_id = p.get(var.json_prompt_id)
+#         if not prompt_raw_id:
+#             continue
+
+#         created = p.get(var.json_prompt_created)
+#         updated = p.get(var.json_prompt_updated) or created
+
+#         if not created:
+#             continue
+
+#         prompt_id = f"prompt_{user_id}_{prompt_raw_id}_{norm(created)}"
+
+#         rows.append({
+#             var.col_prompt_id:         prompt_id,
+#             var.col_user_id:           user_id,
+#             var.col_prompt_type:       p.get(var.json_prompt_type),
+#             var.col_prompt_label:      p.get(var.json_prompt_label),
+#             var.col_prompt_text:       p.get(var.json_prompt_text),
+#             var.col_prompt_created_ts: created,
+#             var.col_prompt_updated_ts: updated,
+#         })
+
+#     if rows:
+#         supabase.table(var.table_prompts).upsert(rows).execute()
+
+
+
 def prompts_ingest(json_data, user_id):
 
     rows = []
@@ -270,20 +308,19 @@ def prompts_ingest(json_data, user_id):
     prompts = (
         json_data.get(var.json_prompts, [])
         if isinstance(json_data, dict)
-        else json_data
+        else (json_data or [])
     )
 
     for p in prompts:
+        if not isinstance(p, dict):
+            continue
+
         prompt_raw_id = p.get(var.json_prompt_id)
-        if not prompt_raw_id:
-            continue
-
         created = p.get(var.json_prompt_created)
-        updated = p.get(var.json_prompt_updated) or created
-
-        if not created:
+        if prompt_raw_id is None or not created:
             continue
 
+        updated = p.get(var.json_prompt_updated) or created
         prompt_id = f"prompt_{user_id}_{prompt_raw_id}_{norm(created)}"
 
         rows.append({
@@ -291,13 +328,19 @@ def prompts_ingest(json_data, user_id):
             var.col_user_id:           user_id,
             var.col_prompt_type:       p.get(var.json_prompt_type),
             var.col_prompt_label:      p.get(var.json_prompt_label),
-            var.col_prompt_text:       p.get(var.json_prompt_text),
+            var.col_prompt_text:       p.get(var.json_prompt_text),   # ← your original logic
             var.col_prompt_created_ts: created,
             var.col_prompt_updated_ts: updated,
+
+            # optional / nullable
+            "options":   p.get("options"),     # jsonb
+            "media_url": p.get("media_url"),   # text
         })
 
     if rows:
         supabase.table(var.table_prompts).upsert(rows).execute()
+
+
 
 
 # --------------------------------------------------
