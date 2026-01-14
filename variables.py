@@ -49,6 +49,8 @@ col_message_id        = "message_id"
 col_message_timestamp = "message_timestamp"
 col_message_body      = "body"
 
+col_media_prompt = "media_prompt"
+
 
 
 ####################################################### json keys (media)
@@ -56,7 +58,7 @@ json_media_list     = "media"         # or whatever your file key is
 json_media_type     = "type"
 json_media_url      = "url"
 json_media_social   = "from_social_media"
-
+json_prompt_text = "prompt"
 
 
 ####################################################### media columns
