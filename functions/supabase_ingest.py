@@ -251,6 +251,7 @@ def media_ingest(json_data, user_id):
             var.col_media_url:    url,
             var.col_media_type:   media_type,
             var.col_media_social: from_social,
+            var.col_media_prompt: prompt,
             var.col_user_id:      user_id,
         })
 
