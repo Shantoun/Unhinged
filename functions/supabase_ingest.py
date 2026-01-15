@@ -52,13 +52,16 @@ def matches_ingest(json_data, user_id):
 
         match_id = f"match_{user_id}_{norm(match_ts)}"
 
+        # defaults so NOT NULL never gets NULL
         row = {
             var.col_match_id: match_id,
             var.col_match_timestamp: match_ts,
             var.col_user_id: user_id,
+            "we_met": False,
+            "my_type": False,
+            "we_met_timestamp": None,
         }
 
-        # --- NEW FIELDS (no var.*) ---
         we_met_events = m.get("we_met", [])
         if we_met_events:
             latest = max(
@@ -71,7 +74,6 @@ def matches_ingest(json_data, user_id):
                 row["we_met"] = True
                 row["we_met_timestamp"] = latest.get("timestamp")
 
-                # only set my_type if was_my_type is True
                 if latest.get("was_my_type") is True:
                     row["my_type"] = True
 
@@ -79,7 +81,6 @@ def matches_ingest(json_data, user_id):
 
     if rows:
         supabase.table(var.table_matches).upsert(rows).execute()
-
 
 
 
