@@ -186,9 +186,44 @@ def messages_ingest(json_data, user_id):
 # --------------------------------------------------
 # USER PROFILE
 # --------------------------------------------------
+# def user_profile_ingest(json_data, user_id):
+
+#     user = json_data.get(var.json_user, {})
+
+#     current = (
+#         supabase.table(var.table_user_profile)
+#         .select(var.col_upload_count)
+#         .eq(var.col_user_id, user_id)
+#         .maybe_single()
+#         .execute()
+#     )
+
+#     upload_count = (
+#         (current.data[var.col_upload_count] if current and current.data else 0)
+#         + 1
+#     )
+
+#     row = {
+#         var.col_user_id: user_id,
+#         var.col_upload_count: upload_count,
+#         var.col_preferences: user.get(var.json_user_preferences) or {},
+#         var.col_location: user.get(var.json_user_location) or {},
+#         var.col_identity: user.get(var.json_user_identity) or {},
+#         var.col_profile: user.get(var.json_user_profile) or {},
+#         var.col_account: user.get(var.json_user_account) or {},
+#     }
+
+#     supabase.table(var.table_user_profile).upsert(
+#         row, on_conflict=var.col_user_id
+#     ).execute()
+
+
+
+
 def user_profile_ingest(json_data, user_id):
 
     user = json_data.get(var.json_user, {})
+    selfie_verification = json_data.get("selfie_verification")
 
     current = (
         supabase.table(var.table_user_profile)
@@ -211,11 +246,15 @@ def user_profile_ingest(json_data, user_id):
         var.col_identity: user.get(var.json_user_identity) or {},
         var.col_profile: user.get(var.json_user_profile) or {},
         var.col_account: user.get(var.json_user_account) or {},
+        "selfie_verification": selfie_verification or {},
     }
 
     supabase.table(var.table_user_profile).upsert(
         row, on_conflict=var.col_user_id
     ).execute()
+
+
+
 
 
 
