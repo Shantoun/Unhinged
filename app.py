@@ -16,7 +16,6 @@ user_id = st.session_state.user_id
 # if logged in → main app
 if user_id:
 
-    
     res = auth.supabase.table(var.table_user_profile) \
         .select("*") \
         .eq(var.col_user_id, user_id) \
