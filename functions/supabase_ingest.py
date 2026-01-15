@@ -12,6 +12,31 @@ def norm(ts: str) -> str:
 # --------------------------------------------------
 # MATCHES
 # --------------------------------------------------
+# def matches_ingest(json_data, user_id):
+
+#     rows = []
+
+#     for m in json_data.get(var.json_matches, []):
+#         match_event = m.get(var.json_match_event)
+#         if not match_event:
+#             continue
+
+#         ts = match_event[0].get(var.json_timestamp)
+#         if not ts:
+#             continue
+
+#         match_id = f"match_{user_id}_{norm(ts)}"
+
+#         rows.append({
+#             var.col_match_id: match_id,
+#             var.col_match_timestamp: ts,
+#             var.col_user_id: user_id,
+#         })
+
+#     if rows:
+#         supabase.table(var.table_matches).upsert(rows).execute()
+
+
 def matches_ingest(json_data, user_id):
 
     rows = []
@@ -21,20 +46,42 @@ def matches_ingest(json_data, user_id):
         if not match_event:
             continue
 
-        ts = match_event[0].get(var.json_timestamp)
-        if not ts:
+        match_ts = match_event[0].get(var.json_timestamp)
+        if not match_ts:
             continue
 
-        match_id = f"match_{user_id}_{norm(ts)}"
+        match_id = f"match_{user_id}_{norm(match_ts)}"
 
-        rows.append({
+        row = {
             var.col_match_id: match_id,
-            var.col_match_timestamp: ts,
+            var.col_match_timestamp: match_ts,
             var.col_user_id: user_id,
-        })
+        }
+
+        # we_met (only most recent; only if most recent is "Yes")
+        we_met_events = m.get(var.json_we_met, [])
+        if we_met_events:
+            latest = max(
+                (e for e in we_met_events if e.get("timestamp")),
+                key=lambda e: e.get("timestamp"),
+                default=None
+            )
+
+            if latest and latest.get("did_meet_subject") == "Yes":
+                we_met_ts = latest.get("timestamp")
+                row["we_met"] = True
+                row["we_met_timestamp"] = we_met_ts
+
+                # my_type only updates if was_my_type is True
+                if latest.get("was_my_type") is True:
+                    row["my_type"] = True
+
+        rows.append(row)
 
     if rows:
         supabase.table(var.table_matches).upsert(rows).execute()
+
+
 
 
 # --------------------------------------------------
