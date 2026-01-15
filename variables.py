@@ -5,6 +5,7 @@ json_like_key     = "like"
 json_chats        = "chats"
 json_media        = "media"
 json_user         = "user"
+json_selfie_verification = "selfie_verification"
 
 json_match_event  = "match"
 json_block_event  = "block"
@@ -43,6 +44,7 @@ col_block_timestamp  = "block_timestamp"
 col_block_type       = "block_type"
 col_prompt_options   = "prompt_options"
 col_prompt_media_url = "prompt_media_url"
+col_selfie_verification = "selfie_verification"
 
 ####################################################### likes column names
 col_like_timestamp  = "like_timestamp"
