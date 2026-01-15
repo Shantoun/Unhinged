@@ -58,21 +58,20 @@ def matches_ingest(json_data, user_id):
             var.col_user_id: user_id,
         }
 
-        # we_met (only most recent; only if most recent is "Yes")
-        we_met_events = m.get(var.json_we_met, [])
+        # --- NEW FIELDS (no var.*) ---
+        we_met_events = m.get("we_met", [])
         if we_met_events:
             latest = max(
                 (e for e in we_met_events if e.get("timestamp")),
-                key=lambda e: e.get("timestamp"),
+                key=lambda e: e["timestamp"],
                 default=None
             )
 
             if latest and latest.get("did_meet_subject") == "Yes":
-                we_met_ts = latest.get("timestamp")
                 row["we_met"] = True
-                row["we_met_timestamp"] = we_met_ts
+                row["we_met_timestamp"] = latest.get("timestamp")
 
-                # my_type only updates if was_my_type is True
+                # only set my_type if was_my_type is True
                 if latest.get("was_my_type") is True:
                     row["my_type"] = True
 
@@ -80,6 +79,7 @@ def matches_ingest(json_data, user_id):
 
     if rows:
         supabase.table(var.table_matches).upsert(rows).execute()
+
 
 
 
