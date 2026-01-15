@@ -11,10 +11,13 @@ json_block_event  = "block"
 
 json_timestamp    = "timestamp"
 json_block_type   = "block_type"
-json_body         = "body"       # for chat messages
-json_comment      = "comment"    # for like comments
-json_voice_notes  = "voice_notes"    # JSON key
+json_body         = "body"
+json_comment      = "comment"
+json_voice_notes  = "voice_notes"
 
+json_options  = "voice_notes"
+json_voice_notes  = "voice_notes"
+json_prompt_media_url = "media_url"
 
 ####################################################### table names
 table_matches       = "matches"
@@ -35,10 +38,11 @@ col_match_timestamp = "match_timestamp"
 
 
 ####################################################### blocks column names
-col_block_id        = "block_id"
-col_block_timestamp = "block_timestamp"
-col_block_type      = "block_type"
-
+col_block_id         = "block_id"
+col_block_timestamp  = "block_timestamp"
+col_block_type       = "block_type"
+col_prompt_options   = "prompt_options"
+col_prompt_media_url = "prompt_media_url"
 
 ####################################################### likes column names
 col_like_timestamp  = "like_timestamp"
