@@ -54,12 +54,12 @@ if user_id:
             )
             df = pd.DataFrame(res.data or [])
 
-    # normalize timestamps if present
-    for col in df.columns:
-        if col.endswith("_timestamp"):
-            df[col] = pd.to_datetime(df[col], errors="coerce")
-
-    return df
+            # normalize timestamps if present
+            for col in df.columns:
+                if col.endswith("_timestamp"):
+                    df[col] = pd.to_datetime(df[col], errors="coerce")
+        
+            return df
         
         def sankey(data):
             nodes = pd.unique(data[["source", "target"]].values.ravel())
