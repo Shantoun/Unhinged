@@ -110,14 +110,12 @@ if user_id:
             likes["entry"] = likes["has_comment"].map({True: "Comments sent", False: "Likes sent"})
         
             # ========== 1) SHOW ALL LIKES (even if unmatched) ==========
-            # Use self-loops for unmatched likes so the node width reflects totals without adding a new node.
+            # Use a sink node instead of self-loops (self-loops create circles)
             unmatched = likes[likes["match_id"].isna()]
             if len(unmatched):
                 unmatched_counts = unmatched.groupby("entry").size().reset_index(name="value")
                 edges.append(
-                    unmatched_counts.assign(source=lambda d: d["entry"], target=lambda d: d["entry"])[
-                        ["source", "target", "value"]
-                    ]
+                    unmatched_counts.assign(source=lambda d: d["entry"], target="No match")[["source", "target", "value"]]
                 )
         
             # ========== 2) BUILD MATCH-LEVEL ENTRY (for matched flows) ==========
