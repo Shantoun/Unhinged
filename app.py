@@ -61,6 +61,12 @@ if user_id:
         
         
         def sankey(data):
+            import plotly.graph_objects as go
+            import pandas as pd
+        
+            # kill any self-loops (they draw as circles)
+            data = data[data["source"] != data["target"]].copy()
+        
             nodes = pd.unique(data[["source", "target"]].values.ravel())
             idx = {n: i for i, n in enumerate(nodes)}
         
