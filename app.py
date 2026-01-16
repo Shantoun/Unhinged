@@ -200,6 +200,7 @@ if user_id:
             data = data.groupby(["source", "target"], as_index=False)["value"].sum()
             data = data[data["value"] > 0]
             return data
+
         
         @st.cache_data(show_spinner=False)
         def load_and_build(user_id, min_messages, min_span_minutes):
