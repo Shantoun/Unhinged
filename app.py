@@ -88,93 +88,154 @@ if user_id:
             min_messages=3,
             min_span_minutes=5,
         ):
-            rows = []
+            # ---- 1) ensure we have required columns even when empty ----
+            for df, cols in [
+                (likes_df, ["like_id", "match_id", "like_timestamp"]),
+                (matches_df, ["match_id", "match_timestamp", "we_met", "my_type"]),
+                (messages_df, ["message_id", "match_id", "message_timestamp", "like_id"]),
+                (blocks_df, ["match_id", "block_timestamp"]),
+            ]:
+                for c in cols:
+                    if c not in df.columns:
+                        df[c] = pd.NA
         
-            # like has comment if any message references like_id
-            comments = (
-                messages_df[messages_df["like_id"].notna()][["like_id"]]
-                .drop_duplicates()
-                .assign(has_comment=True)
+            # ---- 2) like has comment if any message references like_id ----
+            comment_like_ids = set(
+                messages_df.loc[messages_df["like_id"].notna(), "like_id"].dropna().unique()
             )
-            likes = likes_df.merge(comments, on="like_id", how="left")
-            likes["has_comment"] = likes["has_comment"].fillna(False)
         
-            # initiator: first message before match_timestamp => them
-            first_msg = (
-                messages_df.groupby("match_id")["message_timestamp"]
-                .min()
-                .reset_index(name="first_message_ts")
+            likes = likes_df.copy()
+            likes["has_comment"] = likes["like_id"].isin(comment_like_ids)
+        
+            # one like per match (pick earliest like_timestamp)
+            likes = (
+                likes.dropna(subset=["match_id"])
+                .sort_values("like_timestamp")
+                .drop_duplicates(subset=["match_id"], keep="first")
+                [["match_id", "like_timestamp", "has_comment"]]
             )
-            matches = matches_df.merge(first_msg, on="match_id", how="left")
-            matches["initiator"] = "you"
-            matches.loc[
-                (matches["first_message_ts"].notna())
-                & (matches["first_message_ts"] < matches["match_timestamp"]),
-                "initiator",
-            ] = "them"
         
-            # conversation rule
-            convo_stats = (
-                messages_df.groupby("match_id")
-                .agg(
-                    message_count=("message_id", "count"),
-                    span_minutes=(
-                        "message_timestamp",
-                        lambda x: (x.max() - x.min()).total_seconds() / 60,
-                    ),
+            # ---- 3) convo stats per match ----
+            if len(messages_df):
+                convo_stats = (
+                    messages_df.dropna(subset=["match_id", "message_timestamp"])
+                    .groupby("match_id")
+                    .agg(
+                        message_count=("message_id", "count"),
+                        first_message_ts=("message_timestamp", "min"),
+                        last_message_ts=("message_timestamp", "max"),
+                    )
+                    .reset_index()
                 )
-                .reset_index()
-            )
-            convo_ids = set(
-                convo_stats[
-                    (convo_stats["message_count"] >= min_messages)
-                    & (convo_stats["span_minutes"] >= min_span_minutes)
-                ]["match_id"]
-            )
-        
-            blocked_ids = set(blocks_df["match_id"].dropna().unique())
-        
-            for _, like in likes.iterrows():
-                entry = (
-                    "Likes sent"
-                    if combine_likes
-                    else ("Likes (with comment)" if like["has_comment"] else "Likes (no comment)")
+                convo_stats["span_minutes"] = (
+                    (convo_stats["last_message_ts"] - convo_stats["first_message_ts"])
+                    .dt.total_seconds()
+                    / 60
+                )
+            else:
+                convo_stats = pd.DataFrame(
+                    columns=["match_id", "message_count", "first_message_ts", "last_message_ts", "span_minutes"]
                 )
         
-                if pd.isna(like["match_id"]):
-                    continue
-        
-                m = matches[matches["match_id"] == like["match_id"]]
-                if m.empty:
-                    continue
-                m = m.iloc[0]
-        
-                match_node = (
-                    "Matched (initiated by them)"
-                    if m["initiator"] == "them"
-                    else "Matched (initiated by you)"
+            # ---- 4) block timing per match ----
+            if len(blocks_df):
+                block_stats = (
+                    blocks_df.dropna(subset=["match_id", "block_timestamp"])
+                    .groupby("match_id")["block_timestamp"]
+                    .min()
+                    .reset_index(name="block_ts")
                 )
+            else:
+                block_stats = pd.DataFrame(columns=["match_id", "block_ts"])
         
-                rows.append((entry, match_node))
+            # ---- 5) build one match-level table (1 row = 1 journey) ----
+            m = matches_df.copy()
+            m = m.merge(likes, on="match_id", how="left")
+            m = m.merge(convo_stats[["match_id", "message_count", "span_minutes", "first_message_ts"]], on="match_id", how="left")
+            m = m.merge(block_stats, on="match_id", how="left")
         
-                if like["match_id"] in blocked_ids:
-                    rows.append((match_node, "Blocked / Removed"))
-                    continue
+            # drop matches that don't have a like attached (optional; keeps the Sankey “likes-started”)
+            m = m.dropna(subset=["like_timestamp"])
         
-                if like["match_id"] in convo_ids:
-                    rows.append((match_node, "Conversation"))
+            m["is_convo"] = (
+                m["message_count"].fillna(0).astype(int) >= int(min_messages)
+            ) & (
+                m["span_minutes"].fillna(0) >= float(min_span_minutes)
+            )
         
-                    if bool(m.get("we_met")):
-                        rows.append(("Conversation", "We met"))
-                        rows.append(
-                            ("We met", "My type" if bool(m.get("my_type")) else "Not my type")
-                        )
+            # initiated by them if match happened before your like OR first message before your like
+            m["initiated_by_them"] = (
+                (m["match_timestamp"] < m["like_timestamp"])
+                | ((m["first_message_ts"].notna()) & (m["first_message_ts"] < m["like_timestamp"]))
+            )
         
-            data = (
-                pd.DataFrame(rows, columns=["source", "target"])
-                .value_counts()
+            m["entry"] = "Likes sent" if combine_likes else m["has_comment"].map(
+                {True: "Likes (with comment)", False: "Likes (no comment)"}
+            )
+        
+            m["matched_node"] = m["initiated_by_them"].map(
+                {True: "Matched (initiated by them)", False: "Matched (initiated by you)"}
+            )
+        
+            # where does block come from? (avoid double counting)
+            m["blocked"] = m["block_ts"].notna()
+            m["block_from_convo"] = m["blocked"] & m["is_convo"]
+        
+            # ---- 6) aggregate edges (counts) ----
+            edges = []
+        
+            # entry -> matched
+            edges.append(
+                m.groupby(["entry", "matched_node"]).size().reset_index(name="value")
+                .rename(columns={"entry": "source", "matched_node": "target"})
+            )
+        
+            # matched -> conversation
+            edges.append(
+                m[m["is_convo"]]
+                .groupby(["matched_node"])
+                .size()
                 .reset_index(name="value")
+                .assign(source=lambda d: d["matched_node"], target="Conversation")
+                [["source", "target", "value"]]
             )
+        
+            # blocks:
+            # matched -> blocked (only if blocked and NOT from convo)
+            edges.append(
+                m[m["blocked"] & (~m["block_from_convo"])]
+                .groupby(["matched_node"])
+                .size()
+                .reset_index(name="value")
+                .assign(source=lambda d: d["matched_node"], target="Blocked / Removed")
+                [["source", "target", "value"]]
+            )
+            # conversation -> blocked (blocked after convo)
+            edges.append(
+                pd.DataFrame(
+                    [{"source": "Conversation", "target": "Blocked / Removed", "value": int(m["block_from_convo"].sum())}]
+                )
+            )
+        
+            # conversation -> we met (only true)
+            edges.append(
+                pd.DataFrame(
+                    [{"source": "Conversation", "target": "We met", "value": int(((m["is_convo"]) & (m["we_met"] == True)).sum())}]
+                )
+            )
+        
+            # we met -> my type / not
+            met = m[(m["is_convo"]) & (m["we_met"] == True)]
+            edges.append(
+                pd.DataFrame([
+                    {"source": "We met", "target": "My type", "value": int((met["my_type"] == True).sum())},
+                    {"source": "We met", "target": "Not my type", "value": int((met["my_type"] != True).sum())},
+                ])
+            )
+        
+            data = pd.concat(edges, ignore_index=True)
+            data = data[data["value"] > 0]
+        
             return data
         
         @st.cache_data(show_spinner=False)
