@@ -1,4 +1,4 @@
-
+from functions.authentification import supabase
 import streamlit as st
 import functions.authentification as auth
 from functions.zip_uploader import uploader
