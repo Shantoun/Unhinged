@@ -52,7 +52,14 @@ if user_id:
                 .eq("user_id", user_id)
                 .execute()
             )
-            return pd.DataFrame(res.data or [])
+            df = pd.DataFrame(res.data or [])
+
+    # normalize timestamps if present
+    for col in df.columns:
+        if col.endswith("_timestamp"):
+            df[col] = pd.to_datetime(df[col], errors="coerce")
+
+    return df
         
         def sankey(data):
             nodes = pd.unique(data[["source", "target"]].values.ravel())
