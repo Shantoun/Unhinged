@@ -231,7 +231,7 @@ if user_id:
         
         
         @st.cache_data(show_spinner=False)
-        def load_and_build(user_id, combine_likes, min_messages, min_span_minutes):
+        def load_and_build(user_id, min_messages, min_span_minutes):
             likes_df = fetch_df("likes", user_id)
             matches_df = fetch_df("matches", user_id)
             messages_df = fetch_df("messages", user_id)
@@ -242,7 +242,6 @@ if user_id:
                 matches_df,
                 messages_df,
                 blocks_df,
-                combine_likes=combine_likes,
                 min_messages=min_messages,
                 min_span_minutes=min_span_minutes,
             )
@@ -253,7 +252,7 @@ if user_id:
         min_messages = st.slider("Min messages (conversation)", 1, 10, 3)
         min_span_minutes = st.slider("Min span minutes (conversation)", 1, 60, 5)
         
-        data = load_and_build(user_id, combine_likes, min_messages, min_span_minutes)
+        data = load_and_build(user_id, min_messages, min_span_minutes)
         st.plotly_chart(sankey(data), use_container_width=True)
 
 
