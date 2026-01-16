@@ -95,10 +95,10 @@ if user_id:
         ):
             edges = []
         
-            # --- ensure required cols exist ---
+            # --- required cols (avoid KeyErrors) ---
             for df, cols in [
                 (likes_df, ["like_id", "match_id", "like_timestamp"]),
-                (matches_df, ["match_id", "match_timestamp", "we_met", "my_type"]),
+                (matches_df, ["match_id", "we_met", "my_type", "match_timestamp"]),
                 (messages_df, ["message_id", "match_id", "message_timestamp", "like_id"]),
                 (blocks_df, ["match_id", "block_timestamp"]),
             ]:
@@ -106,113 +106,96 @@ if user_id:
                     if c not in df.columns:
                         df[c] = pd.NA
         
-            # --- comment detection: message.like_id != null => that like had a comment ---
-            comment_like_ids = set(
-                messages_df.loc[messages_df["like_id"].notna(), "like_id"].dropna().unique()
-            )
+            # --- TOTAL LIKES + COMMENTS SENT ---
+            # comments sent == likes whose like_id appears in messages.like_id
+            msg_like_ids = set(messages_df.loc[messages_df["like_id"].notna(), "like_id"].dropna().unique())
+            like_ids = set(likes_df.loc[likes_df["like_id"].notna(), "like_id"].dropna().unique())
+            comment_like_ids = msg_like_ids & like_ids  # safety: only count ones that exist in likes
         
             likes = likes_df.copy()
-            likes["has_comment"] = likes["like_id"].isin(comment_like_ids)
-            likes["entry"] = likes["has_comment"].map({True: "Comments sent", False: "Likes sent"})
+            likes["is_comment"] = likes["like_id"].isin(comment_like_ids)
+            likes["entry"] = likes["is_comment"].map({True: "Comments sent", False: "Likes sent"})
         
-            # One like per match (earliest) to classify match origin
-            likes_per_match = (
-                likes.dropna(subset=["match_id"])
-                .sort_values("like_timestamp")
-                .drop_duplicates(subset=["match_id"], keep="first")
-                [["match_id", "entry"]]
-            )
+            # --- split outgoing likes into matched vs no match (so totals show) ---
+            likes_matched = likes.dropna(subset=["match_id"])
+            likes_unmatched = likes[likes["match_id"].isna()]
         
-            # --- match-level base (ALL matches) ---
-            m = matches_df.copy()
-            m = m.merge(likes_per_match, on="match_id", how="left")
-            m["entry"] = m["entry"].fillna("Likes received")
+            if len(likes_matched):
+                edges.append(
+                    likes_matched.groupby("entry").size().reset_index(name="value")
+                    .assign(source=lambda d: d["entry"], target="Match")[["source", "target", "value"]]
+                )
         
-            match_ids = set(m["match_id"].dropna().unique())
+            if len(likes_unmatched):
+                edges.append(
+                    likes_unmatched.groupby("entry").size().reset_index(name="value")
+                    .assign(source=lambda d: d["entry"], target="No match")[["source", "target", "value"]]
+                )
         
-            # --- blocks (ignore blocks whose match_id isn't in matches) ---
-            blocked_ids = set(
-                blocks_df["match_id"].dropna().unique()
-            ) & match_ids
-            m["blocked"] = m["match_id"].isin(blocked_ids)
+            # --- LIKES RECEIVED (matches not tied to any outgoing like) ---
+            like_match_ids = set(likes_matched["match_id"].dropna().unique())
+            received_matches = matches_df[~matches_df["match_id"].isin(like_match_ids)]
+            if len(received_matches):
+                edges.append(pd.DataFrame([{
+                    "source": "Likes received",
+                    "target": "Match",
+                    "value": int(len(received_matches))
+                }]))
         
-            # --- conversation ids (purely a tag/branch; never gates we_met or block) ---
-            msgs = messages_df.dropna(subset=["match_id", "message_timestamp"]).copy()
+            # --- match universe for downstream outcomes ---
+            match_ids = set(matches_df["match_id"].dropna().unique())
+        
+            # --- conversation tag (does NOT gate anything) ---
             convo_ids = set()
+            msgs = messages_df.dropna(subset=["match_id", "message_timestamp"]).copy()
             if len(msgs):
-                convo_stats = (
+                convo = (
                     msgs.groupby("match_id")
                     .agg(
-                        message_count=("message_id", "count"),
-                        first_ts=("message_timestamp", "min"),
-                        last_ts=("message_timestamp", "max"),
+                        cnt=("message_id", "count"),
+                        first=("message_timestamp", "min"),
+                        last=("message_timestamp", "max"),
                     )
                     .reset_index()
                 )
-                convo_stats["span_minutes"] = (
-                    (convo_stats["last_ts"] - convo_stats["first_ts"]).dt.total_seconds() / 60
-                )
-                convo_ids = set(
-                    convo_stats[
-                        (convo_stats["message_count"] >= int(min_messages))
-                        & (convo_stats["span_minutes"] >= float(min_span_minutes))
-                    ]["match_id"]
-                ) & match_ids
+                convo["span_min"] = (convo["last"] - convo["first"]).dt.total_seconds() / 60
+                convo_ids = set(convo[(convo["cnt"] >= int(min_messages)) & (convo["span_min"] >= float(min_span_minutes))]["match_id"]) & match_ids
         
-            # =========================
-            # EDGES (how to view it)
-            # =========================
+            if convo_ids:
+                edges.append(pd.DataFrame([{
+                    "source": "Match",
+                    "target": "Conversation",
+                    "value": int(matches_df["match_id"].isin(convo_ids).sum())
+                }]))
         
-            # Origin -> Match (always)
-            edges.append(
-                m.groupby("entry").size().reset_index(name="value")
-                .assign(source=lambda d: d["entry"], target="Match")[["source", "target", "value"]]
-            )
-        
-            # Origin -> Blocked/Removed (independent outcome; attributed back to origin)
+            # --- blocks (ignore blocks from nothing) ---
+            blocked_ids = set(blocks_df["match_id"].dropna().unique()) & match_ids
             if blocked_ids:
-                edges.append(
-                    m[m["blocked"]]
-                    .groupby("entry").size().reset_index(name="value")
-                    .assign(source=lambda d: d["entry"], target="Blocked / Removed")[["source", "target", "value"]]
-                )
+                edges.append(pd.DataFrame([{
+                    "source": "Match",
+                    "target": "Blocked / Removed",
+                    "value": int(matches_df["match_id"].isin(blocked_ids).sum())
+                }]))
         
-            # Origin -> We met (independent outcome; attributed back to origin)
-            met = m[m["we_met"] == True]
+            # --- we met (independent of convo + blocks) ---
+            met = matches_df[matches_df["we_met"] == True]
             if len(met):
-                edges.append(
-                    met.groupby("entry").size().reset_index(name="value")
-                    .assign(source=lambda d: d["entry"], target="We met")[["source", "target", "value"]]
-                )
+                edges.append(pd.DataFrame([{
+                    "source": "Match",
+                    "target": "We met",
+                    "value": int(len(met))
+                }]))
         
-                # We met -> type split (still independent)
                 edges.append(pd.DataFrame([
                     {"source": "We met", "target": "My type", "value": int((met["my_type"] == True).sum())},
                     {"source": "We met", "target": "Not my type", "value": int((met["my_type"] != True).sum())},
                 ]))
         
-            # Match -> Conversation (tag branch; doesn’t control anything else)
-            if convo_ids:
-                edges.append(pd.DataFrame([{
-                    "source": "Match",
-                    "target": "Conversation",
-                    "value": int(m["match_id"].isin(convo_ids).sum())
-                }]))
-        
-            # (optional, purely visual) Conversation -> We met subset
-            if convo_ids and len(met):
-                convo_met = len(set(convo_ids) & set(met["match_id"].dropna().unique()))
-                if convo_met > 0:
-                    edges.append(pd.DataFrame([{
-                        "source": "Conversation",
-                        "target": "We met",
-                        "value": int(convo_met)
-                    }]))
-        
             data = pd.concat(edges, ignore_index=True)
             data = data.groupby(["source", "target"], as_index=False)["value"].sum()
             data = data[data["value"] > 0]
             return data
+
 
         
         @st.cache_data(show_spinner=False)
