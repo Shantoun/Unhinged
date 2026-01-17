@@ -161,21 +161,26 @@ def sankey_data(data, min_messages=2, min_minutes=5):
 
     df = data.copy()
 
-    # --- like buckets (ALL likes) ---
+    # --- like buckets (row-level, ALL likes) ---
     is_sent = df["like_direction"].eq("sent")
     is_received = df["like_direction"].eq("received")
     has_comment = df["comment_message_id"].notna()
 
-    comments_all = df[is_sent & has_comment]
-    likes_sent_all = df[is_sent & ~has_comment]
-    likes_received_all = df[is_received]
+    comments = df[is_sent & has_comment]
+    likes_sent = df[is_sent & ~has_comment]
+    likes_received = df[is_received]
 
-    # --- matched portions (ONLY where match_id exists) ---
-    comments_matched = comments_all[comments_all["match_id"].notna()]
-    likes_sent_matched = likes_sent_all[likes_sent_all["match_id"].notna()]
-    likes_received_matched = likes_received_all[likes_received_all["match_id"].notna()]
+    # --- matched subsets ---
+    comments_m = comments[comments["match_id"].notna()]
+    likes_sent_m = likes_sent[likes_sent["match_id"].notna()]
+    likes_received_m = likes_received[likes_received["match_id"].notna()]
 
-    # matched universe (for downstream)
+    # --- no-match subsets ---
+    comments_nm = comments[comments["match_id"].isna()]
+    likes_sent_nm = likes_sent[likes_sent["match_id"].isna()]
+    likes_received_nm = likes_received[likes_received["match_id"].isna()]
+
+    # --- matched universe for downstream ---
     matched = df[df["match_id"].notna()].copy()
 
     msg_cnt = matched["conversation_message_count"].fillna(0)
@@ -194,17 +199,17 @@ def sankey_data(data, min_messages=2, min_minutes=5):
     my_type = matched[is_we_met & matched["my_type"].fillna(False).astype(bool)]
 
     flows = [
-        # show ALL likes (no "no match" node)
-        ("Likes", "Comments", len(comments_all)),
-        ("Likes", "Likes sent", len(likes_sent_all)),
-        ("Likes", "Likes received", len(likes_received_all)),
+        # --- entry → match / no match ---
+        ("Comments", "Matches", comments_m["match_id"].nunique()),
+        ("Comments", "No match", len(comments_nm)),
 
-        # only the matched portions flow into Matches
-        ("Comments", "Matches", comments_matched["match_id"].nunique()),
-        ("Likes sent", "Matches", likes_sent_matched["match_id"].nunique()),
-        ("Likes received", "Matches", likes_received_matched["match_id"].nunique()),
+        ("Likes sent", "Matches", likes_sent_m["match_id"].nunique()),
+        ("Likes sent", "No match", len(likes_sent_nm)),
 
-        # downstream uses match_id unique counts
+        ("Likes received", "Matches", likes_received_m["match_id"].nunique()),
+        ("Likes received", "No match", len(likes_received_nm)),
+
+        # --- downstream (match-level) ---
         ("Matches", "Conversations", matched[is_convo]["match_id"].nunique()),
 
         ("Matches", "We met", we_met_direct["match_id"].nunique()),
@@ -221,5 +226,4 @@ def sankey_data(data, min_messages=2, min_minutes=5):
         .groupby(["Source", "Target"], as_index=False)["Value"].sum()
         .query("Value > 0")
     )
-
 
