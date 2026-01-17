@@ -47,7 +47,7 @@ if user_id:
         df = ds.like_events_df(user_id)
         st.write(df)
 
-        def sankey_data(data, min_messages=2, min_minutes=5):
+        def sankey(data, min_messages=2, min_minutes=5):
             import pandas as pd
         
             # --- entry groups (mutually exclusive) ---
