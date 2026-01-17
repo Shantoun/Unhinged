@@ -329,67 +329,114 @@ def _dow_from_dt(dt_series):
     return pd.Categorical(dt_series.dt.day_name(), categories=_DOW_ORDER, ordered=True)
 
 def likes_matches_agg(data, by="time", tz="America/Toronto"):
-    if by not in {"time", "day"}:
-        raise ValueError('by must be "time" or "day"')
+    """
+    by: "time" | "day" | "day_time"
+    returns counts + ratio for sent likes only
+    """
+    if by not in {"time", "day", "day_time"}:
+        raise ValueError('by must be "time", "day", or "day_time"')
 
     df = data.copy()
 
-    # Only sent likes
     if "like_direction" in df.columns:
         df = df[df.like_direction == "sent"].copy()
 
-    # Parse timestamps
-    df.like_timestamp = pd.to_datetime(df.like_timestamp, utc=True, errors="coerce").dt.tz_convert(tz)
+    df.like_timestamp  = pd.to_datetime(df.like_timestamp,  utc=True, errors="coerce").dt.tz_convert(tz)
     df.match_timestamp = pd.to_datetime(df.match_timestamp, utc=True, errors="coerce").dt.tz_convert(tz)
 
-    if by == "time":
-        group_name = "time_bucket"
-        group_order = _TIME_ORDER
-        like_group = _time_bucket_from_dt(df.like_timestamp)
-    else:
-        group_name = "day_of_week"
-        group_order = _DOW_ORDER
-        like_group = _dow_from_dt(df.like_timestamp)
+    # ---- Likes aggregation keys
+    like_day  = _dow_from_dt(df.like_timestamp)
+    like_time = _time_bucket_from_dt(df.like_timestamp)
 
-    likes = (
-        df.groupby(like_group, dropna=False)["like_id"]
-          .nunique()
-          .reindex(group_order, fill_value=0)
-          .rename("likes")
-    )
-
-    # Build match groups on the filtered match dataframe (same length)
+    # ---- Matches dataframe + keys (must align to match_df length)
     match_df = df.dropna(subset=["match_id", "match_timestamp"]).copy()
+    match_day  = _dow_from_dt(match_df.match_timestamp)
+    match_time = _time_bucket_from_dt(match_df.match_timestamp)
+
     if by == "time":
-        match_group = _time_bucket_from_dt(match_df.match_timestamp)
-    else:
-        match_group = _dow_from_dt(match_df.match_timestamp)
+        group_cols_likes = [like_time]
+        group_cols_match = [match_time]
+        group_order = _TIME_ORDER
 
-    matches = (
-        match_df.groupby(match_group, dropna=False)["match_id"]
-                .nunique()
-                .reindex(group_order, fill_value=0)
-                .rename("matches")
-    )
+        likes = (
+            df.groupby(group_cols_likes, dropna=False)["like_id"]
+              .nunique()
+              .reindex(group_order, fill_value=0)
+              .rename("likes")
+        )
 
-    out = pd.concat([likes, matches], axis=1).fillna(0).reset_index()
-    out = out.rename(columns={"index": group_name, 0: group_name})
-    out[group_name] = out[group_name].astype(str)
+        matches = (
+            match_df.groupby(group_cols_match, dropna=False)["match_id"]
+                    .nunique()
+                    .reindex(group_order, fill_value=0)
+                    .rename("matches")
+        )
+
+        out = pd.concat([likes, matches], axis=1).fillna(0).reset_index()
+        out = out.rename(columns={"index": "time_bucket", 0: "time_bucket"})
+
+    elif by == "day":
+        group_cols_likes = [like_day]
+        group_cols_match = [match_day]
+        group_order = _DOW_ORDER
+
+        likes = (
+            df.groupby(group_cols_likes, dropna=False)["like_id"]
+              .nunique()
+              .reindex(group_order, fill_value=0)
+              .rename("likes")
+        )
+
+        matches = (
+            match_df.groupby(group_cols_match, dropna=False)["match_id"]
+                    .nunique()
+                    .reindex(group_order, fill_value=0)
+                    .rename("matches")
+        )
+
+        out = pd.concat([likes, matches], axis=1).fillna(0).reset_index()
+        out = out.rename(columns={"index": "day_of_week", 0: "day_of_week"})
+
+    else:  # "day_time"
+        # For a full grid (Mon..Sun x all 4-hr buckets), use an explicit MultiIndex
+        full_index = pd.MultiIndex.from_product(
+            [_DOW_ORDER, _TIME_ORDER],
+            names=["day_of_week", "time_bucket"]
+        )
+
+        likes = (
+            df.groupby([like_day, like_time], dropna=False)["like_id"]
+              .nunique()
+              .reindex(full_index, fill_value=0)
+              .rename("likes")
+        )
+
+        matches = (
+            match_df.groupby([match_day, match_time], dropna=False)["match_id"]
+                    .nunique()
+                    .reindex(full_index, fill_value=0)
+                    .rename("matches")
+        )
+
+        out = pd.concat([likes, matches], axis=1).fillna(0).reset_index()
+        out["day_of_week"] = pd.Categorical(out.day_of_week, categories=_DOW_ORDER, ordered=True)
+        out["time_bucket"] = pd.Categorical(out.time_bucket, categories=_TIME_ORDER, ordered=True)
+        out = out.sort_values(["day_of_week", "time_bucket"]).reset_index(drop=True)
+        out["day_of_week"] = out["day_of_week"].astype(str)
+        out["time_bucket"] = out["time_bucket"].astype(str)
+
+    # types + ratio
     out["likes"] = out["likes"].astype(int)
     out["matches"] = out["matches"].astype(int)
+    out["match_like_ratio"] = (out["matches"] / out["likes"]).replace([float("inf")], 0).fillna(0)
 
-
-    out["match_like_ratio"] = (
-        out["matches"] / out["likes"]
-    ).replace([pd.NA, pd.NaT, float("inf")], 0).fillna(0)
-
-    
     return out
 
 def likes_matches_aggs(data, tz="America/Toronto"):
     return {
-        "time": likes_matches_agg(data, by="time", tz=tz),
-        "day":  likes_matches_agg(data, by="day",  tz=tz),
+        "time":     likes_matches_agg(data, by="time", tz=tz),
+        "day":      likes_matches_agg(data, by="day", tz=tz),
+        "day_time": likes_matches_agg(data, by="day_time", tz=tz),
     }
 
 
