@@ -82,10 +82,6 @@ if user_id:
             return pd.Categorical(dt_series.dt.day_name(), categories=_DOW_ORDER, ordered=True)
         
         def likes_matches_agg(data, by="time", tz="America/Toronto"):
-            """
-            by: "time" (4-hour buckets) or "day" (day of week)
-            returns a dataframe with columns: [group, likes, matches]
-            """
             if by not in {"time", "day"}:
                 raise ValueError('by must be "time" or "day"')
         
@@ -95,20 +91,18 @@ if user_id:
             if "like_direction" in df.columns:
                 df = df[df.like_direction == "sent"].copy()
         
-            # Parse timestamps (assumes ISO strings with Z/UTC like your sample)
+            # Parse timestamps
             df.like_timestamp = pd.to_datetime(df.like_timestamp, utc=True, errors="coerce").dt.tz_convert(tz)
             df.match_timestamp = pd.to_datetime(df.match_timestamp, utc=True, errors="coerce").dt.tz_convert(tz)
         
             if by == "time":
-                like_group = _time_bucket_from_dt(df.like_timestamp)
-                match_group = _time_bucket_from_dt(df.match_timestamp)
                 group_name = "time_bucket"
                 group_order = _TIME_ORDER
+                like_group = _time_bucket_from_dt(df.like_timestamp)
             else:
-                like_group = _dow_from_dt(df.like_timestamp)
-                match_group = _dow_from_dt(df.match_timestamp)
                 group_name = "day_of_week"
                 group_order = _DOW_ORDER
+                like_group = _dow_from_dt(df.like_timestamp)
         
             likes = (
                 df.groupby(like_group, dropna=False)["like_id"]
@@ -117,15 +111,21 @@ if user_id:
                   .rename("likes")
             )
         
+            # Build match groups on the filtered match dataframe (same length)
+            match_df = df.dropna(subset=["match_id", "match_timestamp"]).copy()
+            if by == "time":
+                match_group = _time_bucket_from_dt(match_df.match_timestamp)
+            else:
+                match_group = _dow_from_dt(match_df.match_timestamp)
+        
             matches = (
-                df.dropna(subset=["match_id", "match_timestamp"])
-                  .groupby(match_group)["match_id"]
-                  .nunique()
-                  .reindex(group_order, fill_value=0)
-                  .rename("matches")
+                match_df.groupby(match_group, dropna=False)["match_id"]
+                        .nunique()
+                        .reindex(group_order, fill_value=0)
+                        .rename("matches")
             )
         
-            out = pd.concat([likes, matches], axis=1).reset_index()
+            out = pd.concat([likes, matches], axis=1).fillna(0).reset_index()
             out = out.rename(columns={"index": group_name, 0: group_name})
             out[group_name] = out[group_name].astype(str)
             out["likes"] = out["likes"].astype(int)
@@ -133,12 +133,10 @@ if user_id:
             return out
         
         def likes_matches_aggs(data, tz="America/Toronto"):
-            """Returns both tables in a dict: {'time': df_time, 'day': df_day}"""
             return {
                 "time": likes_matches_agg(data, by="time", tz=tz),
                 "day":  likes_matches_agg(data, by="day",  tz=tz),
             }
-
 
 
         time_table = likes_matches_agg(engagements, "time")
