@@ -95,11 +95,11 @@ def like_events_df(user_id):
 
     convo_agg = (
         convo_msgs.groupby(var.col_match_id)
-        .agg(
-            conversation_message_count=(var.col_message_id, "count"),
-            var.col_first_message_timestamp=(var.col_message_timestamp, "min"),
-            last_message_ts=(var.col_message_timestamp, "max"),
-        )
+        .agg(**{
+            "conversation_message_count": (var.col_message_id, "count"),
+            var.col_first_message_timestamp: (var.col_message_timestamp, "min"),
+            "last_message_ts": (var.col_message_timestamp, "max"),
+        })
         .reset_index()
     )
     convo_agg[var.col_conversation_span_minutes] = (
