@@ -1,5 +1,4 @@
 import pandas as pd
-import plotly.graph_objects as go
 from functions.authentification import supabase
 import variables as var
 
