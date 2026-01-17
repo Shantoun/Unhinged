@@ -19,6 +19,9 @@ json_voice_notes  = "voice_notes"
 json_options  = "voice_notes"
 json_voice_notes  = "voice_notes"
 json_prompt_media_url = "media_url"
+json_we_met = "did_meet_subject"
+json_my_type = "was_my_type"
+
 
 ####################################################### table names
 table_matches       = "matches"
@@ -33,6 +36,12 @@ col_user_id  = "user_id"
 col_match_id = "match_id"
 col_like_id  = "like_id"
 col_message_voicenote_url = "voicenote_url"
+col_we_met = "we_met"
+col_my_type = "my_type"
+col_we_met_timestamp = "we_met_timestamp"
+col_comment_message_id = "comment_message_id"
+col_conversation_span_minutes = "conversation_span_minutes"
+col_first_message_timestamp = "first_message_timestamp"
 
 ####################################################### matches column names
 col_match_timestamp = "match_timestamp"
