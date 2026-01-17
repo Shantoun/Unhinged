@@ -141,8 +141,8 @@ if user_id:
 
 
 
-        time_table = likes_matches_agg(data, "time")
-        day_table  = likes_matches_agg(data, "day")
+        time_table = likes_matches_agg(engagements, "time")
+        day_table  = likes_matches_agg(engagements, "day")
 
 
         st.write(time_table)
