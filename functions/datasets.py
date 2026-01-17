@@ -440,6 +440,8 @@ def likes_matches_agg(data, by="time", tz="America/Toronto", m=20):
         (out["likes"] + m)
     ).fillna(0)
 
+    out["score"] = (out["smoothed_rate"] - global_rate) * (out["likes"] / (out["likes"] + m))
+    
     return out
 
 def likes_matches_aggs(data, tz="America/Toronto", m=20):
