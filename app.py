@@ -65,11 +65,11 @@ if user_id:
 
         time_table = ds.likes_matches_agg(engagements, "time")
         day_table  = ds.likes_matches_agg(engagements, "day")
-
+        day_time_table  = ds.likes_matches_agg(engagements, "day_time")
 
         st.write(time_table)
         st.write(day_table)
-
+        st.write(day_time_table)
 
     
     
