@@ -57,8 +57,7 @@ if user_id:
 
 
         def sankey(sankey_df):
-            import pandas as pd
-            import plotly.graph_objects as go
+            title = "Engagement Funnel: {} Total Engagements".format(len(sankey_df))
         
             required = {"Source", "Target", "Value"}
             missing = required - set(sankey_df.columns)
@@ -150,26 +149,7 @@ if user_id:
                 ]
             )
         
-            # fig.update_layout(title_text=title, height=520, margin=dict(l=10, r=10, t=50, b=10))
-            fig.update_layout(
-                title=dict(
-                    text="Engagement Funnel",
-                    x=0.5
-                ),
-                annotations=[
-                    dict(
-                        text="{} Total Engagements".format(len(sankey_df)),
-                        x=0.5,
-                        y=1.03,
-                        xref="paper",
-                        yref="paper",
-                        showarrow=False,
-                        font=dict(size=12, color="gray"),
-                    )
-                ],
-                height=520,
-                margin=dict(l=10, r=10, t=70, b=10),
-            )
+            fig.update_layout(title_text=title, height=520, margin=dict(l=10, r=10, t=50, b=10))
             return fig
 
 
