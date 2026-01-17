@@ -12,31 +12,6 @@ def norm(ts: str) -> str:
 # --------------------------------------------------
 # MATCHES
 # --------------------------------------------------
-# def matches_ingest(json_data, user_id):
-
-#     rows = []
-
-#     for m in json_data.get(var.json_matches, []):
-#         match_event = m.get(var.json_match_event)
-#         if not match_event:
-#             continue
-
-#         ts = match_event[0].get(var.json_timestamp)
-#         if not ts:
-#             continue
-
-#         match_id = f"match_{user_id}_{norm(ts)}"
-
-#         rows.append({
-#             var.col_match_id: match_id,
-#             var.col_match_timestamp: ts,
-#             var.col_user_id: user_id,
-#         })
-
-#     if rows:
-#         supabase.table(var.table_matches).upsert(rows).execute()
-
-
 def matches_ingest(json_data, user_id):
 
     rows = []
@@ -57,25 +32,25 @@ def matches_ingest(json_data, user_id):
             var.col_match_id: match_id,
             var.col_match_timestamp: match_ts,
             var.col_user_id: user_id,
-            "we_met": False,
-            "my_type": False,
-            "we_met_timestamp": None,
+            var.col_we_met: False,
+            var.col_my_type: False,
+            var.col_we_met_timestamp : None,
         }
 
-        we_met_events = m.get("we_met", [])
+        we_met_events = m.get(var.col_we_met, [])
         if we_met_events:
             latest = max(
-                (e for e in we_met_events if e.get("timestamp")),
-                key=lambda e: e["timestamp"],
+                (e for e in we_met_events if e.get(var.json_timestamp)),
+                key=lambda e: e[var.json_timestamp],
                 default=None
             )
 
-            if latest and latest.get("did_meet_subject") == "Yes":
-                row["we_met"] = True
-                row["we_met_timestamp"] = latest.get("timestamp")
+            if latest and latest.get(var.json_we_met) == "Yes":
+                row[var.col_we_met] = True
+                row[var.col_we_met_timestamp] = latest.get(var.json_timestamp)
 
-                if latest.get("was_my_type") is True:
-                    row["my_type"] = True
+                if latest.get(var.json_my_type) is True:
+                    row[var.col_my_type] = True
 
         rows.append(row)
 
