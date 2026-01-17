@@ -161,7 +161,7 @@ def sankey_data(data, min_messages=2, min_minutes=5):
 
     df = data.copy()
 
-    # --- entry groups: ALL likes (row-level) ---
+    # --- like buckets (ALL likes) ---
     is_sent = df["like_direction"].eq("sent")
     is_received = df["like_direction"].eq("received")
     has_comment = df["comment_message_id"].notna()
@@ -170,7 +170,12 @@ def sankey_data(data, min_messages=2, min_minutes=5):
     likes_sent_all = df[is_sent & ~has_comment]
     likes_received_all = df[is_received]
 
-    # --- matched subset for everything AFTER "Matches" ---
+    # --- matched portions (ONLY where match_id exists) ---
+    comments_matched = comments_all[comments_all["match_id"].notna()]
+    likes_sent_matched = likes_sent_all[likes_sent_all["match_id"].notna()]
+    likes_received_matched = likes_received_all[likes_received_all["match_id"].notna()]
+
+    # matched universe (for downstream)
     matched = df[df["match_id"].notna()].copy()
 
     msg_cnt = matched["conversation_message_count"].fillna(0)
@@ -189,12 +194,17 @@ def sankey_data(data, min_messages=2, min_minutes=5):
     my_type = matched[is_we_met & matched["my_type"].fillna(False).astype(bool)]
 
     flows = [
-        # ALL likes (no filtering to matched)
-        ("Comments", "Matches", len(comments_all)),
-        ("Likes sent", "Matches", len(likes_sent_all)),
-        ("Likes received", "Matches", len(likes_received_all)),
+        # show ALL likes (no "no match" node)
+        ("Likes", "Comments", len(comments_all)),
+        ("Likes", "Likes sent", len(likes_sent_all)),
+        ("Likes", "Likes received", len(likes_received_all)),
 
-        # from here on: match-level
+        # only the matched portions flow into Matches
+        ("Comments", "Matches", comments_matched["match_id"].nunique()),
+        ("Likes sent", "Matches", likes_sent_matched["match_id"].nunique()),
+        ("Likes received", "Matches", likes_received_matched["match_id"].nunique()),
+
+        # downstream uses match_id unique counts
         ("Matches", "Conversations", matched[is_convo]["match_id"].nunique()),
 
         ("Matches", "We met", we_met_direct["match_id"].nunique()),
