@@ -99,7 +99,8 @@ if user_id:
                 .groupby(["Source", "Target"], as_index=False)["Value"].sum()
                 .query("Value > 0")
             )
-        
+
+            st.write(sankey_df)
             return sankey_df
             
         
