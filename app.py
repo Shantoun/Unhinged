@@ -128,7 +128,7 @@ if user_id:
             return sankey_df
     
         
-            sankey(df)
+        sankey(df)
 
 
 
