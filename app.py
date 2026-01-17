@@ -42,7 +42,6 @@ if user_id:
 
         
         def build_base_df(user_id):
-            # fetch
             likes_df = pd.DataFrame(
                 supabase.table("likes").select("*").eq("user_id", user_id).execute().data or []
             )
@@ -62,31 +61,31 @@ if user_id:
                     if c.endswith("_timestamp"):
                         df[c] = pd.to_datetime(df[c], errors="coerce")
         
-            # --- comments (messages tied to like_id) ---
+            # comments (messages tied to like_id)
             comments = (
                 messages_df.dropna(subset=["like_id"])[["message_id", "like_id"]]
                 .rename(columns={"message_id": "comment_message_id"})
                 .drop_duplicates(subset=["like_id"])
             )
         
-            # --- convo agg (exclude comments) ---
+            # convo msgs (exclude comments)
             convo_msgs = messages_df[messages_df["like_id"].isna()].copy()
         
             convo_agg = (
                 convo_msgs.groupby("match_id")
                 .agg(
                     conversation_message_count=("message_id", "count"),
-                    first_message_ts=("message_timestamp", "min"),
+                    first_message_timestamp=("message_timestamp", "min"),
                     last_message_ts=("message_timestamp", "max"),
                 )
                 .reset_index()
             )
             convo_agg["conversation_span_minutes"] = (
-                (convo_agg["last_message_ts"] - convo_agg["first_message_ts"]).dt.total_seconds() / 60
+                (convo_agg["last_message_ts"] - convo_agg["first_message_timestamp"]).dt.total_seconds() / 60
             )
-            convo_agg = convo_agg.drop(columns=["first_message_ts", "last_message_ts"])
+            convo_agg = convo_agg.drop(columns=["last_message_ts"])
         
-            # --- blocks (one per match) ---
+            # blocks (one per match)
             blocks_agg = (
                 blocks_df.dropna(subset=["match_id"])
                 .sort_values("block_timestamp")
@@ -94,18 +93,20 @@ if user_id:
                 [["match_id", "block_id"]]
             )
         
-            # --- sent likes base (1 row per like) ---
+            # matches subset (include match_timestamp)
+            matches_sub = matches_df[["match_id", "match_timestamp", "we_met", "my_type"]].copy()
+        
+            # sent likes base
             sent = likes_df.copy()
             sent = sent.merge(comments, on="like_id", how="left")
-            sent = sent.merge(matches_df[["match_id", "we_met", "my_type"]], on="match_id", how="left")
+            sent = sent.merge(matches_sub, on="match_id", how="left")
             sent = sent.merge(convo_agg, on="match_id", how="left")
             sent = sent.merge(blocks_agg, on="match_id", how="left")
         
-            # --- received likes: matches that don't link to any like.match_id ---
+            # received likes: matches that don't link to any like.match_id
             like_match_ids = set(likes_df["match_id"].dropna().unique()) if "match_id" in likes_df.columns else set()
             received_matches = matches_df[~matches_df["match_id"].isin(like_match_ids)].copy()
         
-            # make received rows have the same columns as sent
             received = received_matches.copy()
             received["like_id"] = pd.NA
             received["like_timestamp"] = pd.NaT
@@ -122,10 +123,10 @@ if user_id:
         
             base_df = pd.concat([sent, received], ignore_index=True)
         
-            # optional: label origin
             base_df["like_direction"] = base_df["like_id"].isna().map({True: "received", False: "sent"})
         
             return base_df
+
         
 
 
