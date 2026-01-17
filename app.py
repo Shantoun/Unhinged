@@ -43,21 +43,22 @@ if user_id:
         if st.sidebar.button("Upload Data", width="stretch"):
             hinge_sync_dialog()
             
-
-        df = ds.like_events_df(user_id)
-        st.write(df)
+        st.set_page_config(layout="wide")
+        
+        engagements = ds.like_events_df(user_id)
+        st.write(engagements)
 
 
             
         
-        sankey_data = ds.sankey_data(df)
+        sankey_data = ds.sankey_data(engagements)
         
         st.write(sankey_data)
 
 
 
-        def sankey(sankey_df):
-            title = "Engagement Funnel: {} Total Engagements".format(len(sankey_df))
+        def sankey(sankey_df, numb_of_engagements):
+            title = "Engagement Funnel: {} Total Engagements".format(numb_of_engagements)
         
             required = {"Source", "Target", "Value"}
             missing = required - set(sankey_df.columns)
@@ -154,7 +155,7 @@ if user_id:
 
 
 
-        fig = sankey(sankey_data)
+        fig = sankey(sankey_data, len(engagements))
         st.plotly_chart(fig, use_container_width=True)
 
 
