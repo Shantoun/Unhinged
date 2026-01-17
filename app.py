@@ -56,7 +56,7 @@ if user_id:
 
 
 
-        def sankey(sankey_df, title="Engagement Funnel", caption="{} Total Engagements".format(len(sankey_df))):
+        def sankey(sankey_df):
             import pandas as pd
             import plotly.graph_objects as go
         
@@ -153,12 +153,12 @@ if user_id:
             # fig.update_layout(title_text=title, height=520, margin=dict(l=10, r=10, t=50, b=10))
             fig.update_layout(
                 title=dict(
-                    text=title,
+                    text="Engagement Funnel",
                     x=0.5
                 ),
                 annotations=[
                     dict(
-                        text=caption,
+                        text="{} Total Engagements".format(len(sankey_df)),
                         x=0.5,
                         y=1.03,
                         xref="paper",
