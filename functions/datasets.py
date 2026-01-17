@@ -220,7 +220,7 @@ def like_events_df(user_id):
 
 
 
-def sankey_data(data, min_messages=2, min_minutes=5, join_comments_and_likes_sent=False):
+def sankey_data(data, min_messages=2, min_minutes=5, join_comments_and_likes_sent=True):
     
     df = data.copy()
 
