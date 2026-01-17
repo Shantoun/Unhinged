@@ -130,5 +130,5 @@ col_profile      = "profile"
 col_account      = "account"
 
 
-
+col_conversation_message_count = "conversation_message_count"
 
