@@ -47,66 +47,69 @@ if user_id:
         df = ds.like_events_df(user_id)
         st.write(df)
 
-        def sankey(data, min_messages=2, min_minutes=5):
-            import pandas as pd
-        
-            # --- entry groups (mutually exclusive) ---
-            is_sent = data["like_direction"].eq("sent")
-            is_received = data["like_direction"].eq("received")
-            has_comment = data["comment_message_id"].notna()
-        
-            comments = data[is_sent & has_comment]
-            likes_sent = data[is_sent & ~has_comment]
-            likes_received = data[is_received]
-        
-            # --- conversation classification ---
-            msg_cnt = data["conversation_message_count"].fillna(0)
-            span_min = data["conversation_span_minutes"].fillna(0)
-        
-            is_convo = (msg_cnt >= min_messages) & (span_min >= min_minutes)
-        
-            # outcomes
-            is_we_met = data["we_met"].fillna(False).astype(bool)
-            is_blocked = data["block_id"].notna()
-        
-            # split we_met / blocks into "via conversation" vs "direct from matches"
-            we_met_via_convo = data[is_convo & is_we_met]
-            we_met_direct = data[~is_convo & is_we_met]
-        
-            blocks_via_convo = data[is_convo & is_blocked]
-            blocks_direct = data[~is_convo & is_blocked]
-        
-            my_type = data[is_we_met & data["my_type"].fillna(False).astype(bool)]
-        
-            flows = [
-                ("Comments", "Matches", comments["match_id"].nunique()),
-                ("Likes", "Matches", likes_sent["match_id"].nunique()),
-                ("Received", "Matches", likes_received["match_id"].nunique()),
-        
-                ("Matches", "Conversations", data[is_convo]["match_id"].nunique()),
-        
-                ("Matches", "We met", we_met_direct["match_id"].nunique()),
-                ("Conversations", "We met", we_met_via_convo["match_id"].nunique()),
-        
-                ("Matches", "Blocks", blocks_direct["match_id"].nunique()),
-                ("Conversations", "Blocks", blocks_via_convo["match_id"].nunique()),
-        
-                ("We met", "My type", my_type["match_id"].nunique()),
-            ]
-        
-            sankey_df = (
-                pd.DataFrame(flows, columns=["Source", "Target", "Value"])
-                .groupby(["Source", "Target"], as_index=False)["Value"].sum()
-                .query("Value > 0")
-            )
 
-            st.write(sankey_df)
-            return sankey_df
             
         
-        sankey(df)
+        sankey_data = ds.sankey_data(df)
+        
+        st.write(sankey_data)
 
 
+
+        def sankey(sankey_df, title="Unhinged funnel"):
+            import plotly.graph_objects as go
+            import pandas as pd
+        
+            # expects columns: Source, Target, Value
+            required = {"Source", "Target", "Value"}
+            missing = required - set(sankey_df.columns)
+            if missing:
+                raise ValueError(f"sankey_df missing columns: {sorted(missing)}")
+        
+            df = sankey_df.copy()
+            df["Source"] = df["Source"].astype(str)
+            df["Target"] = df["Target"].astype(str)
+            df["Value"] = pd.to_numeric(df["Value"], errors="coerce").fillna(0).astype(int)
+        
+            # drop zeros just in case
+            df = df[df["Value"] > 0]
+        
+            labels = pd.Index(pd.concat([df["Source"], df["Target"]]).unique())
+            label_to_idx = {label: i for i, label in enumerate(labels)}
+        
+            source_idx = df["Source"].map(label_to_idx).tolist()
+            target_idx = df["Target"].map(label_to_idx).tolist()
+            values = df["Value"].tolist()
+        
+            fig = go.Figure(
+                data=[
+                    go.Sankey(
+                        arrangement="snap",
+                        node=dict(
+                            label=labels.tolist(),
+                            pad=18,
+                            thickness=16,
+                        ),
+                        link=dict(
+                            source=source_idx,
+                            target=target_idx,
+                            value=values,
+                        ),
+                    )
+                ]
+            )
+        
+            fig.update_layout(title_text=title, height=520, margin=dict(l=10, r=10, t=50, b=10))
+            return fig
+
+
+
+        fig = sankey(sankey_data)
+        st.plotly_chart(fig, use_container_width=True)
+
+
+
+    
 
     
     # Sign out
