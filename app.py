@@ -57,10 +57,9 @@ if user_id:
 
 
         def sankey(sankey_df, title="Unhinged funnel"):
-            import plotly.graph_objects as go
             import pandas as pd
+            import plotly.graph_objects as go
         
-            # expects columns: Source, Target, Value
             required = {"Source", "Target", "Value"}
             missing = required - set(sankey_df.columns)
             if missing:
@@ -69,17 +68,53 @@ if user_id:
             df = sankey_df.copy()
             df["Source"] = df["Source"].astype(str)
             df["Target"] = df["Target"].astype(str)
-            df["Value"] = pd.to_numeric(df["Value"], errors="coerce").fillna(0).astype(int)
+            df["Value"] = pd.to_numeric(df["Value"], errors="coerce").fillna(0)
         
-            # drop zeros just in case
             df = df[df["Value"] > 0]
         
             labels = pd.Index(pd.concat([df["Source"], df["Target"]]).unique())
             label_to_idx = {label: i for i, label in enumerate(labels)}
         
-            source_idx = df["Source"].map(label_to_idx).tolist()
-            target_idx = df["Target"].map(label_to_idx).tolist()
-            values = df["Value"].tolist()
+            df["s_idx"] = df["Source"].map(label_to_idx)
+            df["t_idx"] = df["Target"].map(label_to_idx)
+        
+            # totals for % math
+            outflow = df.groupby("s_idx")["Value"].sum()  # total leaving each source node
+            inflow = df.groupby("t_idx")["Value"].sum()   # total entering each target node
+        
+            # ---- link custom hover: % of previous (source) ----
+            link_custom = []
+            for s, t, v in zip(df["Source"], df["Target"], df["Value"]):
+                s_i = label_to_idx[s]
+                denom = float(outflow.get(s_i, 0.0))
+                pct = (float(v) / denom) if denom else 0.0
+                link_custom.append(f"{s} → {t}<br>{int(v)}<br>{pct:.1%} of {s}")
+        
+            # ---- node custom hover: show % of each immediate parent ----
+            node_custom = [""] * len(labels)
+            # build incoming link breakdown for each node
+            incoming = df.groupby(["t_idx", "s_idx"])["Value"].sum().reset_index()
+        
+            for t_i in range(len(labels)):
+                node_total = float(inflow.get(t_i, 0.0))
+                if node_total == 0:
+                    node_custom[t_i] = "0"
+                    continue
+        
+                rows = incoming[incoming["t_idx"] == t_i]
+                if rows.empty:
+                    node_custom[t_i] = f"Total: {int(node_total)}"
+                    continue
+        
+                lines = [f"Total: {int(node_total)}"]
+                for _, r in rows.iterrows():
+                    s_i = int(r["s_idx"])
+                    v = float(r["Value"])
+                    denom = float(outflow.get(s_i, 0.0))
+                    pct = (v / denom) if denom else 0.0
+                    lines.append(f"{labels[s_i]}: {pct:.1%}")
+        
+                node_custom[t_i] = "<br>".join(lines)
         
             fig = go.Figure(
                 data=[
@@ -89,11 +124,15 @@ if user_id:
                             label=labels.tolist(),
                             pad=18,
                             thickness=16,
+                            customdata=node_custom,
+                            hovertemplate="%{label}<br>%{customdata}<extra></extra>",
                         ),
                         link=dict(
-                            source=source_idx,
-                            target=target_idx,
-                            value=values,
+                            source=df["s_idx"].tolist(),
+                            target=df["t_idx"].tolist(),
+                            value=df["Value"].astype(float).tolist(),
+                            customdata=link_custom,
+                            hovertemplate="%{customdata}<extra></extra>",
                         ),
                     )
                 ]
