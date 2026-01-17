@@ -171,4 +171,5 @@ if user_id:
 
 # if not logged in → show login screen
 else:
+    st.set_page_config(layout="centered")
     auth.auth_screen()
