@@ -130,6 +130,13 @@ if user_id:
             out[group_name] = out[group_name].astype(str)
             out["likes"] = out["likes"].astype(int)
             out["matches"] = out["matches"].astype(int)
+
+
+            out["match_like_ratio"] = (
+                out["matches"] / out["likes"]
+            ).replace([pd.NA, pd.NaT, float("inf")], 0).fillna(0)
+
+            
             return out
         
         def likes_matches_aggs(data, tz="America/Toronto"):
