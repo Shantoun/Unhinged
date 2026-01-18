@@ -49,7 +49,7 @@ if user_id:
         st.write(engagements)
 
 
-            
+        st.header("Engagement Funnel")    
         # Sankey: Engagement Funnel
         sankey_data = ds.sankey_data(engagements)
         fig = viz.sankey(sankey_data, len(engagements))
@@ -57,7 +57,8 @@ if user_id:
 
 
         st.divider()
-
+        st.header("Timing Performance")
+        
         # Radial: Time Engagement
         time_table = ds.likes_matches_agg(engagements, "time")
         day_table  = ds.likes_matches_agg(engagements, "day")
