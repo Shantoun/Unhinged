@@ -137,17 +137,16 @@ if user_id:
                 go.Box(
                     x=x,
                     orientation="h",
-                    boxpoints=False,          # set True / "outliers" if you want points
                     name="",                  # prevents "trace0" style naming
                     showlegend=False,
                     customdata=customdata,
                     hovertemplate=(
-                        "Q1: %{customdata[0]:.4g}<br>"
-                        "Median: %{customdata[1]:.4g}<br>"
-                        "Q3: %{customdata[2]:.4g}<br>"
-                        "Lower fence: %{customdata[3]:.4g}<br>"
-                        "Upper fence: %{customdata[4]:.4g}<br>"
-                        "Mean: %{customdata[5]:.4g}"
+                        "Q1: %{customdata[0]:,.0f}<br>"
+                        "Median: %{customdata[1]:,.0f}<br>"
+                        "Q3: %{customdata[2]:,.0f}<br>"
+                        "Lower Fence: %{customdata[3]:,.0f}<br>"
+                        "Upper Fence: %{customdata[4]:,.0f}<br>"
+                        "Mean: %{customdata[5]:,.0f}"
                         "<extra></extra>"
                     ),
                 )
