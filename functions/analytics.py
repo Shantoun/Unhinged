@@ -139,7 +139,6 @@ def radial(data, day_col="day_of_week", rate_col="smoothed_rate"):
                 linecolor="#6B7280",
             ),
         ),
-        title=dict(text=title, x=0.5),
         margin=dict(l=10, r=10, t=40, b=10),
         showlegend=False,
     )
