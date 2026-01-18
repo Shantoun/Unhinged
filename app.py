@@ -56,6 +56,7 @@ if user_id:
         st.plotly_chart(fig, width="stretch")
 
 
+        st.divider()
 
         # Radial: Time Engagement
         time_table = ds.likes_matches_agg(engagements, "time")
@@ -63,51 +64,9 @@ if user_id:
         day_time_table  = ds.likes_matches_agg(engagements, "day_time").sort_values(["smoothed_rate", "likes"], ascending=[False, True])
 
 
-
-        def radial(data, day_col="day_of_week", rate_col="smoothed_rate", title="Score by day"):
-            df = data[[day_col, rate_col]].copy()
-        
-            # preserve given order
-            theta = df[day_col].astype(str).tolist()
-            r = df[rate_col].tolist()
-        
-            # close the loop
-            theta += [theta[0]]
-            r += [r[0]]
-        
-            fig = go.Figure()
-        
-            fig.add_trace(go.Scatterpolar(
-                r=r,
-                theta=theta,
-                mode="lines+markers",
-                line=dict(width=3),
-                marker=dict(size=7),
-                hovertemplate="<b>%{theta}</b><br>Score: %{r:.1f}<extra></extra>",
-            ))
-        
-            fig.update_layout(
-                polar=dict(
-                    angularaxis=dict(
-                        rotation=90,
-                        direction="clockwise",
-                        linecolor="#6B7280",
-                        gridcolor="rgba(0,0,0,0.15)",
-                    ),
-                    radialaxis=dict(
-                        tickfont=dict(color="#6B7280"),   # numbers
-                        gridcolor="rgba(0,0,0,0.15)",
-                        linecolor="#6B7280",
-                    ),
-                ),
-            )
-        
-            
-            return fig
-
     
-        fig_day_radial = radial(day_table)
-        fig_time_radial = radial(time_table, day_col="time_bucket")
+        fig_day_radial = viz.radial(day_table)
+        fig_time_radial = viz.radial(time_table, day_col="time_bucket")
         
         col1, col2 = st.columns(2)
         col1.plotly_chart(fig_day_radial, width="stretch")
@@ -118,8 +77,8 @@ if user_id:
         worst = (day_time_table .tail(3).iloc[:, 0] + " " + day_time_table .tail(3).iloc[:, 1]).reset_index(drop=True)
         
         out = pd.DataFrame({
-            "best_times": best,
-            "worst_times": worst,
+            "Peak Times": best,
+            "Off Times": worst,
         })
 
         out.index = [""] * len(out)
