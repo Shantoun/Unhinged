@@ -89,18 +89,19 @@ if user_id:
             ))
         
             fig.update_layout(
-                title=dict(text=title, x=0.5),
-                showlegend=False,
-                height=360,
-                margin=dict(l=20, r=20, t=50, b=20),
                 polar=dict(
                     angularaxis=dict(
                         rotation=90,
                         direction="clockwise",
+                        tickfont=dict(color="#E5E7EB"),   # day labels
+                        linecolor="#6B7280",
+                        gridcolor="rgba(255,255,255,0.15)",
                     ),
                     radialaxis=dict(
-                        showgrid=True,
-                        gridcolor="rgba(0,0,0,0.12)",
+                        tickfont=dict(color="#E5E7EB"),   # numbers
+                        tickcolor="#E5E7EB",
+                        gridcolor="rgba(255,255,255,0.15)",
+                        linecolor="#6B7280",
                     ),
                 ),
             )
@@ -130,6 +131,103 @@ if user_id:
 
 
 
+
+        from plotly.subplots import make_subplots
+        import streamlit as st
+        
+        def _add_radial_trace(fig, data, row, col, day_col, rate_col, name):
+            df = data[[day_col, rate_col]].copy()
+            theta = df[day_col].astype(str).tolist()
+            r = df[rate_col].tolist()
+        
+            theta += [theta[0]]
+            r += [r[0]]
+        
+            fig.add_trace(
+                go.Scatterpolar(
+                    r=r,
+                    theta=theta,
+                    mode="lines+markers",
+                    line=dict(width=3),
+                    marker=dict(size=7),
+                    name=name,
+                    hovertemplate="<b>%{theta}</b><br>Score: %{r:.3f}<extra></extra>",
+                    showlegend=False,
+                ),
+                row=row, col=col
+            )
+        
+        def radial_pair(
+            left_data,
+            right_data,
+            left_day_col="day_of_week",
+            right_day_col="time_bucket",
+            rate_col="smoothed_rate",
+            left_title="By day",
+            right_title="By time",
+            title="Score"
+        ):
+            fig = make_subplots(
+                rows=1, cols=2,
+                specs=[[{"type": "polar"}, {"type": "polar"}]],
+                subplot_titles=(left_title, right_title),
+                horizontal_spacing=0.08,
+            )
+        
+            _add_radial_trace(fig, left_data, 1, 1, left_day_col, rate_col, left_title)
+            _add_radial_trace(fig, right_data, 1, 2, right_day_col, rate_col, right_title)
+        
+            # style BOTH polar subplots
+            polar_style = dict(
+                angularaxis=dict(
+                    rotation=90,
+                    direction="clockwise",
+                    tickfont=dict(color="#E5E7EB"),
+                    linecolor="#6B7280",
+                    gridcolor="rgba(255,255,255,0.15)",
+                ),
+                radialaxis=dict(
+                    tickfont=dict(color="#E5E7EB"),
+                    tickcolor="#E5E7EB",
+                    gridcolor="rgba(255,255,255,0.15)",
+                    linecolor="#6B7280",
+                ),
+            )
+        
+            fig.update_layout(
+                title=dict(text=title, x=0.5),
+                margin=dict(l=20, r=20, t=60, b=20),
+                height=380,
+                polar=polar_style,
+                polar2=polar_style,
+            )
+        
+            return fig
+        
+        # usage
+        fig = radial_pair(
+            day_table, time_table,
+            left_day_col="day_of_week",
+            right_day_col="time_bucket",
+            rate_col="smoothed_rate",
+            left_title="Day of week",
+            right_title="Time bucket",
+            title="Score"
+        )
+        
+        st.plotly_chart(fig, use_container_width=True)
+
+
+
+
+
+
+
+
+
+
+
+    
 
     
     
