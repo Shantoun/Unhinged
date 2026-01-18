@@ -130,21 +130,21 @@ def radial(data, day_col="day_of_week", rate_col="smoothed_rate", title="Score b
             angularaxis=dict(
                 rotation=90,
                 direction="clockwise",
-                fixedrange=True,   # lock rotation
                 linecolor="#6B7280",
                 gridcolor="rgba(0,0,0,0.15)",
             ),
             radialaxis=dict(
-                fixedrange=True,   # lock zoom
                 tickfont=dict(color="#6B7280"),
                 gridcolor="rgba(0,0,0,0.15)",
                 linecolor="#6B7280",
             ),
         ),
+        title=dict(text=title, x=0.5),
+        margin=dict(l=10, r=10, t=40, b=10),
+        showlegend=False,
     )
 
     return fig
-
 
 
 
