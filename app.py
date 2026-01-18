@@ -93,14 +93,14 @@ if user_id:
                     angularaxis=dict(
                         rotation=90,
                         direction="clockwise",
-                        tickfont=dict(color="#E5E7EB"),   # day labels
+                        tickfont=dict(color="#6B7280"),   # day labels
                         linecolor="#6B7280",
-                        gridcolor="rgba(255,255,255,0.15)",
+                        gridcolor="rgba(0,0,0,0.15)",
                     ),
                     radialaxis=dict(
-                        tickfont=dict(color="#E5E7EB"),   # numbers
-                        tickcolor="#E5E7EB",
-                        gridcolor="rgba(255,255,255,0.15)",
+                        tickfont=dict(color="#6B7280"),   # numbers
+                        tickcolor="#6B7280",
+                        gridcolor="rgba(0,0,0,0.15)",
                         linecolor="#6B7280",
                     ),
                 ),
@@ -182,12 +182,12 @@ if user_id:
                 angularaxis=dict(
                     rotation=90,
                     direction="clockwise",
-                    tickfont=dict(color="#E5E7EB"),
+                    tickfont=dict(color="#6B7280"),
                     linecolor="#6B7280",
                     gridcolor="rgba(255,255,255,0.15)",
                 ),
                 radialaxis=dict(
-                    tickfont=dict(color="#E5E7EB"),
+                    tickfont=dict(color="#6B7280"),
                     tickcolor="#E5E7EB",
                     gridcolor="rgba(255,255,255,0.15)",
                     linecolor="#6B7280",
