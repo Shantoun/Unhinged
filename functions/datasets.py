@@ -442,7 +442,7 @@ def likes_matches_agg(data, by="time", tz="America/Toronto", m=100):
 
 
 
-
+    out = out.sort_values(["smoothed_rate", "likes"], ascending=[False, True])
     
     return out
 
