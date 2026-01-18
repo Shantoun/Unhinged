@@ -93,13 +93,13 @@ if user_id:
                     angularaxis=dict(
                         rotation=90,
                         direction="clockwise",
-                        tickfont=dict(color="#4b5d80"),   # day labels
+                        tickfont=dict(color="#4a84f7"),   # day labels
                         linecolor="#6B7280",
                         gridcolor="rgba(0,0,0,0.15)",
                     ),
                     radialaxis=dict(
-                        tickfont=dict(color="#4b5d80"),   # numbers
-                        tickcolor="#4b5d80",
+                        tickfont=dict(color="#4a84f7"),   # numbers
+                        tickcolor="#4a84f7",
                         gridcolor="rgba(0,0,0,0.15)",
                         linecolor="#6B7280",
                     ),
