@@ -131,7 +131,7 @@ if user_id:
 
 
 
-
+        #######################################################################################################
         from plotly.subplots import make_subplots
         import streamlit as st
         
@@ -184,12 +184,12 @@ if user_id:
                     direction="clockwise",
                     tickfont=dict(color="#6B7280"),
                     linecolor="#6B7280",
-                    gridcolor="rgba(255,255,255,0.15)",
+                    gridcolor="rgba(0,0,0,0.15)",
                 ),
                 radialaxis=dict(
                     tickfont=dict(color="#6B7280"),
-                    tickcolor="#E5E7EB",
-                    gridcolor="rgba(255,255,255,0.15)",
+                    tickcolor="#6B7280",
+                    gridcolor="rgba(0,0,0,0.15)",
                     linecolor="#6B7280",
                 ),
             )
