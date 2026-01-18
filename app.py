@@ -70,8 +70,8 @@ if user_id:
         fig_time_radial = viz.radial(time_table, day_col="time_bucket")
         
         col1, col2 = st.columns(2)
-        col1.plotly_chart(fig_day_radial, width="stretch", config={"staticPlot": True})
-        col2.plotly_chart(fig_time_radial, width="stretch", config={"staticPlot": True})
+        col1.plotly_chart(fig_day_radial, width="stretch", config={"scrollZoom": False, "doubleClick": False, "dragmode": False, "displaylogo": False, "modeBarButtonsToRemove": ["zoom","pan","select","lasso","zoomIn","zoomOut","autoScale","resetScale"]})
+        col2.plotly_chart(fig_time_radial, width="stretch", config={"scrollZoom": False, "doubleClick": False, "dragmode": False, "displaylogo": False, "modeBarButtonsToRemove": ["zoom","pan","select","lasso","zoomIn","zoomOut","autoScale","resetScale"]})
 
 
         best  = (day_time_table .head(3).iloc[:, 0] + " " + day_time_table .head(3).iloc[:, 1]).reset_index(drop=True)
