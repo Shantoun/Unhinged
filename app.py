@@ -122,6 +122,7 @@ if user_id:
             "worst_times": worst,
         })
 
+        out.index = [""] * len(df)
         
         st.table(out.reset_index(drop=True), border="horizontal")
 
