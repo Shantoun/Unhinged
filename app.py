@@ -137,6 +137,7 @@ if user_id:
         
             fig.update_layout(title=title, dragmode="zoom")
             fig.update_yaxes(fixedrange=True)
+            fig.update_xaxes(hoverformat=",.0f")
         
             return fig
 
