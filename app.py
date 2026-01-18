@@ -64,7 +64,7 @@ if user_id:
 
         st.write(time_table)
         st.write(day_table)
-        st.write(day_time_table)
+        st.write(day_time_table.sort_values(["smoothed_rate", "likes"], ascending=[False, True]))
 
         def radial(data, day_col="day_of_week", rate_col="smoothed_rate", title="Score by day"):
             df = data[[day_col, rate_col]].copy()
