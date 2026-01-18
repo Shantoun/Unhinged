@@ -85,7 +85,7 @@ if user_id:
                 mode="lines+markers",
                 line=dict(width=3),
                 marker=dict(size=7),
-                hovertemplate="<b>%{theta}</b><br>Score: %{r:.3f}<extra></extra>",
+                hovertemplate="<b>%{theta}</b><br>Score: %{r:.1f}<extra></extra>",
             ))
         
             fig.update_layout(
@@ -93,13 +93,13 @@ if user_id:
                     angularaxis=dict(
                         rotation=90,
                         direction="clockwise",
-                        tickfont=dict(color="#6B7280"),   # day labels
+                        tickfont=dict(color="#4b5d80"),   # day labels
                         linecolor="#6B7280",
                         gridcolor="rgba(0,0,0,0.15)",
                     ),
                     radialaxis=dict(
-                        tickfont=dict(color="#6B7280"),   # numbers
-                        tickcolor="#6B7280",
+                        tickfont=dict(color="#4b5d80"),   # numbers
+                        tickcolor="#4b5d80",
                         gridcolor="rgba(0,0,0,0.15)",
                         linecolor="#6B7280",
                     ),
@@ -151,7 +151,7 @@ if user_id:
                     line=dict(width=3),
                     marker=dict(size=7),
                     name=name,
-                    hovertemplate="<b>%{theta}</b><br>Score: %{r:.3f}<extra></extra>",
+                    hovertemplate="<b>%{theta}</b><br>Score: %{r:.1f}<extra></extra>",
                     showlegend=False,
                 ),
                 row=row, col=col
