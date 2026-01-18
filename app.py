@@ -140,6 +140,7 @@ if user_id:
                     name="",                  # prevents "trace0" style naming
                     showlegend=False,
                     customdata=customdata,
+                    hoveron="boxes",
                     hovertemplate=(
                         "Q1: %{customdata[0]:,.0f}<br>"
                         "Median: %{customdata[1]:,.0f}<br>"
