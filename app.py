@@ -117,15 +117,16 @@ if user_id:
         col2.plotly_chart(fig_time_radial, width="stretch")
 
 
-        best = day_time_table.head(3)
-        worst = day_time_table.tail(3)
+        best  = (df.head(3).iloc[:, 0] + " " + df.head(3).iloc[:, 1]).reset_index(drop=True)
+        worst = (df.tail(3).iloc[:, 0] + " " + df.tail(3).iloc[:, 1]).reset_index(drop=True)
         
         out = pd.DataFrame({
-            "best_times":  best.iloc[:, 0] + " " + best.iloc[:, 1],
-            "worst_times": worst.iloc[:, 0] + " " + worst.iloc[:, 1],
+            "best_times": best,
+            "worst_times": worst,
         })
+
         
-        st.table(out, border="horizontal")
+        st.table(out.reset_index(drop=True), border="horizontal")
 
 
 
