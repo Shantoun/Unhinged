@@ -116,41 +116,7 @@ if user_id:
 
 
 
-
-        
-        def horizontal_boxplot(numeric_col, title=None):
-            import numpy as np
-            import plotly.graph_objects as go
-        
-            x = np.asarray(numeric_col, dtype=float)
-            x = x[np.isfinite(x)]
-        
-            fig = go.Figure(
-                go.Box(
-                    x=x,
-                    orientation="h",
-                    boxpoints="outliers",
-                    name="",
-                    showlegend=False,
-                )
-            )
-        
-            fig.update_layout(title=title, dragmode="zoom")
-            fig.update_yaxes(fixedrange=True)
-            fig.update_xaxes(hoverformat=",.0f")
-        
-            return fig
-
-
-
-
-
-
-
-
-
-
-        fig_box_messaging_duration = horizontal_boxplot(
+        fig_box_messaging_duration = viz.horizontal_boxplot(
             engagements[var.col_conversation_span_minutes],
             title=None
         )
