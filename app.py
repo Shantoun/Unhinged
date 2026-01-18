@@ -129,15 +129,16 @@ if user_id:
             med = np.percentile(x, 50)
             q3 = np.percentile(x, 75)
             iqr = q3 - q1
+        
             lower_fence = q1 - 1.5 * iqr
             upper_fence = q3 + 1.5 * iqr
-            mean = float(np.mean(x))
         
-            stats = [q1, med, q3, lower_fence, upper_fence, mean]
+            mn = float(np.min(x))
+            mx = float(np.max(x))
         
             fig = go.Figure()
         
-            # 1️⃣ Real boxplot (visual only, hover disabled)
+            # main box (visual only)
             fig.add_trace(
                 go.Box(
                     x=x,
@@ -149,34 +150,27 @@ if user_id:
                 )
             )
         
-            # 2️⃣ Invisible bar overlay to carry hover
-            fig.add_trace(
-                go.Bar(
-                    x=[upper_fence - lower_fence],
-                    y=[""],
-                    base=lower_fence,
-                    orientation="h",
-                    opacity=0.001,  # invisible but hoverable
-                    showlegend=False,
-                    customdata=[stats],
-                    hovertemplate=(
-                        "Q1: %{customdata[0]:,.0f}<br>"
-                        "Median: %{customdata[1]:,.0f}<br>"
-                        "Q3: %{customdata[2]:,.0f}<br>"
-                        "Lower Fence: %{customdata[3]:,.0f}<br>"
-                        "Upper Fence: %{customdata[4]:,.0f}<br>"
-                        "Mean: %{customdata[5]:,.0f}"
-                        "<extra></extra>"
-                    ),
+            def hover_point(val, label):
+                fig.add_trace(
+                    go.Scatter(
+                        x=[val],
+                        y=[0],
+                        mode="markers",
+                        marker=dict(size=18, opacity=0),
+                        showlegend=False,
+                        hovertemplate=f"{label}: {val:,.0f}<extra></extra>",
+                    )
                 )
-            )
         
-            fig.update_layout(
-                title=title,
-                dragmode="zoom",
-                barmode="overlay",
-            )
+            hover_point(mn, "Min")
+            hover_point(lower_fence, "Lower Fence")
+            hover_point(q1, "Q1")
+            hover_point(med, "Median")
+            hover_point(q3, "Q3")
+            hover_point(upper_fence, "Upper Fence")
+            hover_point(mx, "Max")
         
+            fig.update_layout(title=title, dragmode="zoom")
             fig.update_yaxes(fixedrange=True, visible=False)
         
             return fig
