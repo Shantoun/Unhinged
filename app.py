@@ -113,15 +113,22 @@ if user_id:
         st.divider()
 
 
-
-
-
+    
+        mean_messaging_duration = int(engagements[var.col_conversation_span_minutes].mean())
         fig_box_messaging_duration = viz.horizontal_boxplot(
             engagements[var.col_conversation_span_minutes],
-            title=None
+            title="Messaging Duration - Mean: {} Minutes".format(mean_messaging_duration)
         )
 
 
+        mean_messaging_number = int(engagements[var.col_conversation_message_count].mean())
+        fig_box_messaging_number = viz.horizontal_boxplot(
+            engagements[var.col_conversation_message_count],
+            title="Messages per Session - Mean: {} Minutes".format(mean_messaging_number),
+            color = "#EF553B"
+        )
+
+        
         st.plotly_chart(fig_box_messaging_duration, width="stretch")
 
         
