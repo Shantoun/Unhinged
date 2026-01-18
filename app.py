@@ -53,7 +53,7 @@ if user_id:
         # Sankey: Engagement Funnel
         sankey_data = ds.sankey_data(engagements)
         fig = viz.sankey(sankey_data, len(engagements))
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, width="stretch")
 
 
 
@@ -113,8 +113,24 @@ if user_id:
         fig_time_radial = radial(time_table, day_col="time_bucket")
         
         col1, col2 = st.columns(2)
-        col1.plotly_chart(fig_day_radial, use_container_width=True)
-        col2.plotly_chart(fig_time_radial, use_container_width=True)
+        col1.plotly_chart(fig_day_radial, width="stretch")
+        col2.plotly_chart(fig_time_radial, width="stretch")
+
+
+        best = day_time_table.head(3)
+        worst = day_time_table.tail(3)
+        
+        out = pd.DataFrame({
+            "best_times":  best.iloc[:, 0] + " " + best.iloc[:, 1],
+            "worst_times": worst.iloc[:, 0] + " " + worst.iloc[:, 1],
+        })
+        
+        st.table(out, width="stretch")
+
+
+
+
+    
     
     # Sign out
     if st.sidebar.button("Sign Out", width="stretch"):
