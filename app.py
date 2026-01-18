@@ -49,6 +49,11 @@ if user_id:
         st.write(engagements)
 
 
+
+
+
+
+        
         st.header("Engagement Funnel")    
         # Sankey: Engagement Funnel
         sankey_data = ds.sankey_data(engagements)
@@ -56,6 +61,11 @@ if user_id:
         st.plotly_chart(fig, width="stretch")
 
 
+
+
+
+
+        
         st.divider()
         st.header("Timing Performance")
         
@@ -88,6 +98,35 @@ if user_id:
 
 
 
+
+
+
+        st.divider()
+        st.header("Messaging Analytics")
+    
+        mean_messaging_duration = int(engagements[var.col_conversation_span_minutes].mean())
+        fig_box_messaging_duration = viz.horizontal_boxplot(
+            engagements[var.col_conversation_span_minutes],
+            title="Messaging Duration - Mean: {:,} Minutes".format(mean_messaging_duration)
+        )
+
+
+        mean_messaging_number = int(engagements[var.col_conversation_message_count].mean())
+        fig_box_messaging_number = viz.horizontal_boxplot(
+            engagements[var.col_conversation_message_count],
+            title="Messages per Session - Mean: {:,} Messages".format(mean_messaging_number),
+            color = "#EF553B",
+            trace_name="Messages"
+        )
+
+        
+        st.plotly_chart(fig_box_messaging_duration, width="stretch")
+        st.plotly_chart(fig_box_messaging_number, width="stretch")
+
+
+
+
+        
         def rename_columns(df):
             rename_map = {
                 "time_bucket": "Time Slot",
@@ -109,28 +148,7 @@ if user_id:
         day_table = rename_columns(day_table)
         day_time_table = rename_columns(day_time_table)
 
-
-        st.divider()
-
-        st.subheader("Messaging Analytics")
-    
-        mean_messaging_duration = int(engagements[var.col_conversation_span_minutes].mean())
-        fig_box_messaging_duration = viz.horizontal_boxplot(
-            engagements[var.col_conversation_span_minutes],
-            title="Messaging Duration - Mean: {} Minutes".format(mean_messaging_duration)
-        )
-
-
-        mean_messaging_number = int(engagements[var.col_conversation_message_count].mean())
-        fig_box_messaging_number = viz.horizontal_boxplot(
-            engagements[var.col_conversation_message_count],
-            title="Messages per Session - Mean: {} Minutes".format(mean_messaging_number),
-            color = "#EF553B"
-        )
-
         
-        st.plotly_chart(fig_box_messaging_duration, width="stretch")
-        st.plotly_chart(fig_box_messaging_number, width="stretch")
         
         st.dataframe(time_table, hide_index=True)
         st.dataframe(day_table, hide_index=True)
