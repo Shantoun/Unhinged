@@ -438,15 +438,15 @@ def likes_matches_agg(data, by="time", tz="America/Toronto", m=100):
     out["smoothed_rate"] = (
         (out["matches"] + m * global_rate) /
         (out["likes"] + m)
-    ).fillna(0)
+    ).fillna(0).where(out["matches"] > 0, float(0))
 
-    out["score"] = (((out["smoothed_rate"] - global_rate) * (out["likes"] / (out["likes"] + m)))**2).where(out["matches"] > 0, float("-inf"))
+
 
 
     
     return out
 
-def likes_matches_aggs(data, tz="America/Toronto", m=100):
+def likes_matches_aggs(data, tz="America/Toronto"):
     return {
         "time":     likes_matches_agg(data, by="time", tz=tz, m=m),
         "day":      likes_matches_agg(data, by="day", tz=tz, m=m),
