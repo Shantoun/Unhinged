@@ -125,7 +125,7 @@ if user_id:
             "worst_times": worst.iloc[:, 0] + " " + worst.iloc[:, 1],
         })
         
-        st.table(out, width="stretch")
+        st.table(out, border="horizontal")
 
 
 
