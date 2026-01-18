@@ -60,11 +60,11 @@ if user_id:
         # Radial: Time Engagement
         time_table = ds.likes_matches_agg(engagements, "time")
         day_table  = ds.likes_matches_agg(engagements, "day")
-        day_time_table  = ds.likes_matches_agg(engagements, "day_time")
+        day_time_table  = ds.likes_matches_agg(engagements, "day_time").sort_values(["smoothed_rate", "likes"], ascending=[False, True])
 
         st.write(time_table)
         st.write(day_table)
-        st.write(day_time_table.sort_values(["smoothed_rate", "likes"], ascending=[False, True]))
+        st.write(day_time_table)
 
         def radial(data, day_col="day_of_week", rate_col="smoothed_rate", title="Score by day"):
             df = data[[day_col, rate_col]].copy()
