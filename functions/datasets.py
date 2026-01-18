@@ -441,6 +441,8 @@ def likes_matches_agg(data, by="time", tz="America/Toronto", m=20):
     ).fillna(0)
 
     out["score"] = (out["smoothed_rate"] - global_rate) * (out["likes"] / (out["likes"] + m))
+
+    out["rank"] = out["score"].rank(method="dense", ascending=True).where(out["matches"] > 0, 0).astype(int)
     
     return out
 
