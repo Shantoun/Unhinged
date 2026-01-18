@@ -440,7 +440,7 @@ def likes_matches_agg(data, by="time", tz="America/Toronto", m=100):
         (out["likes"] + m)
     ).fillna(0).where(out["matches"] > 0, float(0))
 
-
+    out["smoothed_rate"] = out["smoothed_rate"]*100
 
     out = out.sort_values(["smoothed_rate", "likes"], ascending=[False, True])
     
