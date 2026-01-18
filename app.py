@@ -155,7 +155,7 @@ if user_id:
                     x=[med],
                     y=[0],
                     mode="markers",
-                    marker=dict(opacity=50),
+                    marker=dict(opacity=.50),
                     showlegend=False,
                     customdata=[stats],
                     hovertemplate=(
