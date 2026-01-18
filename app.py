@@ -62,9 +62,7 @@ if user_id:
         day_table  = ds.likes_matches_agg(engagements, "day")
         day_time_table  = ds.likes_matches_agg(engagements, "day_time").sort_values(["smoothed_rate", "likes"], ascending=[False, True])
 
-        st.write(time_table)
-        st.write(day_table)
-        st.write(day_time_table)
+
 
         def radial(data, day_col="day_of_week", rate_col="smoothed_rate", title="Score by day"):
             df = data[[day_col, rate_col]].copy()
@@ -129,104 +127,32 @@ if user_id:
 
 
 
-        #######################################################################################################
-        from plotly.subplots import make_subplots
-        import streamlit as st
+        def rename_columns(df):
+            rename_map = {
+                "time_bucket": "Time Slot",
+                "day_of_week": "Day of Week",
+                "likes": "Likes & Comments",
+                "matches": "Matches",
+                "raw_rate": "Match Rate",
+                "smoothed_rate": "Score",
+            }
         
-        def _add_radial_trace(fig, data, row, col, day_col, rate_col, name):
-            df = data[[day_col, rate_col]].copy()
-            theta = df[day_col].astype(str).tolist()
-            r = df[rate_col].tolist()
-        
-            theta += [theta[0]]
-            r += [r[0]]
-        
-            fig.add_trace(
-                go.Scatterpolar(
-                    r=r,
-                    theta=theta,
-                    mode="lines+markers",
-                    line=dict(width=3),
-                    marker=dict(size=7),
-                    name=name,
-                    hovertemplate="<b>%{theta}</b><br>Score: %{r:.1f}<extra></extra>",
-                    showlegend=False,
-                ),
-                row=row, col=col
+            return (
+                df.rename(columns={k: v for k, v in rename_map.items() if k in df.columns})
+                  .reset_index(drop=True)
             )
         
-        def radial_pair(
-            left_data,
-            right_data,
-            left_day_col="day_of_week",
-            right_day_col="time_bucket",
-            rate_col="smoothed_rate",
-            left_title="By day",
-            right_title="By time",
-            title="Score"
-        ):
-            fig = make_subplots(
-                rows=1, cols=2,
-                specs=[[{"type": "polar"}, {"type": "polar"}]],
-                subplot_titles=(left_title, right_title),
-                horizontal_spacing=0.08,
-            )
+
         
-            _add_radial_trace(fig, left_data, 1, 1, left_day_col, rate_col, left_title)
-            _add_radial_trace(fig, right_data, 1, 2, right_day_col, rate_col, right_title)
+        df = rename_columns(df)
+
+        time_table = rename_columns(time_table)
+        day_table = rename_columns(day_table)
+        day_time_table = rename_columns(day_time_table)
         
-            # style BOTH polar subplots
-            polar_style = dict(
-                angularaxis=dict(
-                    rotation=90,
-                    direction="clockwise",
-                    tickfont=dict(color="#6B7280"),
-                    linecolor="#6B7280",
-                    gridcolor="rgba(0,0,0,0.15)",
-                ),
-                radialaxis=dict(
-                    tickfont=dict(color="#6B7280"),
-                    tickcolor="#6B7280",
-                    gridcolor="rgba(0,0,0,0.15)",
-                    linecolor="#6B7280",
-                ),
-            )
-        
-            fig.update_layout(
-                title=dict(text=title, x=0.5),
-                margin=dict(l=20, r=20, t=60, b=20),
-                height=380,
-                polar=polar_style,
-                polar2=polar_style,
-            )
-        
-            return fig
-        
-        # usage
-        fig = radial_pair(
-            day_table, time_table,
-            left_day_col="day_of_week",
-            right_day_col="time_bucket",
-            rate_col="smoothed_rate",
-            left_title="Day of week",
-            right_title="Time bucket",
-            title="Score"
-        )
-        
-        st.plotly_chart(fig, use_container_width=True)
-
-
-
-
-
-
-
-
-
-
-
-    
-
+        st.write(time_table)
+        st.write(day_table)
+        st.write(day_time_table)
     
     
     # Sign out
