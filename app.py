@@ -112,7 +112,7 @@ if user_id:
 
         st.divider()
 
-
+        st.subheader("Messaging Analytics")
     
         mean_messaging_duration = int(engagements[var.col_conversation_span_minutes].mean())
         fig_box_messaging_duration = viz.horizontal_boxplot(
@@ -130,7 +130,7 @@ if user_id:
 
         
         st.plotly_chart(fig_box_messaging_duration, width="stretch")
-
+        st.plotly_chart(fig_box_messaging_number, width="stretch")
         
         st.dataframe(time_table, hide_index=True)
         st.dataframe(day_table, hide_index=True)
