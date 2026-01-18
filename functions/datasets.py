@@ -152,72 +152,6 @@ def like_events_df(user_id):
 
 
 
-# def sankey_data(data, min_messages=2, min_minutes=5):
-#     import pandas as pd
-
-#     df = data.copy()
-
-#     # --- engagement split (ALL likes) ---
-#     is_sent = df["like_direction"].eq("sent")
-#     is_received = df["like_direction"].eq("received")
-#     has_comment = df[var.col_comment_message_id].notna()
-
-#     comments = df[is_sent & has_comment]
-#     likes_sent = df[is_sent & ~has_comment]
-#     likes_received = df[is_received]
-
-#     # --- matched portions only ---
-#     comments_m = comments[comments[var.col_match_id].notna()]
-#     likes_sent_m = likes_sent[likes_sent[var.col_match_id].notna()]
-#     likes_received_m = likes_received[likes_received[var.col_match_id].notna()]
-
-#     flows = [
-#         ("Engagements", "Comments", len(comments)),
-#         ("Engagements", "Likes sent", len(likes_sent)),
-#         ("Engagements", "Likes received", len(likes_received)),
-
-#         # only matched portions flow forward
-#         ("Comments", "Matches", comments_m[var.col_match_id].nunique()),
-#         ("Likes sent", "Matches", likes_sent_m[var.col_match_id].nunique()),
-#         ("Likes received", "Matches", likes_received_m[var.col_match_id].nunique()),
-#     ]
-
-#     # --- downstream (match-level only) ---
-#     matched = df[df[var.col_match_id].notna()].copy()
-
-#     msg_cnt = matched[var.col_conversation_message_count].fillna(0)
-#     span_min = matched[var.col_conversation_span_minutes].fillna(0)
-#     is_convo = (msg_cnt >= min_messages) & (span_min >= min_minutes)
-
-#     is_we_met = matched[var.col_we_met].fillna(False).astype(bool)
-#     is_blocked = matched[var.col_block_id].notna()
-
-#     we_met_via_convo = matched[is_convo & is_we_met]
-#     we_met_direct = matched[~is_convo & is_we_met]
-
-#     blocks_via_convo = matched[is_convo & is_blocked]
-#     blocks_direct = matched[~is_convo & is_blocked]
-
-#     my_type = matched[is_we_met & matched[var.col_my_type].fillna(False).astype(bool)]
-
-#     flows += [
-#         ("Matches", "Conversations", matched[is_convo][var.col_match_id].nunique()),
-
-#         ("Matches", "We met", we_met_direct[var.col_match_id].nunique()),
-#         ("Conversations", "We met", we_met_via_convo[var.col_match_id].nunique()),
-
-#         ("Matches", "Blocks", blocks_direct[var.col_match_id].nunique()),
-#         ("Conversations", "Blocks", blocks_via_convo[var.col_match_id].nunique()),
-
-#         ("We met", "My type", my_type[var.col_match_id].nunique()),
-#     ]
-
-#     return (
-#         pd.DataFrame(flows, columns=["Source", "Target", "Value"])
-#         .groupby(["Source", "Target"], as_index=False)["Value"].sum()
-#         .query("Value > 0")
-#     )
-
 
 
 def sankey_data(data, min_messages=2, min_minutes=5, join_comments_and_likes_sent=False):
@@ -263,31 +197,31 @@ def sankey_data(data, min_messages=2, min_minutes=5, join_comments_and_likes_sen
         start_no_match = len(comments_nm) + len(likes_sent_nm)
 
         flows = [
-            (start, "Matches", start_matches),
+            (start, var.json_matches, start_matches),
             (start, "No match", start_no_match),
 
-            ("Likes received", "Matches", likes_received_m[var.col_match_id].nunique()),
+            ("Likes received", var.json_matches, likes_received_m[var.col_match_id].nunique()),
             ("Likes received", "No match", len(likes_received_nm)),
         ]
     else:
         flows = [
-            ("Comments", "Matches", comments_m[var.col_match_id].nunique()),
+            ("Comments", var.json_matches, comments_m[var.col_match_id].nunique()),
             ("Comments", "No match", len(comments_nm)),
 
-            ("Likes sent", "Matches", likes_sent_m[var.col_match_id].nunique()),
+            ("Likes sent", var.json_matches, likes_sent_m[var.col_match_id].nunique()),
             ("Likes sent", "No match", len(likes_sent_nm)),
 
-            ("Likes received", "Matches", likes_received_m[var.col_match_id].nunique()),
+            ("Likes received", var.json_matches, likes_received_m[var.col_match_id].nunique()),
             ("Likes received", "No match", len(likes_received_nm)),
         ]
 
     flows += [
-        ("Matches", "Conversations", matched[is_convo][var.col_match_id].nunique()),
+        (var.json_matches, "Conversations", matched[is_convo][var.col_match_id].nunique()),
 
-        ("Matches", "We met", we_met_direct[var.col_match_id].nunique()),
+        (var.json_matches, "We met", we_met_direct[var.col_match_id].nunique()),
         ("Conversations", "We met", we_met_via_convo[var.col_match_id].nunique()),
 
-        ("Matches", "Blocks", blocks_direct[var.col_match_id].nunique()),
+        (var.json_matches, "Blocks", blocks_direct[var.col_match_id].nunique()),
         ("Conversations", "Blocks", blocks_via_convo[var.col_match_id].nunique()),
 
         ("We met", "My type", my_type[var.col_match_id].nunique()),
@@ -347,8 +281,8 @@ def likes_matches_agg(data, by="time", tz="America/Toronto", m=100):
     df.match_timestamp = pd.to_datetime(df.match_timestamp, utc=True, errors="coerce").dt.tz_convert(tz)
 
     # Global baseline rate (sent only)
-    total_likes = df.like_id.nunique() if "like_id" in df.columns else 0
-    total_matches = df.match_id.nunique() if "match_id" in df.columns else 0
+    total_likes = df.like_id.nunique() if var.col_like_id in df.columns else 0
+    total_matches = df.match_id.nunique() if var.col_match_id in df.columns else 0
     global_rate = (total_matches / total_likes) if total_likes else 0
 
     # Group keys for likes
@@ -356,7 +290,7 @@ def likes_matches_agg(data, by="time", tz="America/Toronto", m=100):
     like_time = _time_bucket_from_dt(df.like_timestamp)
 
     # Matches frame + keys (aligned length)
-    match_df = df.dropna(subset=["match_id", "match_timestamp"]).copy()
+    match_df = df.dropna(subset=[var.col_match_id, "match_timestamp"]).copy()
     match_day  = _dow_from_dt(match_df.match_timestamp)
     match_time = _time_bucket_from_dt(match_df.match_timestamp)
 
@@ -364,17 +298,17 @@ def likes_matches_agg(data, by="time", tz="America/Toronto", m=100):
         group_order = _TIME_ORDER
 
         likes = (
-            df.groupby(like_time, dropna=False)["like_id"]
+            df.groupby(like_time, dropna=False)[var.col_like_id]
               .nunique()
               .reindex(group_order, fill_value=0)
-              .rename("likes")
+              .rename(var.table_likes)
         )
 
         matches = (
-            match_df.groupby(match_time, dropna=False)["match_id"]
+            match_df.groupby(match_time, dropna=False)[var.col_match_id]
                     .nunique()
                     .reindex(group_order, fill_value=0)
-                    .rename("matches")
+                    .rename(var.json_matches)
         )
 
         out = pd.concat([likes, matches], axis=1).fillna(0).reset_index()
@@ -385,17 +319,17 @@ def likes_matches_agg(data, by="time", tz="America/Toronto", m=100):
         group_order = _DOW_ORDER
 
         likes = (
-            df.groupby(like_day, dropna=False)["like_id"]
+            df.groupby(like_day, dropna=False)[var.col_like_id]
               .nunique()
               .reindex(group_order, fill_value=0)
-              .rename("likes")
+              .rename(var.table_likes)
         )
 
         matches = (
-            match_df.groupby(match_day, dropna=False)["match_id"]
+            match_df.groupby(match_day, dropna=False)[var.col_match_id]
                     .nunique()
                     .reindex(group_order, fill_value=0)
-                    .rename("matches")
+                    .rename(var.json_matches)
         )
 
         out = pd.concat([likes, matches], axis=1).fillna(0).reset_index()
@@ -409,17 +343,17 @@ def likes_matches_agg(data, by="time", tz="America/Toronto", m=100):
         )
 
         likes = (
-            df.groupby([like_day, like_time], dropna=False)["like_id"]
+            df.groupby([like_day, like_time], dropna=False)[var.col_like_id]
               .nunique()
               .reindex(full_index, fill_value=0)
-              .rename("likes")
+              .rename(var.table_likes)
         )
 
         matches = (
-            match_df.groupby([match_day, match_time], dropna=False)["match_id"]
+            match_df.groupby([match_day, match_time], dropna=False)[var.col_match_id]
                     .nunique()
                     .reindex(full_index, fill_value=0)
-                    .rename("matches")
+                    .rename(var.json_matches)
         )
 
         out = pd.concat([likes, matches], axis=1).fillna(0).reset_index()
@@ -430,19 +364,19 @@ def likes_matches_agg(data, by="time", tz="America/Toronto", m=100):
         out["time_bucket"] = out["time_bucket"].astype(str)
 
     # Rates
-    out["likes"] = out["likes"].astype(int)
-    out["matches"] = out["matches"].astype(int)
+    out[var.table_likes] = out[var.table_likes].astype(int)
+    out[var.json_matches] = out[var.json_matches].astype(int)
 
-    out["raw_rate"] = (out["matches"] / out["likes"]).replace([float("inf")], 0).fillna(0)
+    out["raw_rate"] = (out[var.json_matches] / out[var.table_likes]).replace([float("inf")], 0).fillna(0)
 
     out["smoothed_rate"] = (
-        (out["matches"] + m * global_rate) /
-        (out["likes"] + m)
-    ).fillna(0).where(out["matches"] > 0, float(0))
+        (out[var.json_matches] + m * global_rate) /
+        (out[var.table_likes] + m)
+    ).fillna(0).where(out[var.json_matches] > 0, float(0))
 
     out["smoothed_rate"] = out["smoothed_rate"]*100
 
-    # out = out.sort_values(["smoothed_rate", "likes"], ascending=[False, True])
+    # out = out.sort_values(["smoothed_rate", var.table_likes], ascending=[False, True])
     
     return out
 
