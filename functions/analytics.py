@@ -147,7 +147,10 @@ def radial(data, day_col="day_of_week", rate_col="smoothed_rate"):
 
 
 
-def horizontal_boxplot(numeric_col, title=None, color="#636EFA"):
+def horizontal_boxplot(numeric_col, title=None, color="#636EFA", trace_name="Minutes"):
+    import numpy as np
+    import plotly.graph_objects as go
+
     x = np.asarray(numeric_col, dtype=float)
     x = x[np.isfinite(x)]
 
@@ -156,7 +159,7 @@ def horizontal_boxplot(numeric_col, title=None, color="#636EFA"):
             x=x,
             orientation="h",
             boxpoints="outliers",
-            name="",
+            name=trace_name,   # <- shows "Minutes" instead of trace0
             showlegend=False,
             marker_color=color,
         )
