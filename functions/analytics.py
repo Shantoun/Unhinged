@@ -3,7 +3,7 @@ import variables as var
 
 import pandas as pd
 import plotly.graph_objects as go
-
+import numpy as np
 
 
 
@@ -147,6 +147,26 @@ def radial(data, day_col="day_of_week", rate_col="smoothed_rate"):
 
 
 
+def horizontal_boxplot(numeric_col, title=None, color="#636EFA"):
+    x = np.asarray(numeric_col, dtype=float)
+    x = x[np.isfinite(x)]
+
+    fig = go.Figure(
+        go.Box(
+            x=x,
+            orientation="h",
+            boxpoints="outliers",
+            name="",
+            showlegend=False,
+            marker_color=color,
+        )
+    )
+
+    fig.update_layout(title=title, dragmode="zoom")
+    fig.update_yaxes(fixedrange=True)
+    fig.update_xaxes(hoverformat=",.0f")
+
+    return fig
 
 
 
