@@ -125,55 +125,22 @@ if user_id:
             x = np.asarray(numeric_col, dtype=float)
             x = x[np.isfinite(x)]
         
-            q1 = np.percentile(x, 25)
-            med = np.percentile(x, 50)
-            q3 = np.percentile(x, 75)
-            iqr = q3 - q1
-        
-            lower_fence = q1 - 1.5 * iqr
-            upper_fence = q3 + 1.5 * iqr
-        
-            mn = float(np.min(x))
-            mx = float(np.max(x))
-        
-            fig = go.Figure()
-        
-            # main box (visual only)
-            fig.add_trace(
+            fig = go.Figure(
                 go.Box(
                     x=x,
                     orientation="h",
                     boxpoints="outliers",
-                    hoverinfo="skip",
                     name="",
                     showlegend=False,
                 )
             )
         
-            def hover_point(val, label):
-                fig.add_trace(
-                    go.Scatter(
-                        x=[val],
-                        y=[0],
-                        mode="markers",
-                        marker=dict(size=18, opacity=0),
-                        showlegend=False,
-                        hovertemplate=f"{label}: {val:,.0f}<extra></extra>",
-                    )
-                )
-        
-            hover_point(mn, "Min")
-            hover_point(lower_fence, "Lower Fence")
-            hover_point(q1, "Q1")
-            hover_point(med, "Median")
-            hover_point(q3, "Q3")
-            hover_point(upper_fence, "Upper Fence")
-            hover_point(mx, "Max")
-        
             fig.update_layout(title=title, dragmode="zoom")
-            fig.update_yaxes(fixedrange=True, visible=False)
+            fig.update_yaxes(fixedrange=True)
         
             return fig
+
+
 
 
 
