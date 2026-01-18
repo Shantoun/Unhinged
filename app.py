@@ -110,7 +110,7 @@ if user_id:
 
     
         radial(day_table)
-        radial(time_table)
+        radial(day_col="time_bucket", time_table)
         
         
     
