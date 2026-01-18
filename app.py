@@ -148,11 +148,11 @@ if user_id:
         time_table = rename_columns(time_table)
         day_table = rename_columns(day_table)
         day_time_table = rename_columns(day_time_table)
+
         
-        st.write(time_table)
-        st.write(day_table)
-        st.write(day_time_table)
-    
+        st.dataframe(time_table, hide_index=True)
+        st.dataframe(day_table, hide_index=True)
+        st.dataframe(day_time_table, hide_index=True)
     
     # Sign out
     if st.sidebar.button("Sign Out", width="stretch"):
