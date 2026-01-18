@@ -8,7 +8,7 @@ import plotly.graph_objects as go
 
 
 def sankey(sankey_df, numb_of_engagements):
-    title = "Engagement Funnel: {} Total Engagements".format(numb_of_engagements)
+    title = "{} Total Engagements".format(numb_of_engagements)
 
     required = {"Source", "Target", "Value"}
     missing = required - set(sankey_df.columns)
