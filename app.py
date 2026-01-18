@@ -133,31 +133,30 @@ if user_id:
             upper_fence = q3 + 1.5 * iqr
             mean = float(np.mean(x))
         
-            stats = np.array([q1, med, q3, lower_fence, upper_fence, mean], dtype=float)
-        
-            y0 = ""  # one category
-            y = np.repeat(y0, len(x))
+            stats = [q1, med, q3, lower_fence, upper_fence, mean]
         
             fig = go.Figure()
         
+            # 1️⃣ Real boxplot (visual only, hover disabled)
             fig.add_trace(
                 go.Box(
                     x=x,
-                    y=y,
                     orientation="h",
                     boxpoints="outliers",
+                    hoverinfo="skip",
                     name="",
                     showlegend=False,
-                    hoverinfo="skip",
                 )
             )
         
+            # 2️⃣ Invisible bar overlay to carry hover
             fig.add_trace(
-                go.Scatter(
-                    x=[med],
-                    y=[y0],
-                    mode="markers",
-                    marker=dict(opacity=0.01, size=30),
+                go.Bar(
+                    x=[upper_fence - lower_fence],
+                    y=[""],
+                    base=lower_fence,
+                    orientation="h",
+                    opacity=0.001,  # invisible but hoverable
                     showlegend=False,
                     customdata=[stats],
                     hovertemplate=(
@@ -172,11 +171,15 @@ if user_id:
                 )
             )
         
-            fig.update_layout(title=title, dragmode="zoom")
+            fig.update_layout(
+                title=title,
+                dragmode="zoom",
+                barmode="overlay",
+            )
+        
             fig.update_yaxes(fixedrange=True, visible=False)
         
             return fig
-
 
 
 
