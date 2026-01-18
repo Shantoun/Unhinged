@@ -442,7 +442,7 @@ def likes_matches_agg(data, by="time", tz="America/Toronto", m=100):
 
     out["smoothed_rate"] = out["smoothed_rate"]*100
 
-    out = out.sort_values(["smoothed_rate", "likes"], ascending=[False, True])
+    # out = out.sort_values(["smoothed_rate", "likes"], ascending=[False, True])
     
     return out
 
@@ -450,7 +450,7 @@ def likes_matches_aggs(data, tz="America/Toronto"):
     return {
         "time":     likes_matches_agg(data, by="time", tz=tz, m=m),
         "day":      likes_matches_agg(data, by="day", tz=tz, m=m),
-        "day_time": likes_matches_agg(data, by="day_time", tz=tz, m=m),
+        "day_time": likes_matches_agg(data, by="day_time", tz=tz, m=m).sort_values(["smoothed_rate", "likes"], ascending=[False, True]),
     }
 
 
