@@ -105,16 +105,16 @@ if user_id:
                 ),
             )
         
-            st.plotly_chart(fig, use_container_width=True)
+            
             return fig
 
     
-        radial(day_table)
-        radial(time_table, day_col="time_bucket")
+        fig_day_radial = radial(day_table)
+        fig_time_radial = radial(time_table, day_col="time_bucket")
         
-        
-    
-
+        col1, col2 = st.columns(2)
+        col1.plotly_chart(fig_day_radial, use_container_width=True)
+        col2.plotly_chart(fig_time_radial, use_container_width=True)
     
     # Sign out
     if st.sidebar.button("Sign Out", width="stretch"):
