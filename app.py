@@ -111,6 +111,10 @@ if user_id:
 
 
         st.divider()
+
+        fig_box_messaging_duration = go.Figure(go.Box(y=engagements[var.col_conversation_span_minutes]))
+        st.plotly_chart(fig_box_messaging_duration, width="stretch")
+
         
         st.dataframe(time_table, hide_index=True)
         st.dataframe(day_table, hide_index=True)
