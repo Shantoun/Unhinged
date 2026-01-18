@@ -105,7 +105,7 @@ def sankey(sankey_df, numb_of_engagements):
 
 
 
-def radial(data, day_col="day_of_week", rate_col="smoothed_rate", title="Score by day"):
+def radial(data, day_col="day_of_week", rate_col="smoothed_rate"):
     df = data[[day_col, rate_col]].copy()
 
     theta = df[day_col].astype(str).tolist()
