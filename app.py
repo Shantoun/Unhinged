@@ -143,8 +143,7 @@ if user_id:
             )
         
 
-        
-        df = rename_columns(df)
+
 
         time_table = rename_columns(time_table)
         day_table = rename_columns(day_table)
