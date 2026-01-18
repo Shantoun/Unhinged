@@ -440,9 +440,9 @@ def likes_matches_agg(data, by="time", tz="America/Toronto", m=20):
         (out["likes"] + m)
     ).fillna(0)
 
-    out["score"] = (out["smoothed_rate"] - global_rate) * (out["likes"] / (out["likes"] + m))
+    out["score"] = (((out["smoothed_rate"] - global_rate) * (out["likes"] / (out["likes"] + m)))**2).where(out["matches"] > 0, float("-inf"))
 
-    out["sort_score"] = out["score"].where(out["matches"] > 0, float("-inf"))
+
     
     return out
 
