@@ -97,7 +97,7 @@ if user_id:
                         gridcolor="rgba(0,0,0,0.15)",
                     ),
                     radialaxis=dict(
-                        tickfont=dict(color="#4a84f7"),   # numbers
+                        tickfont=dict(color="#6B7280"),   # numbers
                         gridcolor="rgba(0,0,0,0.15)",
                         linecolor="#6B7280",
                     ),
