@@ -135,12 +135,15 @@ if user_id:
         
             stats = np.array([q1, med, q3, lower_fence, upper_fence, mean], dtype=float)
         
+            y0 = ""  # one category
+            y = np.repeat(y0, len(x))
+        
             fig = go.Figure()
         
-            # main box (NO hover)
             fig.add_trace(
                 go.Box(
                     x=x,
+                    y=y,
                     orientation="h",
                     boxpoints="outliers",
                     name="",
@@ -149,13 +152,12 @@ if user_id:
                 )
             )
         
-            # invisible hover carrier
             fig.add_trace(
                 go.Scatter(
                     x=[med],
-                    y=[0],
+                    y=[y0],
                     mode="markers",
-                    marker=dict(opacity=.50),
+                    marker=dict(opacity=0.01, size=30),
                     showlegend=False,
                     customdata=[stats],
                     hovertemplate=(
@@ -170,11 +172,8 @@ if user_id:
                 )
             )
         
-            fig.update_layout(
-                title=title,
-                dragmode="zoom",
-            )
-            fig.update_yaxes(fixedrange=True)
+            fig.update_layout(title=title, dragmode="zoom")
+            fig.update_yaxes(fixedrange=True, visible=False)
         
             return fig
 
