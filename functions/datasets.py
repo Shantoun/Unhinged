@@ -328,7 +328,7 @@ def _time_bucket_from_dt(dt_series):
 def _dow_from_dt(dt_series):
     return pd.Categorical(dt_series.dt.day_name(), categories=_DOW_ORDER, ordered=True)
 
-def likes_matches_agg(data, by="time", tz="America/Toronto", m=50):
+def likes_matches_agg(data, by="time", tz="America/Toronto", m=100):
     """
     by: "time" | "day" | "day_time"
     Returns counts + raw_rate + smoothed_rate for sent likes only.
