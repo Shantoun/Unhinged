@@ -117,8 +117,11 @@ if user_id:
 
 
 
-
+        
         def horizontal_boxplot(numeric_col, title=None):
+            import numpy as np
+            import plotly.graph_objects as go
+        
             x = np.asarray(numeric_col, dtype=float)
             x = x[np.isfinite(x)]
         
@@ -131,16 +134,30 @@ if user_id:
             mean = float(np.mean(x))
         
             stats = np.array([q1, med, q3, lower_fence, upper_fence, mean], dtype=float)
-            customdata = np.tile(stats, (len(x), 1))
         
-            fig = go.Figure(
+            fig = go.Figure()
+        
+            # main box (NO hover)
+            fig.add_trace(
                 go.Box(
                     x=x,
                     orientation="h",
-                    name="",                  # prevents "trace0" style naming
+                    boxpoints="outliers",
+                    name="",
                     showlegend=False,
-                    customdata=customdata,
-                    hoveron="boxes",
+                    hoverinfo="skip",
+                )
+            )
+        
+            # invisible hover carrier
+            fig.add_trace(
+                go.Scatter(
+                    x=[med],
+                    y=[0],
+                    mode="markers",
+                    marker=dict(opacity=0),
+                    showlegend=False,
+                    customdata=[stats],
                     hovertemplate=(
                         "Q1: %{customdata[0]:,.0f}<br>"
                         "Median: %{customdata[1]:,.0f}<br>"
@@ -155,10 +172,9 @@ if user_id:
         
             fig.update_layout(
                 title=title,
-                dragmode="zoom",          # drag-zoom
+                dragmode="zoom",
             )
-            fig.update_yaxes(fixedrange=True)   # lock y so zoom is only along x
-            # x stays zoomable by default
+            fig.update_yaxes(fixedrange=True)
         
             return fig
 
