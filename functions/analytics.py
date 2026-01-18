@@ -108,11 +108,9 @@ def sankey(sankey_df, numb_of_engagements):
 def radial(data, day_col="day_of_week", rate_col="smoothed_rate", title="Score by day"):
     df = data[[day_col, rate_col]].copy()
 
-    # preserve given order
     theta = df[day_col].astype(str).tolist()
     r = df[rate_col].tolist()
 
-    # close the loop
     theta += [theta[0]]
     r += [r[0]]
 
@@ -132,19 +130,21 @@ def radial(data, day_col="day_of_week", rate_col="smoothed_rate", title="Score b
             angularaxis=dict(
                 rotation=90,
                 direction="clockwise",
+                fixedrange=True,   # lock rotation
                 linecolor="#6B7280",
                 gridcolor="rgba(0,0,0,0.15)",
             ),
             radialaxis=dict(
-                tickfont=dict(color="#6B7280"),   # numbers
+                fixedrange=True,   # lock zoom
+                tickfont=dict(color="#6B7280"),
                 gridcolor="rgba(0,0,0,0.15)",
                 linecolor="#6B7280",
             ),
         ),
     )
 
-    
     return fig
+
 
 
 
