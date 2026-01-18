@@ -9,7 +9,7 @@ import plotly.graph_objects as go
 
 import functions.datasets as ds
 import functions.analytics as viz
-
+import numpy as np
 
 # initialize the key so it always exists
 if var.col_user_id not in st.session_state:
