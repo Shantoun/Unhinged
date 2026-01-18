@@ -57,12 +57,7 @@ if user_id:
 
 
 
-
-
-
-
-
-
+        # Radial: Time Engagement
         time_table = ds.likes_matches_agg(engagements, "time")
         day_table  = ds.likes_matches_agg(engagements, "day")
         day_time_table  = ds.likes_matches_agg(engagements, "day_time")
@@ -71,6 +66,50 @@ if user_id:
         st.write(day_table)
         st.write(day_time_table)
 
+        def radial(data, day_col="day_of_week", rate_col="smoothed_rate", title="Score by day"):
+            df = data[[day_col, rate_col]].copy()
+        
+            # preserve given order
+            theta = df[day_col].astype(str).tolist()
+            r = df[rate_col].tolist()
+        
+            # close the loop
+            theta += [theta[0]]
+            r += [r[0]]
+        
+            fig = go.Figure()
+        
+            fig.add_trace(go.Scatterpolar(
+                r=r,
+                theta=theta,
+                mode="lines+markers",
+                line=dict(width=3),
+                marker=dict(size=7),
+                hovertemplate="<b>%{theta}</b><br>Score: %{r:.3f}<extra></extra>",
+            ))
+        
+            fig.update_layout(
+                title=dict(text=title, x=0.5),
+                showlegend=False,
+                height=360,
+                margin=dict(l=20, r=20, t=50, b=20),
+                polar=dict(
+                    angularaxis=dict(
+                        rotation=90,
+                        direction="clockwise",
+                    ),
+                    radialaxis=dict(
+                        showgrid=True,
+                        gridcolor="rgba(0,0,0,0.12)",
+                    ),
+                ),
+            )
+        
+            st.plotly_chart(fig, use_container_width=True)
+            return fig
+
+    
+        radial(day_table)
     
     
 
