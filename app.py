@@ -112,7 +112,70 @@ if user_id:
 
         st.divider()
 
-        fig_box_messaging_duration = go.Figure(go.Box(y=engagements[var.col_conversation_span_minutes]))
+
+
+
+
+
+
+        def horizontal_boxplot(numeric_col, title=None):
+            x = np.asarray(numeric_col, dtype=float)
+            x = x[np.isfinite(x)]
+        
+            q1 = np.percentile(x, 25)
+            med = np.percentile(x, 50)
+            q3 = np.percentile(x, 75)
+            iqr = q3 - q1
+            lower_fence = q1 - 1.5 * iqr
+            upper_fence = q3 + 1.5 * iqr
+            mean = float(np.mean(x))
+        
+            stats = np.array([q1, med, q3, lower_fence, upper_fence, mean], dtype=float)
+            customdata = np.tile(stats, (len(x), 1))
+        
+            fig = go.Figure(
+                go.Box(
+                    x=x,
+                    orientation="h",
+                    boxpoints=False,          # set True / "outliers" if you want points
+                    name="",                  # prevents "trace0" style naming
+                    showlegend=False,
+                    customdata=customdata,
+                    hovertemplate=(
+                        "Q1: %{customdata[0]:.4g}<br>"
+                        "Median: %{customdata[1]:.4g}<br>"
+                        "Q3: %{customdata[2]:.4g}<br>"
+                        "Lower fence: %{customdata[3]:.4g}<br>"
+                        "Upper fence: %{customdata[4]:.4g}<br>"
+                        "Mean: %{customdata[5]:.4g}"
+                        "<extra></extra>"
+                    ),
+                )
+            )
+        
+            fig.update_layout(
+                title=title,
+                dragmode="zoom",          # drag-zoom
+            )
+            fig.update_yaxes(fixedrange=True)   # lock y so zoom is only along x
+            # x stays zoomable by default
+        
+            return fig
+
+
+
+
+
+
+
+
+
+        fig_box_messaging_duration = horizontal_boxplot(
+            engagements[var.col_conversation_span_minutes],
+            title=None
+        )
+
+
         st.plotly_chart(fig_box_messaging_duration, width="stretch")
 
         
