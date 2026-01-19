@@ -130,45 +130,133 @@ if user_id:
         st.divider()
         st.header("Messaging Engagement")
 
-        def scatter_plot(x_col, y_col, title=None, color="#636EFA"):
+        _TIME_BINS = [
+            (0, 4,  "12 - 4am"),
+            (4, 8,  "4 - 8am"),
+            (8, 12, "8am - 12pm"),
+            (12, 16,"12 - 4pm"),
+            (16, 20,"4 - 8pm"),
+            (20, 24,"8pm - 12am"),
+        ]
+        
+        def scatter_plot(df, x_key, y_col, first_ts_col, title=None, color="#636EFA", jitter=0.18):
             import numpy as np
+            import pandas as pd
             import plotly.graph_objects as go
         
-            x = np.asarray(x_col, dtype=float)
-            y = np.asarray(y_col, dtype=float)
+            def _time_bin_label(ts: pd.Series) -> pd.Series:
+                h = ts.dt.hour
+                out = pd.Series(index=ts.index, dtype="object")
+                for start, end, label in _TIME_BINS:
+                    out[(h >= start) & (h < end)] = label
+                return out
         
-            mask = np.isfinite(x) & np.isfinite(y)
-            x = x[mask].astype(int)
-            y = y[mask].astype(int)
+            ts = pd.to_datetime(df[first_ts_col], errors="coerce")
         
-            fig = go.Figure(
-                go.Scatter(
-                    x=x,
-                    y=y,
-                    mode="markers",
-                    marker=dict(color=color),
+            # build X
+            if x_key == "Time of Day":
+                x_cat = _time_bin_label(ts)
+                x_is_cat = True
+                x_title = "Time of Day"
+            elif x_key == "Day of Week":
+                x_cat = ts.dt.day_name()
+                x_is_cat = True
+                x_title = "Day of Week"
+            elif x_key == "Daytime":
+                x_cat = ts.dt.day_name().astype(str) + " • " + _time_bin_label(ts).astype(str)
+                x_is_cat = True
+                x_title = "Daytime"
+            else:
+                x = pd.to_numeric(df[x_key], errors="coerce")
+                x_is_cat = False
+                x_title = str(x_key)
+        
+            # Y
+            y = pd.to_numeric(df[y_col], errors="coerce")
+        
+            if x_is_cat:
+                mask = x_cat.notna() & y.notna()
+                x_cat = x_cat[mask]
+                y = y[mask].astype(float).round().astype("Int64")
+        
+                cats = pd.Categorical(x_cat)
+                codes = cats.codes.astype(float)
+        
+                # jitter so points don’t stack in a single vertical line per category
+                rng = np.random.default_rng(42)
+                x_plot = codes + rng.uniform(-jitter, jitter, size=len(codes))
+        
+                tickvals = np.arange(len(cats.categories))
+                ticktext = list(cats.categories)
+        
+                fig = go.Figure(
+                    go.Scatter(
+                        x=x_plot,
+                        y=y.astype(float),
+                        mode="markers",
+                        marker=dict(color=color),
+                        customdata=np.array(x_cat.astype(str)),
+                        hovertemplate=(
+                            f"{x_title}: %{customdata}<br>"
+                            f"{y_col}: %{y:,.0f}"
+                            "<extra></extra>"
+                        ),
+                    )
                 )
-            )
         
+                fig.update_xaxes(
+                    title=x_title,
+                    tickmode="array",
+                    tickvals=tickvals,
+                    ticktext=ticktext,
+                    zeroline=False,
+                )
+        
+            else:
+                mask = x.notna() & y.notna()
+                x = x[mask].astype(float).round().astype("Int64")
+                y = y[mask].astype(float).round().astype("Int64")
+        
+                fig = go.Figure(
+                    go.Scatter(
+                        x=x.astype(float),
+                        y=y.astype(float),
+                        mode="markers",
+                        marker=dict(color=color),
+                        hovertemplate=(
+                            f"{x_title}: %{x:,.0f}<br>"
+                            f"{y_col}: %{y:,.0f}"
+                            "<extra></extra>"
+                        ),
+                    )
+                )
+        
+                fig.update_xaxes(title=x_title, hoverformat=",.0f")
+        
+            fig.update_yaxes(title=str(y_col), hoverformat=",.0f")
             fig.update_layout(title=title)
-            fig.update_xaxes(hoverformat=",")
-            fig.update_yaxes(hoverformat=",")
         
             return fig
 
-
-        columns_scatter = [var.col_avg_message_gap, var.col_first_message_delay]
-
+        columns_scatter = [
+            var.col_avg_message_gap,
+            var.col_first_message_delay,
+            "Time of Day",
+            "Day of Week",
+            "Daytime",
+        ]
+        
         colx = st.selectbox("", columns_scatter)
         
         fig = scatter_plot(
-            engagements[colx],
-            engagements[var.col_conversation_message_count],
-            title="Messaging Analytics"
+            engagements,
+            x_key=colx,
+            y_col=var.col_conversation_message_count,
+            first_ts_col=var.col_first_message_timestamp,
+            title="Messaging Analytics",
         )
         
         st.plotly_chart(fig, width="stretch")
-
 
 
 
