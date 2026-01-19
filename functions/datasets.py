@@ -166,8 +166,13 @@ def like_events_df(user_id):
 
     base_df = pd.concat([sent, received], ignore_index=True)
 
-    base_df["like_direction"] = base_df[var.col_like_id].isna().map(
+    base_df[var.col_like_direction] = base_df[var.col_like_id].isna().map(
         {True: "received", False: "sent"}
+    )
+    
+    base_df[var.col_first_message_delay] = (
+        (base_df[var.col_first_message_timestamp] - base_df[var.col_match_timestamp])
+        .dt.total_seconds() / 60
     )
 
     base_df = _dedupe_keep_best(base_df)
@@ -179,8 +184,8 @@ def sankey_data(data, min_messages=2, min_minutes=5, join_comments_and_likes_sen
     
     df = data.copy()
 
-    is_sent = df["like_direction"].eq("sent")
-    is_received = df["like_direction"].eq("received")
+    is_sent = df[var.col_like_direction].eq("sent")
+    is_received = df[var.col_like_direction].eq("received")
     has_comment = df[var.col_comment_message_id].notna()
 
     comments = df[is_sent & has_comment]
@@ -294,7 +299,7 @@ def likes_matches_agg(data, by="time", tz="America/Toronto", m=100):
     df = data.copy()
 
     # Only sent likes
-    if "like_direction" in df.columns:
+    if var.col_like_direction in df.columns:
         df = df[df.like_direction == "sent"].copy()
 
     # Parse timestamps (assumes UTC input; converts to tz)
