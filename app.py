@@ -67,7 +67,7 @@ if user_id:
 
         
         st.divider()
-        st.header("Timing Performance")
+        st.header("Likes & Comments Timing Performance")
         
         # Radial: Time Engagement
         time_table = ds.likes_matches_agg(engagements, "time")
@@ -125,6 +125,54 @@ if user_id:
 
 
 
+
+
+        st.divider()
+        st.header("Messaging Engagement")
+
+        def scatter_plot(x_col, y_col, title=None, color="#636EFA"):
+            import numpy as np
+            import plotly.graph_objects as go
+        
+            x = np.asarray(x_col, dtype=float)
+            y = np.asarray(y_col, dtype=float)
+        
+            mask = np.isfinite(x) & np.isfinite(y)
+            x = x[mask].astype(int)
+            y = y[mask].astype(int)
+        
+            fig = go.Figure(
+                go.Scatter(
+                    x=x,
+                    y=y,
+                    mode="markers",
+                    marker=dict(color=color),
+                )
+            )
+        
+            fig.update_layout(title=title)
+            fig.update_xaxes(hoverformat=",")
+            fig.update_yaxes(hoverformat=",")
+        
+            return fig
+
+
+        columns_scatter = [var.col_avg_message_gap, var.col_first_message_delay]
+
+        colx = st.selectbox("", columns_scatter)
+        
+        fig = scatter_plot(
+            engagements[colx],
+            engagements[var.col_conversation_message_count],
+            title="Messaging Analytics"
+        )
+        
+        st.plotly_chart(fig, width="stretch")
+
+
+
+
+        
 
         
         def rename_columns(df):
