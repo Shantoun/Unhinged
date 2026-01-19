@@ -130,134 +130,6 @@ if user_id:
         st.divider()
         st.header("Messaging Engagement")
 
- 
-        
-        _TIME_BINS = [
-            (0, 4,  "12 - 4am"),
-            (4, 8,  "4 - 8am"),
-            (8, 12, "8am - 12pm"),
-            (12, 16,"12 - 4pm"),
-            (16, 20,"4 - 8pm"),
-            (20, 24,"8pm - 12am"),
-        ]
-        
-        def scatter_plot(
-            df,
-            x_key,
-            y_col,
-            first_ts_col,
-            title=None,
-            color="#636EFA",
-            jitter=0.18,
-        ):
-            import numpy as np
-            import pandas as pd
-            import plotly.graph_objects as go
-        
-            DAY_ORDER = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
-            TIME_BIN_ORDER = [label for _, _, label in _TIME_BINS]
-            DAYTIME_ORDER = [f"{d} • {t}" for d in DAY_ORDER for t in TIME_BIN_ORDER]
-        
-            def _time_bin_label(ts: pd.Series) -> pd.Series:
-                h = ts.dt.hour
-                out = pd.Series(index=ts.index, dtype="object")
-                for start, end, label in _TIME_BINS:
-                    out[(h >= start) & (h < end)] = label
-                return out
-        
-            ts = pd.to_datetime(df[first_ts_col], errors="coerce")
-        
-            # Build X
-            if x_key == "First Message: Time of Day":
-                x_series = _time_bin_label(ts)
-                cat_order = TIME_BIN_ORDER
-                x_title = x_key
-                x_is_cat = True
-        
-            elif x_key == "First Message: Day of Week":
-                x_series = ts.dt.day_name()
-                cat_order = DAY_ORDER
-                x_title = x_key
-                x_is_cat = True
-        
-            elif x_key == "First Message: Daytime":
-                x_series = ts.dt.day_name().astype(str) + " • " + _time_bin_label(ts).astype(str)
-                cat_order = DAYTIME_ORDER
-                x_title = x_key
-                x_is_cat = True
-        
-            else:
-                x_series = pd.to_numeric(df[x_key], errors="coerce")
-                x_title = str(x_key)
-                x_is_cat = False
-        
-            y_series = pd.to_numeric(df[y_col], errors="coerce")
-        
-            if x_is_cat:
-                mask = x_series.notna() & y_series.notna()
-                x_series = x_series[mask].astype(str)
-                y_series = y_series[mask]
-        
-                x_cat = pd.Categorical(x_series, categories=cat_order, ordered=True)
-                codes = x_cat.codes.astype(float)
-        
-                # drop anything not in categories (-1 code)
-                ok = codes >= 0
-                codes = codes[ok]
-                y_vals = y_series.iloc[np.where(ok)[0]].astype(float).round().astype(int)
-        
-                rng = np.random.default_rng(42)
-                x_plot = codes + rng.uniform(-jitter, jitter, size=len(codes))
-        
-                fig = go.Figure(
-                    go.Scatter(
-                        x=x_plot,
-                        y=y_vals,
-                        mode="markers",
-                        marker=dict(color=color),
-                        customdata=np.array(x_cat[ok].astype(str)),
-                        hovertemplate=(
-                            f"{x_title}: %{{customdata}}<br>"
-                            f"{y_col}: %{{y:,.0f}}"
-                            "<extra></extra>"
-                        ),
-                    )
-                )
-        
-                fig.update_xaxes(
-                    title=x_title,
-                    tickmode="array",
-                    tickvals=np.arange(len(cat_order)),
-                    ticktext=cat_order,
-                    zeroline=False,
-                )
-        
-            else:
-                mask = x_series.notna() & y_series.notna()
-                x_vals = x_series[mask].astype(float).round().astype(int)
-                y_vals = y_series[mask].astype(float).round().astype(int)
-        
-                fig = go.Figure(
-                    go.Scatter(
-                        x=x_vals,
-                        y=y_vals,
-                        mode="markers",
-                        marker=dict(color=color),
-                        hovertemplate=(
-                            f"{x_title}: %{{x:,.0f}}<br>"
-                            f"{y_col}: %{{y:,.0f}}"
-                            "<extra></extra>"
-                        ),
-                    )
-                )
-        
-                fig.update_xaxes(title=x_title, hoverformat=",.0f")
-        
-            fig.update_yaxes(title=str(y_col), hoverformat=",.0f")
-            fig.update_layout(title=title)
-        
-            return fig
-
 
         engagements.rename(columns={
             var.col_avg_message_gap: "Av. Time Between Messages (Mins)",
@@ -277,7 +149,7 @@ if user_id:
         colx = st.selectbox("", columns_scatter)
 
         
-        fig = scatter_plot(
+        fig = viz.scatter_plot(
             engagements,
             x_key=colx,
             y_col="# of Messages per Session",
@@ -296,6 +168,15 @@ if user_id:
         }, inplace=True)
         
 
+
+
+
+
+
+
+
+
+        
         
         def rename_columns(df):
             rename_map = {
