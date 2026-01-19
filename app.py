@@ -280,7 +280,7 @@ if user_id:
         fig = scatter_plot(
             engagements,
             x_key=colx,
-            y_col=var.col_conversation_message_count,
+            y_col="# of Messages per Session",
             first_ts_col=var.col_first_message_timestamp,
             title="Messaging Analytics",
         )
