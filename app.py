@@ -261,14 +261,14 @@ if user_id:
 
         engagements.rename(columns={
             var.col_avg_message_gap: "Av. Time Between Messages (Mins)",
-            var.col_first_message_delay: "Match to First Message Time (Min)",
+            var.col_first_message_delay: "Match to First Message Time (Mins)",
             var.col_conversation_message_count: "# of Messages per Session",
         }, inplace=True)
         
 
         columns_scatter = [
-            "Average Time Between Messages (Mins)",
-            "Match to First Message Time (Min)",
+            "Av. Time Between Messages (Mins)",
+            "Match to First Message Time (Mins)",
             "First Message: Time of Day",
             "First Message: Day of Week",
             "First Message: Daytime",
@@ -291,7 +291,7 @@ if user_id:
         # I know how this looks lol, shut up...
         engagements.rename(columns={
             "Av. Time Between Messages (Mins)": var.col_avg_message_gap,
-            "Match to First Message Time (Min)": var.col_first_message_delay,
+            "Match to First Message Time (Mins)": var.col_first_message_delay,
             "# of Messages per Session": var.col_conversation_message_count,
         }, inplace=True)
         
