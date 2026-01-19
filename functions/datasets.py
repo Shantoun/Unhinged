@@ -175,10 +175,10 @@ def like_events_df(user_id):
         .dt.total_seconds() / 60
     )
 
-    base_df[var.col_like_match_delay] = (
-        (base_df[var.col_match_timestamp] - base_df[var.col_like_timestamp])
-        .dt.total_seconds() / 60
-    )
+    # base_df[var.col_like_match_delay] = (
+    #     (base_df[var.col_match_timestamp] - base_df[var.col_like_timestamp])
+    #     .dt.total_seconds() / 60
+    # )
     
     base_df = _dedupe_keep_best(base_df)
     return base_df
