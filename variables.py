@@ -132,3 +132,6 @@ col_account      = "account"
 
 col_conversation_message_count = "conversation_message_count"
 col_avg_message_gap = "avg_message_gap"
+col_first_message_delay = "first_message_delay"
+col_like_direction = "like_direction"
+
