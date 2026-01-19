@@ -197,8 +197,8 @@ if user_id:
                         marker=dict(color=color),
                         customdata=np.array(x_cat.astype(str)),
                         hovertemplate=(
-                            f"{x_title}: %{customdata}<br>"
-                            f"{y_col}: %{y:,.0f}"
+                            f"{x_title}: %{{x:,.0f}}<br>"
+                            f"{y_col}: %{{y:,.0f}}"
                             "<extra></extra>"
                         ),
                     )
