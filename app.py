@@ -224,8 +224,8 @@ if user_id:
                         mode="markers",
                         marker=dict(color=color),
                         hovertemplate=(
-                            f"{x_title}: %{x:,.0f}<br>"
-                            f"{y_col}: %{y:,.0f}"
+                            f"{x_title}: %{{x:,.0f}}<br>"
+                            f"{y_col}: %{{y:,.0f}}"
                             "<extra></extra>"
                         ),
                     )
