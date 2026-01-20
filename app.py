@@ -160,30 +160,7 @@ if user_id:
         st.plotly_chart(fig, width="stretch")
 
         
-        # I know how this looks lol, shut up...
-        engagements.rename(columns={
-            "Av. Time Between Messages (Mins)": var.col_avg_message_gap,
-            "Match to First Message Time (Mins)": var.col_first_message_delay,
-            "# of Messages per Session": var.col_conversation_message_count,
-        }, inplace=True)
-        
 
-
-
-
-        
-        st.divider()
-        st.header("Time From Like to Match")
-
-        mean_like_match_delay = int(engagements[var.col_like_match_delay].mean())
-        fig_like_match_delay = viz.horizontal_boxplot(
-            engagements[var.col_like_match_delay],
-            title="Like to Match Time - Mean: {:,} Minutes".format(mean_like_match_delay),
-            color = "#EF553B",
-            trace_name="Minutes"
-        )
-
-        st.plotly_chart(fig_like_match_delay, width="stretch")
 
 
 
@@ -237,7 +214,30 @@ if user_id:
         st.write(result["label"])
 
 
+        # I know how this looks lol, shut up...
+        engagements.rename(columns={
+            "Av. Time Between Messages (Mins)": var.col_avg_message_gap,
+            "Match to First Message Time (Mins)": var.col_first_message_delay,
+            "# of Messages per Session": var.col_conversation_message_count,
+        }, inplace=True)
+        
 
+
+
+
+        
+        st.divider()
+        st.header("Time From Like to Match")
+
+        mean_like_match_delay = int(engagements[var.col_like_match_delay].mean())
+        fig_like_match_delay = viz.horizontal_boxplot(
+            engagements[var.col_like_match_delay],
+            title="Like to Match Time - Mean: {:,} Minutes".format(mean_like_match_delay),
+            color = "#EF553B",
+            trace_name="Minutes"
+        )
+
+        st.plotly_chart(fig_like_match_delay, width="stretch")
 
         
         
