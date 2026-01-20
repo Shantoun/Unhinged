@@ -4,3 +4,4 @@ snowflake-connector-python
 supabase
 Authlib
 plotly
+scipy
