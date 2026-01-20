@@ -347,14 +347,11 @@ if user_id:
         
             df = events_df.copy()
         
-            # infer timestamp column
             if ts_col is None:
                 candidates = [c for c in df.columns if "timestamp" in c.lower()]
                 ts_col = candidates[0] if candidates else df.columns[0]
         
             df[ts_col] = pd.to_datetime(df[ts_col], errors="coerce")
-        
-            # fix tz-aware vs tz-naive (force everything to tz-naive)
             if pd.api.types.is_datetime64tz_dtype(df[ts_col]):
                 df[ts_col] = df[ts_col].dt.tz_convert(None)
         
@@ -373,10 +370,8 @@ if user_id:
             one_day = pd.Timedelta(days=1)
         
             if span < one_day:
-                show_select = False
                 bucket = "All"
             else:
-                show_select = True
                 opts = ["Day"]
                 if span >= pd.Timedelta(days=7):
                     opts = ["Week"] + opts
@@ -386,37 +381,31 @@ if user_id:
                     opts = ["Quarter"] + opts
                 if ge_offset(tmin, tmax, pd.DateOffset(years=1)):
                     opts = ["Year"] + opts
-        
                 bucket = st.selectbox("Group by", opts, index=0)
         
-            # ---------- bucketing + pretty labels ----------
+            # ---- bucketing + pretty labels ----
             if bucket == "All":
                 df["_bucket_dt"] = pd.Timestamp("1970-01-01")
                 df["_bucket_label"] = "All time"
                 df["_hover_label"] = "All time"
-        
             elif bucket == "Year":
                 df["_bucket_dt"] = df[ts_col].dt.to_period("Y").dt.start_time
                 df["_bucket_label"] = df["_bucket_dt"].dt.strftime("%Y")
                 df["_hover_label"] = df["_bucket_label"]
-        
             elif bucket == "Quarter":
                 p = df[ts_col].dt.to_period("Q")
                 df["_bucket_dt"] = p.dt.start_time
-                df["_bucket_label"] = p.astype(str)  # e.g. 2026Q4
-                df["_hover_label"] = df["_bucket_label"].str.replace("Q", " Q", regex=False)  # 2026 Q4
-        
+                df["_bucket_label"] = p.astype(str)
+                df["_hover_label"] = df["_bucket_label"].str.replace("Q", " Q", regex=False)
             elif bucket == "Month":
                 df["_bucket_dt"] = df[ts_col].dt.to_period("M").dt.start_time
-                df["_bucket_label"] = df["_bucket_dt"].dt.strftime("%Y-%m")  # stable ordering
-                df["_hover_label"] = df["_bucket_dt"].dt.strftime("%b %Y")   # Jan 2026
-        
+                df["_bucket_label"] = df["_bucket_dt"].dt.strftime("%Y-%m")
+                df["_hover_label"] = df["_bucket_dt"].dt.strftime("%b %Y")
             elif bucket == "Week":
                 df["_bucket_dt"] = df[ts_col].dt.to_period("W-MON").dt.start_time
                 week_end = df["_bucket_dt"] + pd.Timedelta(days=6)
                 df["_bucket_label"] = df["_bucket_dt"].dt.strftime("%Y-%m-%d")
                 df["_hover_label"] = df["_bucket_dt"].dt.strftime("%d.%m.%Y") + " – " + week_end.dt.strftime("%d.%m.%Y")
-        
             else:  # Day
                 df["_bucket_dt"] = df[ts_col].dt.floor("D")
                 df["_bucket_label"] = df["_bucket_dt"].dt.strftime("%Y-%m-%d")
@@ -428,12 +417,26 @@ if user_id:
                   .rename(columns={"size": "count"})
             )
         
-            # chronological order
             sort_key = (
                 df.drop_duplicates("_bucket_label")[["_bucket_label", "_bucket_dt"]]
                   .sort_values("_bucket_dt")
             )
             agg = agg.merge(sort_key, on="_bucket_label", how="left").sort_values("_bucket_dt")
+        
+            # ---- stack order (bottom -> top) ----
+            order = [
+                "Like sent",
+                "Comment",
+                "Like received",
+                "Match",
+                "Conversation",
+                "We met",
+                "My type",
+                "Block",
+            ]
+            # keep any unexpected events at the top (after known ones)
+            extras = [e for e in agg["event"].unique().tolist() if e not in order]
+            category_order = order + sorted(extras)
         
             fig = px.bar(
                 agg,
@@ -442,18 +445,21 @@ if user_id:
                 color="event",
                 barmode="stack",
                 title=title,
+                category_orders={"event": category_order},
                 custom_data=["_hover_label", "event", "count"],
             )
         
-            # clean hover
             fig.update_traces(
                 hovertemplate="%{customdata[0]}<br>%{customdata[1]}: %{customdata[2]}<extra></extra>"
             )
-        
             fig.update_layout(xaxis_title=None, yaxis_title=None)
+        
+            # ---- zoom only on X (lock Y range) ----
+            fig.update_yaxes(fixedrange=True)
+        
             st.plotly_chart(fig, use_container_width=True)
         
-            # ---------- partial bucket warning (tz-safe) ----------
+            # ---- partial bucket warning ----
             if bucket != "All":
                 tmin0 = pd.Timestamp(tmin).tz_localize(None) if getattr(tmin, "tzinfo", None) else pd.Timestamp(tmin)
                 tmax0 = pd.Timestamp(tmax).tz_localize(None) if getattr(tmax, "tzinfo", None) else pd.Timestamp(tmax)
@@ -478,13 +484,10 @@ if user_id:
                         end = start + pd.Timedelta(days=1)
                     return start, end
         
-                first_bucket_start, first_bucket_end = bounds(tmin0, bucket)
-                last_bucket_start, last_bucket_end = bounds(tmax0, bucket)
+                first_bucket_start, _ = bounds(tmin0, bucket)
+                _, last_bucket_end = bounds(tmax0, bucket)
         
-                partial_first = tmin0 > first_bucket_start
-                partial_last = tmax0 < last_bucket_end
-        
-                if partial_first or partial_last:
+                if (tmin0 > first_bucket_start) or (tmax0 < last_bucket_end):
                     st.caption("⚠️ Time buckets may be partial at the edges (data doesn’t cover full calendar buckets).")
 
         
