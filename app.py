@@ -340,13 +340,14 @@ if user_id:
         st.write(deef)
 
 
-        def stacked_events_bar(events_df, ts_col=None, title="Events over time"):
+        def stacked_events_bar_fig(events_df, ts_col=None, title="Events over time"):
             import pandas as pd
             import plotly.express as px
             import streamlit as st
         
             df = events_df.copy()
         
+            # infer timestamp col
             if ts_col is None:
                 candidates = [c for c in df.columns if "timestamp" in c.lower()]
                 ts_col = candidates[0] if candidates else df.columns[0]
@@ -357,8 +358,7 @@ if user_id:
         
             df = df.dropna(subset=[ts_col, "event"])
             if df.empty:
-                st.info("No events to plot.")
-                return
+                return None, None
         
             tmin = df[ts_col].min()
             tmax = df[ts_col].max()
@@ -369,6 +369,7 @@ if user_id:
         
             one_day = pd.Timedelta(days=1)
         
+            # -------- group-by selector (dynamic options) --------
             if span < one_day:
                 bucket = "All"
             else:
@@ -381,49 +382,59 @@ if user_id:
                     opts = ["Quarter"] + opts
                 if ge_offset(tmin, tmax, pd.DateOffset(years=1)):
                     opts = ["Year"] + opts
+        
                 bucket = st.selectbox("Group by", opts, index=0)
         
-            # ---- bucketing + pretty labels ----
+            # -------- bucketing + pretty hover labels --------
             if bucket == "All":
                 df["_bucket_dt"] = pd.Timestamp("1970-01-01")
                 df["_bucket_label"] = "All time"
                 df["_hover_label"] = "All time"
+        
             elif bucket == "Year":
                 df["_bucket_dt"] = df[ts_col].dt.to_period("Y").dt.start_time
                 df["_bucket_label"] = df["_bucket_dt"].dt.strftime("%Y")
                 df["_hover_label"] = df["_bucket_label"]
+        
             elif bucket == "Quarter":
                 p = df[ts_col].dt.to_period("Q")
                 df["_bucket_dt"] = p.dt.start_time
-                df["_bucket_label"] = p.astype(str)
-                df["_hover_label"] = df["_bucket_label"].str.replace("Q", " Q", regex=False)
+                df["_bucket_label"] = p.astype(str)               # 2026Q4
+                df["_hover_label"] = df["_bucket_label"].str.replace("Q", " Q", regex=False)  # 2026 Q4
+        
             elif bucket == "Month":
                 df["_bucket_dt"] = df[ts_col].dt.to_period("M").dt.start_time
-                df["_bucket_label"] = df["_bucket_dt"].dt.strftime("%Y-%m")
-                df["_hover_label"] = df["_bucket_dt"].dt.strftime("%b %Y")
+                df["_bucket_label"] = df["_bucket_dt"].dt.strftime("%Y-%m")   # stable x ordering
+                df["_hover_label"] = df["_bucket_dt"].dt.strftime("%b %Y")    # Jan 2026
+        
             elif bucket == "Week":
                 df["_bucket_dt"] = df[ts_col].dt.to_period("W-MON").dt.start_time
                 week_end = df["_bucket_dt"] + pd.Timedelta(days=6)
                 df["_bucket_label"] = df["_bucket_dt"].dt.strftime("%Y-%m-%d")
-                df["_hover_label"] = df["_bucket_dt"].dt.strftime("%d.%m.%Y") + " – " + week_end.dt.strftime("%d.%m.%Y")
+                df["_hover_label"] = (
+                    df["_bucket_dt"].dt.strftime("%d.%m.%Y") + " – " + week_end.dt.strftime("%d.%m.%Y")
+                )
+        
             else:  # Day
                 df["_bucket_dt"] = df[ts_col].dt.floor("D")
                 df["_bucket_label"] = df["_bucket_dt"].dt.strftime("%Y-%m-%d")
                 df["_hover_label"] = df["_bucket_dt"].dt.strftime("%d.%m.%Y")
         
+            # -------- aggregate --------
             agg = (
                 df.groupby(["_bucket_label", "_hover_label", "event"], as_index=False)
                   .size()
                   .rename(columns={"size": "count"})
             )
         
+            # chronological order
             sort_key = (
                 df.drop_duplicates("_bucket_label")[["_bucket_label", "_bucket_dt"]]
                   .sort_values("_bucket_dt")
             )
             agg = agg.merge(sort_key, on="_bucket_label", how="left").sort_values("_bucket_dt")
         
-            # ---- stack order (bottom -> top) ----
+            # stack + legend order (bottom -> top)
             order = [
                 "Like sent",
                 "Comment",
@@ -434,7 +445,6 @@ if user_id:
                 "My type",
                 "Block",
             ]
-            # keep any unexpected events at the top (after known ones)
             extras = [e for e in agg["event"].unique().tolist() if e not in order]
             category_order = order + sorted(extras)
         
@@ -449,17 +459,23 @@ if user_id:
                 custom_data=["_hover_label", "event", "count"],
             )
         
+            # clean hover
             fig.update_traces(
                 hovertemplate="%{customdata[0]}<br>%{customdata[1]}: %{customdata[2]}<extra></extra>"
             )
-            fig.update_layout(xaxis_title=None, yaxis_title=None)
         
-            # ---- zoom only on X (lock Y range) ----
+            # remove legend title, keep legend ordered
+            fig.update_layout(
+                legend_title_text="",
+                xaxis_title=None,
+                yaxis_title=None,
+            )
+        
+            # zoom only on X (lock Y)
             fig.update_yaxes(fixedrange=True)
         
-            st.plotly_chart(fig, use_container_width=True)
-        
-            # ---- partial bucket warning ----
+            # -------- partial bucket warning --------
+            warning = None
             if bucket != "All":
                 tmin0 = pd.Timestamp(tmin).tz_localize(None) if getattr(tmin, "tzinfo", None) else pd.Timestamp(tmin)
                 tmax0 = pd.Timestamp(tmax).tz_localize(None) if getattr(tmax, "tzinfo", None) else pd.Timestamp(tmax)
@@ -488,10 +504,16 @@ if user_id:
                 _, last_bucket_end = bounds(tmax0, bucket)
         
                 if (tmin0 > first_bucket_start) or (tmax0 < last_bucket_end):
-                    st.caption("⚠️ Time buckets may be partial at the edges (data doesn’t cover full calendar buckets).")
+                    warning = "⚠️ Time buckets may be partial at the edges (data doesn’t cover full calendar buckets)."
+        
+            return fig, warning
 
         
-        stacked_events_bar(deef)        
+        fig, warning = stacked_events_bar_fig(deef, ts_col="Event Timestamp")
+        if fig is not None:
+            st.plotly_chart(fig, use_container_width=True)
+        if warning:
+            st.caption(warning)  
         
         def rename_columns(df):
             rename_map = {
