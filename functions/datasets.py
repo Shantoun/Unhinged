@@ -131,12 +131,12 @@ def like_events_df(user_id):
         blocks_df.dropna(subset=[var.col_match_id])
         .sort_values(var.col_block_timestamp)
         .drop_duplicates(var.col_match_id)
-        [[var.col_match_id, var.col_block_id]]
+        [[var.col_match_id, var.col_block_id, var.col_block_timestamp]]
     )
 
     # matches subset
     matches_sub = matches_df[
-        [var.col_match_id, var.col_match_timestamp, var.col_we_met, var.col_my_type]
+        [var.col_match_id, var.col_match_timestamp, var.col_we_met, var.col_my_type, var.col_we_met_timestamp]
     ].copy()
 
     # sent likes
