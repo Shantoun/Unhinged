@@ -173,7 +173,7 @@ if user_id:
         ]
 
 
-        def relationship_summary(df, x_key, y_col, first_ts_col, min_n=30, min_groups=5, min_per_group=5):
+        def relationship_summary(df, x_key, y_col, first_ts_col, min_n=25, min_groups=5, min_per_group=5):
             import numpy as np
             import pandas as pd
             from scipy.stats import spearmanr
