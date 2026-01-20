@@ -347,10 +347,16 @@ if user_id:
         
             df = events_df.copy()
         
-            # infer timestamp col
-            if ts_col is None:
-                candidates = [c for c in df.columns if "timestamp" in c.lower()]
-                ts_col = candidates[0] if candidates else df.columns[0]
+            # infer / validate timestamp col
+            if ts_col is None or ts_col not in df.columns:
+                # prefer your two canonical names first
+                for c in ["Event Timestamp", "Like Timestamp"]:
+                    if c in df.columns:
+                        ts_col = c
+                        break
+                else:
+                    candidates = [c for c in df.columns if "timestamp" in c.lower()]
+                    ts_col = candidates[0] if candidates else df.columns[0]
         
             df[ts_col] = pd.to_datetime(df[ts_col], errors="coerce")
             if pd.api.types.is_datetime64tz_dtype(df[ts_col]):
@@ -359,7 +365,7 @@ if user_id:
             df = df.dropna(subset=[ts_col, "event"])
             if df.empty:
                 return None, None
-        
+                
             tmin = df[ts_col].min()
             tmax = df[ts_col].max()
             span = tmax - tmin
@@ -509,7 +515,7 @@ if user_id:
             return fig, warning
 
         
-        fig, warning = stacked_events_bar_fig(deef, ts_col="Event Timestamp")
+        fig, warning = stacked_events_bar_fig(deef)
         if fig is not None:
             st.plotly_chart(fig, use_container_width=True)
         if warning:
