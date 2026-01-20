@@ -187,6 +187,58 @@ if user_id:
 
 
 
+
+
+        def relationship_summary(x, y, min_n=30):
+            import pandas as pd
+            from scipy.stats import spearmanr
+        
+            df = pd.DataFrame({"x": x, "y": y}).dropna()
+        
+            if len(df) < min_n:
+                return {
+                    "r": None,
+                    "label": "Not enough data to determine a relationship"
+                }
+        
+            r, _ = spearmanr(df["x"], df["y"])
+        
+            ar = abs(r)
+        
+            if ar < 0.1:
+                strength = "No meaningful"
+            elif ar < 0.3:
+                strength = "Weak"
+            elif ar < 0.5:
+                strength = "Moderate"
+            else:
+                strength = "Strong"
+        
+            direction = "positive" if r > 0 else "negative"
+        
+            if strength == "No meaningful":
+                label = "No meaningful relationship"
+            else:
+                label = f"{strength} {direction} relationship"
+        
+            return {
+                "r": r,
+                "label": label
+            }
+        
+        
+
+
+        result = relationship_summary(
+            engagements[colx],
+            engagements[var.col_conversation_message_count]
+        )
+        
+        st.write(result["label"])
+
+
+
+
         
         
         def rename_columns(df):
