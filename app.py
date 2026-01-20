@@ -186,6 +186,150 @@ if user_id:
 
         st.plotly_chart(fig_like_match_delay, width="stretch")
 
+
+
+        def events_over_time_df(
+            data,
+            min_messages=2,
+            min_minutes=5,
+            join_comments_and_likes_sent=False,
+        ):
+            import pandas as pd
+        
+            df = data.copy()
+        
+            # --- ensure timestamps are datetime ---
+            ts_cols = [
+                col_like_timestamp,
+                col_match_timestamp,
+                col_first_message_timestamp,
+                col_we_met_timestamp,
+                col_block_timestamp,
+            ]
+            for c in ts_cols:
+                if c in df.columns:
+                    df[c] = pd.to_datetime(df[c], errors="coerce")
+        
+            is_sent = df[col_like_direction].eq("sent")
+            is_received = df[col_like_direction].eq("received")
+            has_comment = df[col_comment_message_id].notna()
+        
+            # ---------------------------------
+            # Likes / Comments events (use like_timestamp)
+            # ---------------------------------
+            if join_comments_and_likes_sent:
+                sent_any = df[is_sent & df[col_like_timestamp].notna()]
+                likes_events = pd.DataFrame(
+                    {
+                        "timestamp": sent_any[col_like_timestamp],
+                        "event": "Comments & Likes Sent",
+                    }
+                )
+            else:
+                comments = df[is_sent & has_comment & df[col_like_timestamp].notna()]
+                likes_sent = df[is_sent & ~has_comment & df[col_like_timestamp].notna()]
+        
+                likes_events = pd.concat(
+                    [
+                        pd.DataFrame({"timestamp": comments[col_like_timestamp], "event": "Comment"}),
+                        pd.DataFrame({"timestamp": likes_sent[col_like_timestamp], "event": "Like sent"}),
+                    ],
+                    ignore_index=True,
+                )
+        
+            # ---------------------------------
+            # Matches (use match_timestamp; match_id required)
+            # ---------------------------------
+            matched = df[df[col_match_id].notna()].copy()
+        
+            match_events = matched[matched[col_match_timestamp].notna()]
+            match_events = pd.DataFrame(
+                {
+                    "timestamp": match_events[col_match_timestamp],
+                    "event": "Match",
+                }
+            ).drop_duplicates()
+        
+            # ---------------------------------
+            # Like received (use match_timestamp; match_id required)  ✅ per your correction
+            # ---------------------------------
+            received_matched = matched[is_received.reindex(matched.index, fill_value=False)]
+            received_matched = received_matched[received_matched[col_match_timestamp].notna()]
+            like_received_events = pd.DataFrame(
+                {
+                    "timestamp": received_matched[col_match_timestamp],
+                    "event": "Like received",
+                }
+            ).drop_duplicates()
+        
+            # ---------------------------------
+            # Conversations (use first_message_timestamp; thresholds)
+            # ---------------------------------
+            msg_cnt = matched[col_conversation_message_count].fillna(0)
+            span_min = matched[col_conversation_span_minutes].fillna(0)
+            is_convo = (msg_cnt >= min_messages) & (span_min >= min_minutes)
+        
+            convo = matched[is_convo & matched[col_first_message_timestamp].notna()]
+            convo_events = pd.DataFrame(
+                {
+                    "timestamp": convo[col_first_message_timestamp],
+                    "event": "Conversation",
+                }
+            ).drop_duplicates()
+        
+            # ---------------------------------
+            # We met / My type (use we_met_timestamp)
+            # ---------------------------------
+            is_we_met = matched[col_we_met].fillna(False).astype(bool)
+            we_met = matched[is_we_met & matched[col_we_met_timestamp].notna()]
+        
+            we_met_events = pd.DataFrame(
+                {"timestamp": we_met[col_we_met_timestamp], "event": "We met"}
+            ).drop_duplicates()
+        
+            is_my_type = we_met[col_my_type].fillna(False).astype(bool)
+            my_type = we_met[is_my_type & we_met[col_we_met_timestamp].notna()]
+            my_type_events = pd.DataFrame(
+                {"timestamp": my_type[col_we_met_timestamp], "event": "My type"}
+            ).drop_duplicates()
+        
+            # ---------------------------------
+            # Blocks (use block_timestamp)
+            # ---------------------------------
+            blocked = matched[matched[col_block_id].notna() & matched[col_block_timestamp].notna()]
+            block_events = pd.DataFrame(
+                {"timestamp": blocked[col_block_timestamp], "event": "Block"}
+            ).drop_duplicates()
+        
+            # ---------------------------------
+            # Combine
+            # ---------------------------------
+            out = pd.concat(
+                [
+                    likes_events,
+                    like_received_events,
+                    match_events,
+                    convo_events,
+                    we_met_events,
+                    my_type_events,
+                    block_events,
+                ],
+                ignore_index=True,
+            )
+        
+            out = out.dropna(subset=["timestamp"]).sort_values("timestamp").reset_index(drop=True)
+            return out
+
+
+
+        events_df = events_over_time_df(engagements)
+
+
+
+
+
+
+        
         
         
         def rename_columns(df):
