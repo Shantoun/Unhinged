@@ -340,10 +340,144 @@ if user_id:
         st.write(deef)
 
 
-
+        def stacked_events_bar(events_df, ts_col=None, title="Events over time"):
+            import pandas as pd
+            import plotly.express as px
+            import streamlit as st
+        
+            df = events_df.copy()
+        
+            # infer timestamp column
+            if ts_col is None:
+                candidates = [c for c in df.columns if "timestamp" in c.lower()]
+                ts_col = candidates[0] if candidates else df.columns[0]
+        
+            df[ts_col] = pd.to_datetime(df[ts_col], errors="coerce")
+            df = df.dropna(subset=[ts_col, "event"])
+        
+            if df.empty:
+                st.info("No events to plot.")
+                return
+        
+            tmin = df[ts_col].min()
+            tmax = df[ts_col].max()
+            span = tmax - tmin
+        
+            # ---------- option logic ----------
+            one_day = pd.Timedelta(days=1)
+            one_week = pd.Timedelta(days=7)
+            one_month = pd.DateOffset(months=1)
+            one_quarter = pd.DateOffset(months=3)
+            one_year = pd.DateOffset(years=1)
+        
+            def ge_offset(dt_min, dt_max, offset):
+                # dt_max >= dt_min + offset
+                return dt_max >= (dt_min + offset)
+        
+            if span < one_day:
+                bucket = "Day"  # but we won't show selectbox; we collapse to one bar
+                show_select = False
+            else:
+                show_select = True
+                opts = ["Day"]
+                if span >= one_week:
+                    opts = ["Week"] + opts
+                if ge_offset(tmin, tmax, one_month):
+                    opts = ["Month"] + opts
+                if ge_offset(tmin, tmax, one_quarter):
+                    opts = ["Quarter"] + opts
+                if ge_offset(tmin, tmax, one_year):
+                    opts = ["Year"] + opts
+        
+                bucket = st.selectbox("Group by", opts, index=0)
+        
+            # ---------- bucketing ----------
+            if span < one_day:
+                df["_bucket"] = "All time"
+            else:
+                if bucket == "Year":
+                    df["_bucket_dt"] = df[ts_col].dt.to_period("Y").dt.start_time
+                elif bucket == "Quarter":
+                    df["_bucket_dt"] = df[ts_col].dt.to_period("Q").dt.start_time
+                elif bucket == "Month":
+                    df["_bucket_dt"] = df[ts_col].dt.to_period("M").dt.start_time
+                elif bucket == "Week":
+                    # ISO-ish weeks starting Monday
+                    df["_bucket_dt"] = df[ts_col].dt.to_period("W-MON").dt.start_time
+                else:  # Day
+                    df["_bucket_dt"] = df[ts_col].dt.floor("D")
+        
+                df["_bucket"] = df["_bucket_dt"].dt.strftime("%Y-%m-%d") if bucket in ["Week", "Day"] else df["_bucket_dt"].dt.strftime("%Y-%m")
+        
+                if bucket == "Year":
+                    df["_bucket"] = df["_bucket_dt"].dt.strftime("%Y")
+                elif bucket == "Quarter":
+                    df["_bucket"] = df["_bucket_dt"].dt.to_period("Q").astype(str)
+                elif bucket == "Week":
+                    # label as start date
+                    df["_bucket"] = df["_bucket_dt"].dt.strftime("%Y-%m-%d")
+        
+            agg = (
+                df.groupby(["_bucket", "event"])
+                  .size()
+                  .reset_index(name="count")
+            )
+        
+            # keep chronological order
+            if span >= one_day:
+                # rebuild a sort key from _bucket_dt
+                sort_key = (
+                    df.drop_duplicates("_bucket")[["_bucket", "_bucket_dt"]]
+                      .sort_values("_bucket_dt")
+                )
+                agg = agg.merge(sort_key, on="_bucket", how="left").sort_values("_bucket_dt")
+            else:
+                agg["_bucket_dt"] = pd.Timestamp("1970-01-01")
+        
+            fig = px.bar(
+                agg,
+                x="_bucket",
+                y="count",
+                color="event",
+                barmode="stack",
+                title=title,
+            )
+            fig.update_layout(xaxis_title=None, yaxis_title=None)
+            st.plotly_chart(fig, use_container_width=True)
+        
+            # ---------- partial bucket warning ----------
+            if span >= one_day:
+                # compute first/last bucket bounds for chosen bucket type
+                def bounds(dt, mode):
+                    if mode == "Year":
+                        start = pd.Timestamp(dt.year, 1, 1)
+                        end = pd.Timestamp(dt.year + 1, 1, 1)
+                    elif mode == "Quarter":
+                        q = ((dt.month - 1) // 3) * 3 + 1
+                        start = pd.Timestamp(dt.year, q, 1)
+                        end = (start + pd.DateOffset(months=3))
+                    elif mode == "Month":
+                        start = pd.Timestamp(dt.year, dt.month, 1)
+                        end = (start + pd.DateOffset(months=1))
+                    elif mode == "Week":
+                        start = (dt.normalize() - pd.Timedelta(days=dt.weekday()))  # Monday
+                        end = start + pd.Timedelta(days=7)
+                    else:  # Day
+                        start = dt.normalize()
+                        end = start + pd.Timedelta(days=1)
+                    return start, end
+        
+                first_bucket_start, first_bucket_end = bounds(tmin, bucket)
+                last_bucket_start, last_bucket_end = bounds(tmax, bucket)
+        
+                partial_first = tmin > first_bucket_start
+                partial_last = tmax < last_bucket_end
+        
+                if partial_first or partial_last:
+                    st.caption("⚠️ Time buckets may be partial at the edges (your data doesn’t cover full calendar buckets).")
 
         
-        
+        stacked_events_bar(deef)        
         
         def rename_columns(df):
             rename_map = {
