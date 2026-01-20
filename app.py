@@ -324,9 +324,9 @@ if user_id:
 
 
 
-        events_df = events_over_time_df(engagements)
+        deef = events_over_time_df(engagements)
 
-
+        st.write(deef)
 
 
 
