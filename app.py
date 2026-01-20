@@ -452,7 +452,7 @@ if user_id:
                 "Block",
             ]
             extras = [e for e in agg["event"].unique().tolist() if e not in order]
-            category_order = list(reversed(order)) + sorted(extras)
+            category_order = order + sorted(extras)
         
             fig = px.bar(
                 agg,
@@ -476,10 +476,12 @@ if user_id:
                 xaxis_title=None,
                 yaxis_title=None,
             )
-        
+
+            fig.update_layout(legend_traceorder="reversed")
+            
             # zoom only on X (lock Y)
             fig.update_yaxes(fixedrange=True)
-        
+            
             # -------- partial bucket warning --------
             warning = None
             if bucket != "All":
