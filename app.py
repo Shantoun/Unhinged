@@ -193,7 +193,7 @@ if user_id:
             min_messages=2,
             min_minutes=5,
             join_comments_and_likes_sent=False,
-            use_like_timestamp=False,
+            use_like_timestamp=True,
         ):
             import pandas as pd
         
