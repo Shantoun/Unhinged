@@ -163,7 +163,14 @@ if user_id:
 
 
 
-
+        _TIME_BINS = [
+            (0, 4,  "12 - 4am"),
+            (4, 8,  "4 - 8am"),
+            (8, 12, "8am - 12pm"),
+            (12, 16,"12 - 4pm"),
+            (16, 20,"4 - 8pm"),
+            (20, 24,"8pm - 12am"),
+        ]
 
 
         def relationship_summary(df, x_key, y_col, first_ts_col, min_n=30, min_groups=5, min_per_group=5):
