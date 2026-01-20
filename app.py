@@ -208,7 +208,7 @@ if user_id:
 
         result = relationship_summary(
             engagements[colx],
-            engagements[var.col_conversation_message_count]
+            engagements["# of Messages per Session"]
         )
         
         st.write(result["label"])
