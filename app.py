@@ -110,7 +110,9 @@ if user_id:
             title="Messaging Duration - Mean: {:,} Minutes".format(mean_messaging_duration)
         )
 
+        st.plotly_chart(fig_box_messaging_duration, width="stretch")
 
+        
         mean_messaging_number = int(engagements[var.col_conversation_message_count].mean())
         fig_box_messaging_number = viz.horizontal_boxplot(
             engagements[var.col_conversation_message_count],
@@ -118,9 +120,7 @@ if user_id:
             color = "#EF553B",
             trace_name="Messages"
         )
-
         
-        st.plotly_chart(fig_box_messaging_duration, width="stretch")
         st.plotly_chart(fig_box_messaging_number, width="stretch")
 
 
@@ -171,8 +171,19 @@ if user_id:
 
 
 
+        
+        st.divider()
+        st.header("Time From Like to Match")
 
+        mean_like_match_delay = int(engagements[var.col_like_match_delay].mean())
+        fig_like_match_delay = viz.horizontal_boxplot(
+            engagements[var.col_like_match_delay],
+            title="Like to Match Time - Mean: {:,} Minutes".format(mean_like_match_delay),
+            color = "#EF553B",
+            trace_name="Minutes"
+        )
 
+        st.plotly_chart(fig_like_match_delay, width="stretch")
 
 
 
