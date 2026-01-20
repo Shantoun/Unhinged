@@ -478,7 +478,9 @@ if user_id:
             )
 
             fig.update_layout(legend_traceorder="reversed")
-            
+
+            fig.update_xaxes(type="category", tickangle=0)
+                    
             # zoom only on X (lock Y)
             fig.update_yaxes(fixedrange=True)
             
