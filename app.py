@@ -166,7 +166,7 @@ if user_id:
 
 
 
-        def relationship_summary(x, y, min_n=30):
+        def relationship_summary(x, y, min_n=25):
             import pandas as pd
             from scipy.stats import spearmanr
         
