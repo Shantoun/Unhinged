@@ -166,52 +166,110 @@ if user_id:
 
 
 
-        def relationship_summary(x, y, min_n=25):
+        def relationship_summary(df, x_key, y_col, first_ts_col, min_n=30, min_groups=5, min_per_group=5):
+            import numpy as np
             import pandas as pd
             from scipy.stats import spearmanr
         
-            df = pd.DataFrame({"x": x, "y": y}).dropna()
+            DAY_ORDER = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
+            TIME_BIN_ORDER = [label for _, _, label in _TIME_BINS]
+            DAYTIME_ORDER = [f"{d} • {t}" for d in DAY_ORDER for t in TIME_BIN_ORDER]
         
-            if len(df) < min_n:
-                return {
-                    "r": None,
-                    "label": "Not enough data to determine a relationship"
-                }
+            def _time_bin_label(ts: pd.Series) -> pd.Series:
+                h = ts.dt.hour
+                out = pd.Series(index=ts.index, dtype="object")
+                for start, end, label in _TIME_BINS:
+                    out[(h >= start) & (h < end)] = label
+                return out
         
-            r, _ = spearmanr(df["x"], df["y"])
+            y = pd.to_numeric(df[y_col], errors="coerce")
+        
+            # categorical X from first message timestamp
+            if x_key in {"First Message: Day of Week", "First Message: Time of Day", "First Message: Daytime"}:
+                ts = pd.to_datetime(df[first_ts_col], errors="coerce")
+        
+                if x_key == "First Message: Day of Week":
+                    x = ts.dt.day_name()
+                    order = DAY_ORDER
+                elif x_key == "First Message: Time of Day":
+                    x = _time_bin_label(ts)
+                    order = TIME_BIN_ORDER
+                else:
+                    x = ts.dt.day_name().astype(str) + " • " + _time_bin_label(ts).astype(str)
+                    order = DAYTIME_ORDER
+        
+                tmp = pd.DataFrame({"x": x, "y": y}).dropna()
+                if tmp.empty:
+                    return {"r": None, "label": "Insufficient data to assess a relationship", "n": 0}
+        
+                tmp["x"] = pd.Categorical(tmp["x"].astype(str), categories=order, ordered=True)
+                tmp = tmp[tmp["x"].cat.codes >= 0]
+        
+                g = (
+                    tmp.groupby("x", observed=True)["y"]
+                    .agg(mean="mean", n="size")
+                    .reset_index()
+                )
+                g = g[g["n"] >= min_per_group]
+                if len(g) < min_groups:
+                    return {"r": None, "label": "Insufficient data to assess a relationship", "n": int(len(tmp)), "groups": int(len(g))}
+        
+                idx = g["x"].cat.codes.astype(float).to_numpy()
+                vals = g["mean"].to_numpy(dtype=float)
+        
+                r, _ = spearmanr(idx, vals)
+        
+                ar = abs(r)
+                if ar < 0.1:
+                    label = "No meaningful relationship"
+                elif ar < 0.3:
+                    label = f"Weak {'positive' if r > 0 else 'negative'} relationship"
+                elif ar < 0.5:
+                    label = f"Moderate {'positive' if r > 0 else 'negative'} relationship"
+                else:
+                    label = f"Strong {'positive' if r > 0 else 'negative'} relationship"
+        
+                return {"r": float(r), "label": label, "n": int(len(tmp)), "groups": int(len(g))}
+        
+            # numeric X
+            x = pd.to_numeric(df[x_key], errors="coerce")
+            tmp = pd.DataFrame({"x": x, "y": y}).dropna()
+        
+            if len(tmp) < min_n:
+                return {"r": None, "label": "Insufficient data to assess a relationship", "n": int(len(tmp))}
+        
+            r, _ = spearmanr(tmp["x"], tmp["y"])
         
             ar = abs(r)
-        
             if ar < 0.1:
-                strength = "No meaningful"
-            elif ar < 0.3:
-                strength = "Weak"
-            elif ar < 0.5:
-                strength = "Moderate"
-            else:
-                strength = "Strong"
-        
-            direction = "positive" if r > 0 else "negative"
-        
-            if strength == "No meaningful":
                 label = "No meaningful relationship"
+            elif ar < 0.3:
+                label = f"Weak {'positive' if r > 0 else 'negative'} relationship"
+            elif ar < 0.5:
+                label = f"Moderate {'positive' if r > 0 else 'negative'} relationship"
             else:
-                label = f"{strength} {direction} relationship"
+                label = f"Strong {'positive' if r > 0 else 'negative'} relationship"
         
-            return {
-                "r": r,
-                "label": label
-            }
-        
-        
+            return {"r": float(r), "label": label, "n": int(len(tmp))}
+                
+                
 
 
         result = relationship_summary(
-            engagements[colx],
-            engagements["# of Messages per Session"]
+            engagements,
+            x_key=colx,
+            y_col="# of Messages per Session",
+            first_ts_col=var.col_first_message_timestamp,
         )
         
-        st.write(result["label"])
+        st.caption(result["label"])
+        
+
+
+
+
+
+
 
 
         # I know how this looks lol, shut up...
