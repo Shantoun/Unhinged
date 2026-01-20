@@ -452,7 +452,7 @@ if user_id:
                 "Block",
             ]
             extras = [e for e in agg["event"].unique().tolist() if e not in order]
-            category_order = order + sorted(extras)
+            category_order = list(reversed(order)) + sorted(extras)
         
             fig = px.bar(
                 agg,
