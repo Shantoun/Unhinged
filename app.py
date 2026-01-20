@@ -353,8 +353,12 @@ if user_id:
                 ts_col = candidates[0] if candidates else df.columns[0]
         
             df[ts_col] = pd.to_datetime(df[ts_col], errors="coerce")
-            df = df.dropna(subset=[ts_col, "event"])
         
+            # fix tz-aware vs tz-naive (force everything to tz-naive)
+            if pd.api.types.is_datetime64tz_dtype(df[ts_col]):
+                df[ts_col] = df[ts_col].dt.tz_convert(None)
+        
+            df = df.dropna(subset=[ts_col, "event"])
             if df.empty:
                 st.info("No events to plot.")
                 return
@@ -363,118 +367,125 @@ if user_id:
             tmax = df[ts_col].max()
             span = tmax - tmin
         
-            # ---------- option logic ----------
-            one_day = pd.Timedelta(days=1)
-            one_week = pd.Timedelta(days=7)
-            one_month = pd.DateOffset(months=1)
-            one_quarter = pd.DateOffset(months=3)
-            one_year = pd.DateOffset(years=1)
-        
             def ge_offset(dt_min, dt_max, offset):
-                # dt_max >= dt_min + offset
                 return dt_max >= (dt_min + offset)
         
+            one_day = pd.Timedelta(days=1)
+        
             if span < one_day:
-                bucket = "Day"  # but we won't show selectbox; we collapse to one bar
                 show_select = False
+                bucket = "All"
             else:
                 show_select = True
                 opts = ["Day"]
-                if span >= one_week:
+                if span >= pd.Timedelta(days=7):
                     opts = ["Week"] + opts
-                if ge_offset(tmin, tmax, one_month):
+                if ge_offset(tmin, tmax, pd.DateOffset(months=1)):
                     opts = ["Month"] + opts
-                if ge_offset(tmin, tmax, one_quarter):
+                if ge_offset(tmin, tmax, pd.DateOffset(months=3)):
                     opts = ["Quarter"] + opts
-                if ge_offset(tmin, tmax, one_year):
+                if ge_offset(tmin, tmax, pd.DateOffset(years=1)):
                     opts = ["Year"] + opts
         
                 bucket = st.selectbox("Group by", opts, index=0)
         
-            # ---------- bucketing ----------
-            if span < one_day:
-                df["_bucket"] = "All time"
-            else:
-                if bucket == "Year":
-                    df["_bucket_dt"] = df[ts_col].dt.to_period("Y").dt.start_time
-                elif bucket == "Quarter":
-                    df["_bucket_dt"] = df[ts_col].dt.to_period("Q").dt.start_time
-                elif bucket == "Month":
-                    df["_bucket_dt"] = df[ts_col].dt.to_period("M").dt.start_time
-                elif bucket == "Week":
-                    # ISO-ish weeks starting Monday
-                    df["_bucket_dt"] = df[ts_col].dt.to_period("W-MON").dt.start_time
-                else:  # Day
-                    df["_bucket_dt"] = df[ts_col].dt.floor("D")
+            # ---------- bucketing + pretty labels ----------
+            if bucket == "All":
+                df["_bucket_dt"] = pd.Timestamp("1970-01-01")
+                df["_bucket_label"] = "All time"
+                df["_hover_label"] = "All time"
         
-                df["_bucket"] = df["_bucket_dt"].dt.strftime("%Y-%m-%d") if bucket in ["Week", "Day"] else df["_bucket_dt"].dt.strftime("%Y-%m")
+            elif bucket == "Year":
+                df["_bucket_dt"] = df[ts_col].dt.to_period("Y").dt.start_time
+                df["_bucket_label"] = df["_bucket_dt"].dt.strftime("%Y")
+                df["_hover_label"] = df["_bucket_label"]
         
-                if bucket == "Year":
-                    df["_bucket"] = df["_bucket_dt"].dt.strftime("%Y")
-                elif bucket == "Quarter":
-                    df["_bucket"] = df["_bucket_dt"].dt.to_period("Q").astype(str)
-                elif bucket == "Week":
-                    # label as start date
-                    df["_bucket"] = df["_bucket_dt"].dt.strftime("%Y-%m-%d")
+            elif bucket == "Quarter":
+                p = df[ts_col].dt.to_period("Q")
+                df["_bucket_dt"] = p.dt.start_time
+                df["_bucket_label"] = p.astype(str)  # e.g. 2026Q4
+                df["_hover_label"] = df["_bucket_label"].str.replace("Q", " Q", regex=False)  # 2026 Q4
+        
+            elif bucket == "Month":
+                df["_bucket_dt"] = df[ts_col].dt.to_period("M").dt.start_time
+                df["_bucket_label"] = df["_bucket_dt"].dt.strftime("%Y-%m")  # stable ordering
+                df["_hover_label"] = df["_bucket_dt"].dt.strftime("%b %Y")   # Jan 2026
+        
+            elif bucket == "Week":
+                df["_bucket_dt"] = df[ts_col].dt.to_period("W-MON").dt.start_time
+                week_end = df["_bucket_dt"] + pd.Timedelta(days=6)
+                df["_bucket_label"] = df["_bucket_dt"].dt.strftime("%Y-%m-%d")
+                df["_hover_label"] = df["_bucket_dt"].dt.strftime("%d.%m.%Y") + " – " + week_end.dt.strftime("%d.%m.%Y")
+        
+            else:  # Day
+                df["_bucket_dt"] = df[ts_col].dt.floor("D")
+                df["_bucket_label"] = df["_bucket_dt"].dt.strftime("%Y-%m-%d")
+                df["_hover_label"] = df["_bucket_dt"].dt.strftime("%d.%m.%Y")
         
             agg = (
-                df.groupby(["_bucket", "event"])
+                df.groupby(["_bucket_label", "_hover_label", "event"], as_index=False)
                   .size()
-                  .reset_index(name="count")
+                  .rename(columns={"size": "count"})
             )
         
-            # keep chronological order
-            if span >= one_day:
-                # rebuild a sort key from _bucket_dt
-                sort_key = (
-                    df.drop_duplicates("_bucket")[["_bucket", "_bucket_dt"]]
-                      .sort_values("_bucket_dt")
-                )
-                agg = agg.merge(sort_key, on="_bucket", how="left").sort_values("_bucket_dt")
-            else:
-                agg["_bucket_dt"] = pd.Timestamp("1970-01-01")
+            # chronological order
+            sort_key = (
+                df.drop_duplicates("_bucket_label")[["_bucket_label", "_bucket_dt"]]
+                  .sort_values("_bucket_dt")
+            )
+            agg = agg.merge(sort_key, on="_bucket_label", how="left").sort_values("_bucket_dt")
         
             fig = px.bar(
                 agg,
-                x="_bucket",
+                x="_bucket_label",
                 y="count",
                 color="event",
                 barmode="stack",
                 title=title,
+                custom_data=["_hover_label", "event", "count"],
             )
+        
+            # clean hover
+            fig.update_traces(
+                hovertemplate="%{customdata[0]}<br>%{customdata[1]}: %{customdata[2]}<extra></extra>"
+            )
+        
             fig.update_layout(xaxis_title=None, yaxis_title=None)
             st.plotly_chart(fig, use_container_width=True)
         
-            # ---------- partial bucket warning ----------
-            if span >= one_day:
-                # compute first/last bucket bounds for chosen bucket type
+            # ---------- partial bucket warning (tz-safe) ----------
+            if bucket != "All":
+                tmin0 = pd.Timestamp(tmin).tz_localize(None) if getattr(tmin, "tzinfo", None) else pd.Timestamp(tmin)
+                tmax0 = pd.Timestamp(tmax).tz_localize(None) if getattr(tmax, "tzinfo", None) else pd.Timestamp(tmax)
+        
                 def bounds(dt, mode):
+                    dt = pd.Timestamp(dt).tz_localize(None) if getattr(dt, "tzinfo", None) else pd.Timestamp(dt)
                     if mode == "Year":
                         start = pd.Timestamp(dt.year, 1, 1)
                         end = pd.Timestamp(dt.year + 1, 1, 1)
                     elif mode == "Quarter":
                         q = ((dt.month - 1) // 3) * 3 + 1
                         start = pd.Timestamp(dt.year, q, 1)
-                        end = (start + pd.DateOffset(months=3))
+                        end = start + pd.DateOffset(months=3)
                     elif mode == "Month":
                         start = pd.Timestamp(dt.year, dt.month, 1)
-                        end = (start + pd.DateOffset(months=1))
+                        end = start + pd.DateOffset(months=1)
                     elif mode == "Week":
-                        start = (dt.normalize() - pd.Timedelta(days=dt.weekday()))  # Monday
+                        start = dt.normalize() - pd.Timedelta(days=dt.weekday())
                         end = start + pd.Timedelta(days=7)
                     else:  # Day
                         start = dt.normalize()
                         end = start + pd.Timedelta(days=1)
                     return start, end
         
-                first_bucket_start, first_bucket_end = bounds(tmin, bucket)
-                last_bucket_start, last_bucket_end = bounds(tmax, bucket)
+                first_bucket_start, first_bucket_end = bounds(tmin0, bucket)
+                last_bucket_start, last_bucket_end = bounds(tmax0, bucket)
         
-                partial_first = tmin > first_bucket_start
-                partial_last = tmax < last_bucket_end
+                partial_first = tmin0 > first_bucket_start
+                partial_last = tmax0 < last_bucket_end
         
                 if partial_first or partial_last:
-                    st.caption("⚠️ Time buckets may be partial at the edges (your data doesn’t cover full calendar buckets).")
+                    st.caption("⚠️ Time buckets may be partial at the edges (data doesn’t cover full calendar buckets).")
 
         
         stacked_events_bar(deef)        
