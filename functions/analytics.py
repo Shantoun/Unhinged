@@ -301,6 +301,182 @@ def scatter_plot(
 
 
 
+def stacked_events_bar_fig(events_df, ts_col=None, title="Events over time"):
+    import pandas as pd
+    import plotly.express as px
+    import streamlit as st
 
+    df = events_df.copy()
+
+    # infer / validate timestamp col
+    if ts_col is None or ts_col not in df.columns:
+        # prefer your two canonical names first
+        for c in ["Event Timestamp", "Like Timestamp"]:
+            if c in df.columns:
+                ts_col = c
+                break
+        else:
+            candidates = [c for c in df.columns if "timestamp" in c.lower()]
+            ts_col = candidates[0] if candidates else df.columns[0]
+
+    df[ts_col] = pd.to_datetime(df[ts_col], errors="coerce")
+    if pd.api.types.is_datetime64tz_dtype(df[ts_col]):
+        df[ts_col] = df[ts_col].dt.tz_convert(None)
+
+    df = df.dropna(subset=[ts_col, "event"])
+    if df.empty:
+        return None, None
+        
+    tmin = df[ts_col].min()
+    tmax = df[ts_col].max()
+    span = tmax - tmin
+
+    def ge_offset(dt_min, dt_max, offset):
+        return dt_max >= (dt_min + offset)
+
+    one_day = pd.Timedelta(days=1)
+
+    # -------- group-by selector (dynamic options) --------
+    if span < one_day:
+        bucket = "All"
+    else:
+        opts = ["Day"]
+        if span >= pd.Timedelta(days=7):
+            opts = ["Week"] + opts
+        if ge_offset(tmin, tmax, pd.DateOffset(months=1)):
+            opts = ["Month"] + opts
+        if ge_offset(tmin, tmax, pd.DateOffset(months=3)):
+            opts = ["Quarter"] + opts
+        if ge_offset(tmin, tmax, pd.DateOffset(years=1)):
+            opts = ["Year"] + opts
+
+        bucket = st.selectbox("Group by", opts, index=0)
+
+    # -------- bucketing + pretty hover labels --------
+    if bucket == "All":
+        df["_bucket_dt"] = pd.Timestamp("1970-01-01")
+        df["_bucket_label"] = "All time"
+        df["_hover_label"] = "All time"
+
+    elif bucket == "Year":
+        df["_bucket_dt"] = df[ts_col].dt.to_period("Y").dt.start_time
+        df["_bucket_label"] = df["_bucket_dt"].dt.strftime("%Y")
+        df["_hover_label"] = df["_bucket_label"]
+
+    elif bucket == "Quarter":
+        p = df[ts_col].dt.to_period("Q")
+        df["_bucket_dt"] = p.dt.start_time
+        df["_bucket_label"] = p.astype(str)               # 2026Q4
+        df["_hover_label"] = df["_bucket_label"].str.replace("Q", " Q", regex=False)  # 2026 Q4
+
+    elif bucket == "Month":
+        df["_bucket_dt"] = df[ts_col].dt.to_period("M").dt.start_time
+        df["_bucket_label"] = df["_bucket_dt"].dt.strftime("%Y-%m")   # stable x ordering
+        df["_hover_label"] = df["_bucket_dt"].dt.strftime("%b %Y")    # Jan 2026
+
+    elif bucket == "Week":
+        df["_bucket_dt"] = df[ts_col].dt.to_period("W-MON").dt.start_time
+        week_end = df["_bucket_dt"] + pd.Timedelta(days=6)
+        df["_bucket_label"] = df["_bucket_dt"].dt.strftime("%Y-%m-%d")
+        df["_hover_label"] = (
+            df["_bucket_dt"].dt.strftime("%d.%m.%Y") + " – " + week_end.dt.strftime("%d.%m.%Y")
+        )
+
+    else:  # Day
+        df["_bucket_dt"] = df[ts_col].dt.floor("D")
+        df["_bucket_label"] = df["_bucket_dt"].dt.strftime("%Y-%m-%d")
+        df["_hover_label"] = df["_bucket_dt"].dt.strftime("%d.%m.%Y")
+
+    # -------- aggregate --------
+    agg = (
+        df.groupby(["_bucket_label", "_hover_label", "event"], as_index=False)
+          .size()
+          .rename(columns={"size": "count"})
+    )
+
+    # chronological order
+    sort_key = (
+        df.drop_duplicates("_bucket_label")[["_bucket_label", "_bucket_dt"]]
+          .sort_values("_bucket_dt")
+    )
+    agg = agg.merge(sort_key, on="_bucket_label", how="left").sort_values("_bucket_dt")
+
+    # stack + legend order (bottom -> top)
+    order = [
+        "Like sent",
+        "Comment",
+        "Like received",
+        "Match",
+        "Conversation",
+        "We met",
+        "My type",
+        "Block",
+    ]
+    extras = [e for e in agg["event"].unique().tolist() if e not in order]
+    category_order = order + sorted(extras)
+
+    fig = px.bar(
+        agg,
+        x="_bucket_label",
+        y="count",
+        color="event",
+        barmode="stack",
+        title=title,
+        category_orders={"event": category_order},
+        custom_data=["_hover_label", "event", "count"],
+    )
+
+    # clean hover
+    fig.update_traces(
+        hovertemplate="%{customdata[0]}<br>%{customdata[1]}: %{customdata[2]}<extra></extra>"
+    )
+
+    # remove legend title, keep legend ordered
+    fig.update_layout(
+        legend_title_text="",
+        xaxis_title=None,
+        yaxis_title=None,
+    )
+
+    fig.update_layout(legend_traceorder="reversed")
+
+    fig.update_xaxes(type="category", tickangle=0)
+            
+    # zoom only on X (lock Y)
+    fig.update_yaxes(fixedrange=True)
+    
+    # -------- partial bucket warning --------
+    warning = None
+    if bucket != "All":
+        tmin0 = pd.Timestamp(tmin).tz_localize(None) if getattr(tmin, "tzinfo", None) else pd.Timestamp(tmin)
+        tmax0 = pd.Timestamp(tmax).tz_localize(None) if getattr(tmax, "tzinfo", None) else pd.Timestamp(tmax)
+
+        def bounds(dt, mode):
+            dt = pd.Timestamp(dt).tz_localize(None) if getattr(dt, "tzinfo", None) else pd.Timestamp(dt)
+            if mode == "Year":
+                start = pd.Timestamp(dt.year, 1, 1)
+                end = pd.Timestamp(dt.year + 1, 1, 1)
+            elif mode == "Quarter":
+                q = ((dt.month - 1) // 3) * 3 + 1
+                start = pd.Timestamp(dt.year, q, 1)
+                end = start + pd.DateOffset(months=3)
+            elif mode == "Month":
+                start = pd.Timestamp(dt.year, dt.month, 1)
+                end = start + pd.DateOffset(months=1)
+            elif mode == "Week":
+                start = dt.normalize() - pd.Timedelta(days=dt.weekday())
+                end = start + pd.Timedelta(days=7)
+            else:  # Day
+                start = dt.normalize()
+                end = start + pd.Timedelta(days=1)
+            return start, end
+
+        first_bucket_start, _ = bounds(tmin0, bucket)
+        _, last_bucket_end = bounds(tmax0, bucket)
+
+        if (tmin0 > first_bucket_start) or (tmax0 < last_bucket_end):
+            warning = "⚠️ Time buckets may be partial at the edges (data doesn’t cover full calendar buckets)."
+
+    return fig, warning
 
 
