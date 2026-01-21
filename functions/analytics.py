@@ -148,8 +148,7 @@ def radial(data, day_col="day_of_week", rate_col="smoothed_rate"):
 
 
 def horizontal_boxplot(numeric_col, title=None, color="#636EFA", trace_name="Minutes"):
-    import numpy as np
-    import plotly.graph_objects as go
+
 
     x = np.asarray(numeric_col, dtype=float)
     x = x[np.isfinite(x)]
@@ -302,9 +301,6 @@ def scatter_plot(
 
 
 def stacked_events_bar_fig(events_df, ts_col=None, title="Events over time"):
-    import pandas as pd
-    import plotly.express as px
-    import streamlit as st
 
     df = events_df.copy()
 
