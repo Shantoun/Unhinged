@@ -191,7 +191,7 @@ if user_id:
 
         engagements_over_time = ds.events_over_time_df(engagements)
 
-        st.write(deef)
+        st.write(engagements_over_time)
 
 
         fig_engagements_over_time, warning = viz.stacked_events_bar_fig(engagements_over_time)
