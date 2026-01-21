@@ -425,3 +425,149 @@ def likes_matches_aggs(data, tz="America/Toronto"):
 
 
 
+
+def events_over_time_df(
+    data,
+    min_messages=2,
+    min_minutes=5,
+    join_comments_and_likes_sent=False,
+    use_like_timestamp=True,
+):
+    import pandas as pd
+
+    df = data.copy()
+
+    ts_col_name = "Like Timestamp" if use_like_timestamp else "Event Timestamp"
+
+    # ensure timestamps are datetime
+    for c in [
+        var.col_like_timestamp,
+        var.col_match_timestamp,
+        var.col_first_message_timestamp,
+        var.col_we_met_timestamp,
+        var.col_block_timestamp,
+    ]:
+        if c in df.columns:
+            df[c] = pd.to_datetime(df[c], errors="coerce")
+
+    is_sent = df[var.col_like_direction].eq("sent")
+    is_received = df[var.col_like_direction].eq("received")
+    has_comment = df[var.col_comment_message_id].notna()
+
+    # -----------------------------
+    # Likes / Comments
+    # -----------------------------
+    base_ts = var.col_like_timestamp if use_like_timestamp else var.col_like_timestamp
+
+    if join_comments_and_likes_sent:
+        sent_any = df[is_sent & df[base_ts].notna()]
+        likes_events = pd.DataFrame(
+            {ts_col_name: sent_any[base_ts], "event": "Comments & Likes Sent"}
+        )
+    else:
+        comments = df[is_sent & has_comment & df[base_ts].notna()]
+        likes_sent = df[is_sent & ~has_comment & df[base_ts].notna()]
+
+        likes_events = pd.concat(
+            [
+                pd.DataFrame({ts_col_name: comments[base_ts], "event": "Comment"}),
+                pd.DataFrame({ts_col_name: likes_sent[base_ts], "event": "Like sent"}),
+            ],
+            ignore_index=True,
+        )
+
+    # -----------------------------
+    # Matched universe
+    # -----------------------------
+    matched = df[df[var.col_match_id].notna()].copy()
+
+    # -----------------------------
+    # Like received (ALWAYS match timestamp)
+    # -----------------------------
+    received = matched[
+        is_received.reindex(matched.index, fill_value=False)
+        & matched[var.col_match_timestamp].notna()
+    ]
+
+    like_received_events = pd.DataFrame(
+        {ts_col_name: received[var.col_match_timestamp], "event": "Like received"}
+    ).drop_duplicates()
+
+    # -----------------------------
+    # Match
+    # -----------------------------
+    match_ts = var.col_like_timestamp if use_like_timestamp else var.col_match_timestamp
+    match_events = matched[matched[match_ts].notna()]
+
+    match_events = pd.DataFrame(
+        {ts_col_name: match_events[match_ts], "event": "Match"}
+    ).drop_duplicates()
+
+    # -----------------------------
+    # Conversation
+    # -----------------------------
+    msg_cnt = matched[var.col_conversation_message_count].fillna(0)
+    span_min = matched[var.col_conversation_span_minutes].fillna(0)
+    is_convo = (msg_cnt >= min_messages) & (span_min >= min_minutes)
+
+    convo_ts = var.col_like_timestamp if use_like_timestamp else var.col_first_message_timestamp
+    convo = matched[is_convo & matched[convo_ts].notna()]
+
+    convo_events = pd.DataFrame(
+        {ts_col_name: convo[convo_ts], "event": "Conversation"}
+    ).drop_duplicates()
+
+    # -----------------------------
+    # We met / My type
+    # -----------------------------
+    is_we_met = matched[var.col_we_met].fillna(False).astype(bool)
+    we_met_ts = var.col_like_timestamp if use_like_timestamp else var.col_we_met_timestamp
+
+    we_met = matched[is_we_met & matched[we_met_ts].notna()]
+    we_met_events = pd.DataFrame(
+        {ts_col_name: we_met[we_met_ts], "event": "We met"}
+    ).drop_duplicates()
+
+    is_my_type = we_met[var.col_my_type].fillna(False).astype(bool)
+    my_type = we_met[is_my_type & we_met[we_met_ts].notna()]
+
+    my_type_events = pd.DataFrame(
+        {ts_col_name: my_type[we_met_ts], "event": "My type"}
+    ).drop_duplicates()
+
+    # -----------------------------
+    # Blocks
+    # -----------------------------
+    block_ts = var.col_like_timestamp if use_like_timestamp else var.col_block_timestamp
+    blocked = matched[
+        matched[var.col_block_id].notna() & matched[block_ts].notna()
+    ]
+
+    block_events = pd.DataFrame(
+        {ts_col_name: blocked[block_ts], "event": "Block"}
+    ).drop_duplicates()
+
+    # -----------------------------
+    # Combine
+    # -----------------------------
+    out = pd.concat(
+        [
+            likes_events,
+            like_received_events,
+            match_events,
+            convo_events,
+            we_met_events,
+            my_type_events,
+            block_events,
+        ],
+        ignore_index=True,
+    )
+
+    out = (
+        out.dropna(subset=[ts_col_name])
+        .sort_values(ts_col_name)
+        .reset_index(drop=True)
+    )
+
+    return out
+
