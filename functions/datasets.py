@@ -433,7 +433,6 @@ def events_over_time_df(
     join_comments_and_likes_sent=False,
     use_like_timestamp=True,
 ):
-    import pandas as pd
 
     df = data.copy()
 
