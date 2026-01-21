@@ -4,7 +4,7 @@ import variables as var
 import pandas as pd
 import plotly.graph_objects as go
 import numpy as np
-
+import plotly.express as px
 
 
 def sankey(sankey_df, numb_of_engagements):
