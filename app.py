@@ -337,8 +337,8 @@ if user_id:
             
     
             columns_scatter = [
-                "Av. Time Between Messages (Mins)",
                 "Match to First Message Time (Mins)",
+                "Av. Time Between Messages (Mins)",
                 "First Message: Time of Day",
                 "First Message: Day of Week",
                 "First Message: Daytime",
@@ -360,7 +360,7 @@ if user_id:
 
             
             with st.expander("View as data"):
-                out_df_drivers = engagements[[colx, "# of Messages per Session"]].set_index(colx).dropna().fillna(0)
+                out_df_drivers = engagements[[colx, "# of Messages per Session"]].set_index(colx).dropna()
                 st.dataframe(out_df_drivers)
                 
             # I know how this looks lol, shut up...
