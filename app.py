@@ -68,6 +68,7 @@ if user_id:
         with tab1:
             st.header(var.tab_engagement_funnel)    
             st.caption("Shows how interactions flow from starting point to deeper engagement, step by step.")
+            st.divider()
             
             # Sankey: Engagement Funnel
             sankey_data = ds.sankey_data(engagements)
@@ -85,6 +86,7 @@ if user_id:
         with tab2:
             st.header(var.tab_engagement_over_time)
             st.caption("Shows what happened in each time period, so you can spot trends.")
+            st.divider()
             
             engagements_over_time = ds.events_over_time_df(engagements)
     
@@ -107,6 +109,8 @@ if user_id:
         with tab3:
             st.header(var.tab_outbound_timing)
             st.caption("Highlights when outreach tends to perform best.")
+            st.divider()
+            
             st.caption("""
                         The score used below is more reliable than a raw match rate. A raw rate can be misleading with very little data
                         - for example, 1 match from 2 likes doesn’t mean a time slot is better than one with 20 matches from 100 likes. 
@@ -178,7 +182,7 @@ if user_id:
         with tab4:
             st.header(var.tab_distribution)
             st.caption("Shows how different metrics are spread out using box plots.")
-
+            st.divider()
             
             mean_messaging_duration = int(engagements[var.col_conversation_span_minutes].mean())
             fig_box_messaging_duration = viz.horizontal_boxplot(
@@ -199,9 +203,6 @@ if user_id:
             
             st.plotly_chart(fig_box_messaging_number, width="stretch")
 
-
-
-            st.header("Time From Like to Match")
     
             mean_like_match_delay = int(engagements[var.col_like_match_delay].mean())
             fig_like_match_delay = viz.horizontal_boxplot(
@@ -220,7 +221,8 @@ if user_id:
         with tab5:
             st.header(var.tab_drivers)
             st.caption("Highlights what factors are most linked to higher messaging engagement.")
-    
+            st.divider()
+            
             engagements.rename(columns={
                 var.col_avg_message_gap: "Av. Time Between Messages (Mins)",
                 var.col_first_message_delay: "Match to First Message Time (Mins)",
@@ -265,8 +267,8 @@ if user_id:
         with tab6:
             st.header(var.tab_subscriptions)    
             st.caption("Summarizes how your plan relates to activity and engagement.")
-    
-
+            st.divider()
+        
 
 
         
