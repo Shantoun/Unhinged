@@ -63,7 +63,7 @@ def _dedupe_keep_best(df):
 
 
 
-def like_events_df(user_id):
+def like_events_df(user_id, tz="America/Toronto"):
     likes_df = pd.DataFrame(
         supabase.table(var.table_likes).select("*").eq(var.col_user_id, user_id).execute().data or []
     )
@@ -77,7 +77,7 @@ def like_events_df(user_id):
         supabase.table(var.table_blocks).select("*").eq(var.col_user_id, user_id).execute().data or []
     )
 
-    # timestamps
+    # timestamps (parse only; tz handled after concat)
     for df in [likes_df, messages_df, matches_df, blocks_df]:
         for c in df.columns:
             if c.endswith("_timestamp"):
@@ -118,12 +118,7 @@ def like_events_df(user_id):
         .reset_index(name=var.col_avg_message_gap)
     )
 
-    convo_agg = convo_agg.merge(
-        avg_gap,
-        on=var.col_match_id,
-        how="left"
-    )
-
+    convo_agg = convo_agg.merge(avg_gap, on=var.col_match_id, how="left")
     convo_agg = convo_agg.drop(columns=["last_message_ts"])
 
     # blocks (one per match)
@@ -166,25 +161,33 @@ def like_events_df(user_id):
 
     base_df = pd.concat([sent, received], ignore_index=True)
 
-    base_df[var.col_like_direction] = base_df[var.col_like_id].isna().map(
-        {True: "received", False: "sent"}
-    )
-    
+    # TZ CONVERSION (UTC -> tz, then drop tz info; do upstream once)
+    def _to_local_naive(s):
+        s = pd.to_datetime(s, utc=True, errors="coerce")
+        return s.dt.tz_convert(tz).dt.tz_localize(None)
+
+    for c in base_df.columns:
+        if c.endswith("_timestamp"):
+            base_df[c] = _to_local_naive(base_df[c])
+
+    base_df[var.col_like_direction] = base_df[var.col_like_id].isna().map({True: "received", False: "sent"})
+
     base_df[var.col_first_message_delay] = (
         (base_df[var.col_first_message_timestamp] - base_df[var.col_match_timestamp])
         .dt.total_seconds() / 60
     )
 
-
-    base_df[[var.col_match_timestamp, var.col_like_timestamp]] = base_df[[var.col_match_timestamp, var.col_like_timestamp]].apply(pd.to_datetime, errors="coerce")
-    
     base_df[var.col_like_match_delay] = (
         (base_df[var.col_match_timestamp] - base_df[var.col_like_timestamp])
         .dt.total_seconds() / 60
     )
-    
+
     base_df = _dedupe_keep_best(base_df)
     return base_df
+
+
+
+
 
 
 
@@ -296,7 +299,7 @@ def _time_bucket_from_dt(dt_series):
 def _dow_from_dt(dt_series):
     return pd.Categorical(dt_series.dt.day_name(), categories=_DOW_ORDER, ordered=True)
 
-def likes_matches_agg(data, by="time", tz="America/Toronto", m=100):
+def likes_matches_agg(data, by="time", m=100):
     """
     by: "time" | "day" | "day_time"
     Returns counts + raw_rate + smoothed_rate for sent likes only.
@@ -310,9 +313,9 @@ def likes_matches_agg(data, by="time", tz="America/Toronto", m=100):
     if var.col_like_direction in df.columns:
         df = df[df.like_direction == "sent"].copy()
 
-    # Parse timestamps (assumes UTC input; converts to tz)
-    df.like_timestamp  = pd.to_datetime(df.like_timestamp,  utc=True, errors="coerce").dt.tz_convert(tz)
-    df.match_timestamp = pd.to_datetime(df.match_timestamp, utc=True, errors="coerce").dt.tz_convert(tz)
+    # Parse timestamps (assumes already-localized upstream)
+    df.like_timestamp  = pd.to_datetime(df.like_timestamp, errors="coerce")
+    df.match_timestamp = pd.to_datetime(df.match_timestamp, errors="coerce")
 
     # Global baseline rate (sent only)
     total_likes = df.like_id.nunique() if var.col_like_id in df.columns else 0
@@ -323,7 +326,7 @@ def likes_matches_agg(data, by="time", tz="America/Toronto", m=100):
     like_day  = _dow_from_dt(df.like_timestamp)
     like_time = _time_bucket_from_dt(df.like_timestamp)
 
-    # Matches frame + keys (aligned length)
+    # Matches frame + keys
     match_df = df.dropna(subset=[var.col_match_id, "match_timestamp"]).copy()
     match_day  = _dow_from_dt(match_df.match_timestamp)
     match_time = _time_bucket_from_dt(match_df.match_timestamp)
@@ -401,24 +404,25 @@ def likes_matches_agg(data, by="time", tz="America/Toronto", m=100):
     out[var.table_likes] = out[var.table_likes].astype(int)
     out[var.json_matches] = out[var.json_matches].astype(int)
 
-    out["raw_rate"] = (out[var.json_matches] / out[var.table_likes]).replace([float("inf")], 0).fillna(0)
+    out["raw_rate"] = (
+        out[var.json_matches] / out[var.table_likes]
+    ).replace([float("inf")], 0).fillna(0)
 
     out["smoothed_rate"] = (
         (out[var.json_matches] + m * global_rate) /
         (out[var.table_likes] + m)
-    ).fillna(0).where(out[var.json_matches] > 0, float(0))
+    ).fillna(0).where(out[var.json_matches] > 0, 0)
 
-    out["smoothed_rate"] = out["smoothed_rate"]*100
+    out["smoothed_rate"] *= 100
 
-    # out = out.sort_values(["smoothed_rate", var.table_likes], ascending=[False, True])
-    
     return out
 
-def likes_matches_aggs(data, tz="America/Toronto"):
+
+def likes_matches_aggs(data):
     return {
-        "time":     likes_matches_agg(data, by="time", tz=tz, m=m),
-        "day":      likes_matches_agg(data, by="day", tz=tz, m=m),
-        "day_time": likes_matches_agg(data, by="day_time", tz=tz, m=m),
+        "time":     likes_matches_agg(data, by="time", m=m),
+        "day":      likes_matches_agg(data, by="day", m=m),
+        "day_time": likes_matches_agg(data, by="day_time", m=m),
     }
 
 
