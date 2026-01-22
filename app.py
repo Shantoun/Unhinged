@@ -61,12 +61,14 @@ if user_id:
 
         st.title("Unhinged")
 
-        tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs(["Engagement Funnel", "Engagement over Time", "Outbound Timing Performance", "General Distributions", "Engagement Drivers", "Subscription Statistics"])
+        tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs([var.tab_engagement_funnel, var.tab_engagement_over_time, var.tab_outbound_timing, var.tab_distribution, var.tab_drivers, var.tab_subscriptions])
 
 
 
         with tab1:
-            st.header("Engagement Funnel")    
+            st.header(var.tab_engagement_funnel)    
+            st.caption("Shows how interactions flow from starting point to deeper engagement, step by step.")
+            
             # Sankey: Engagement Funnel
             sankey_data = ds.sankey_data(engagements)
             fig_sankey = viz.sankey(sankey_data, len(engagements))
@@ -74,10 +76,16 @@ if user_id:
     
 
             with st.expander("View as data"):
-                st.dataframe(sankey_data)
+                st.dataframe(sankey_data, hide_index=True)
 
 
+
+
+        
         with tab2:
+            st.header(var.tab_engagement_over_time)
+            st.caption("Shows what happened in each time period, so you can spot trends.")
+            
             engagements_over_time = ds.events_over_time_df(engagements)
     
     
@@ -91,12 +99,19 @@ if user_id:
             with st.expander("View as data"):
                 st.dataframe(engagements_over_time)            
 
-    
 
 
+
+        
 
         with tab3:
-            st.header("Likes & Comments Timing Performance")
+            st.header(var.tab_outbound_timing)
+            st.caption("Highlights when outreach tends to perform best.")
+            st.caption("""
+                        The score used below is more reliable than a raw match rate. A raw rate can be misleading with very little data
+                        - for example, 1 match from 2 likes doesn’t mean a time slot is better than one with 20 matches from 100 likes. 
+                        This score reduces the impact of small samples so the results reflect real patterns
+                    """)
             
             # Radial: Time Engagement
             time_table = ds.likes_matches_agg(engagements, "time")
@@ -126,7 +141,6 @@ if user_id:
             st.table(out, border="horizontal")
 
 
-        
 
             def rename_columns(df):
                 rename_map = {
@@ -149,7 +163,9 @@ if user_id:
             day_table = rename_columns(day_table)
             day_time_table = rename_columns(day_time_table)
 
-
+            time_table = time_table.sort_values(["Score", "Likes & Comments"], ascending=[False, True])
+            day_table = day_table.sort_values(["Score", "Likes & Comments"], ascending=[False, True])
+            
             with st.expander("View as data"):
                 st.dataframe(time_table, hide_index=True)
                 st.dataframe(day_table, hide_index=True)
@@ -158,9 +174,12 @@ if user_id:
             
 
 
-        with tab4:
-            st.header("Messaging Analytics")
         
+        with tab4:
+            st.header(var.tab_distribution)
+            st.caption("Shows how different metrics are spread out using box plots.")
+
+            
             mean_messaging_duration = int(engagements[var.col_conversation_span_minutes].mean())
             fig_box_messaging_duration = viz.horizontal_boxplot(
                 engagements[var.col_conversation_span_minutes],
@@ -196,13 +215,11 @@ if user_id:
 
 
 
-            
-
 
         
         with tab5:
-            st.header("Messaging Engagement")
-    
+            st.header(var.tab_drivers)
+            st.caption("Highlights what factors are most linked to higher messaging engagement.")
     
             engagements.rename(columns={
                 var.col_avg_message_gap: "Av. Time Between Messages (Mins)",
@@ -243,9 +260,11 @@ if user_id:
 
 
     
-    
-    
 
+        
+        with tab6:
+            st.header(var.tab_subscriptions)    
+            st.caption("Summarizes how your plan relates to activity and engagement.")
     
 
 
