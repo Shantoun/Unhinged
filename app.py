@@ -45,7 +45,11 @@ if user_id:
 
     ################################################################################## MAIN
     else:
-
+        st.set_page_config(
+            layout="wide",
+            initial_sidebar_state="collapsed",
+        )
+        
         tzs = sorted(available_timezones())
         
         browser_tz = st_javascript("Intl.DateTimeFormat().resolvedOptions().timeZone")
@@ -70,7 +74,7 @@ if user_id:
 
 
         
-        st.set_page_config(layout="wide")
+        
         
         engagements = ds.like_events_df(user_id, tz)
 
@@ -290,8 +294,8 @@ if user_id:
     
             st.plotly_chart(fig_like_match_delay, width="stretch")
 
-
-
+            st.write(engagements)
+ 
 
         
         with tab5:
@@ -337,7 +341,7 @@ if user_id:
             }, inplace=True)
 
 
-    
+            st.write(engagements)
 
         
         with tab6:
