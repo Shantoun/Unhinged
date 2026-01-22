@@ -399,7 +399,7 @@ def stacked_events_bar_fig(events_df, ts_col=None):
 
     # stack + legend order (bottom -> top)
     order = [
-        "Comments & likes sent
+        "Comments & likes sent"
         "Like sent",
         "Comment",
         "Like received",
