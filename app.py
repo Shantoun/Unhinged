@@ -312,6 +312,12 @@ if user_id:
                     index=["Like to Match Time"],
                 )
                 
+
+                df_message_durations["Values"] = df_message_durations["Values"].apply(sorted)
+                df_messages_per_session["Values"] = df_messages_per_session["Values"].apply(sorted)
+                df_like_to_match_time["Values"] = df_like_to_match_time["Values"].apply(sorted)                
+                                     
+                
                 st.dataframe(df_message_durations)
                 st.dataframe(df_messages_per_session)
                 st.dataframe(df_like_to_match_time)
