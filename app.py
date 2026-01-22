@@ -245,9 +245,11 @@ if user_id:
 
             st.divider()
             with st.expander("View as data"):
-                st.dataframe(time_table, hide_index=True)
-                st.dataframe(day_table, hide_index=True)
-                st.dataframe(day_time_table, hide_index=True)  
+                time_table = time_table.set_index("Time Slot")
+                st.dataframe(time_table)
+                day_table = day_table.set_index("Day of Week")
+                st.dataframe(day_table)
+                st.dataframe(day_time_table, hide_index=True)
     
             
 
