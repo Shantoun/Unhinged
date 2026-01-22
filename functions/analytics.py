@@ -306,7 +306,6 @@ def stacked_events_bar_fig(events_df, ts_col=None):
 
     # infer / validate timestamp col
     if ts_col is None or ts_col not in df.columns:
-        # prefer your two canonical names first
         for c in ["Event Timestamp", "Like Timestamp"]:
             if c in df.columns:
                 ts_col = c
@@ -321,8 +320,8 @@ def stacked_events_bar_fig(events_df, ts_col=None):
 
     df = df.dropna(subset=[ts_col, "event"])
     if df.empty:
-        return None, None
-        
+        return None, None, None
+
     tmin = df[ts_col].min()
     tmax = df[ts_col].max()
     span = tmax - tmin
@@ -362,13 +361,13 @@ def stacked_events_bar_fig(events_df, ts_col=None):
     elif bucket == "Quarter":
         p = df[ts_col].dt.to_period("Q")
         df["_bucket_dt"] = p.dt.start_time
-        df["_bucket_label"] = p.astype(str)               # 2026Q4
+        df["_bucket_label"] = p.astype(str)  # 2026Q4
         df["_hover_label"] = df["_bucket_label"].str.replace("Q", " Q", regex=False)  # 2026 Q4
 
     elif bucket == "Month":
         df["_bucket_dt"] = df[ts_col].dt.to_period("M").dt.start_time
-        df["_bucket_label"] = df["_bucket_dt"].dt.strftime("%Y-%m")   # stable x ordering
-        df["_hover_label"] = df["_bucket_dt"].dt.strftime("%b %Y")    # Jan 2026
+        df["_bucket_label"] = df["_bucket_dt"].dt.strftime("%Y-%m")
+        df["_hover_label"] = df["_bucket_dt"].dt.strftime("%b %Y")
 
     elif bucket == "Week":
         df["_bucket_dt"] = df[ts_col].dt.to_period("W-MON").dt.start_time
@@ -390,7 +389,7 @@ def stacked_events_bar_fig(events_df, ts_col=None):
           .rename(columns={"size": "count"})
     )
 
-    # chronological order
+    # chronological order for columns/x
     sort_key = (
         df.drop_duplicates("_bucket_label")[["_bucket_label", "_bucket_dt"]]
           .sort_values("_bucket_dt")
@@ -412,6 +411,22 @@ def stacked_events_bar_fig(events_df, ts_col=None):
     extras = [e for e in agg["event"].unique().tolist() if e not in order]
     category_order = order + sorted(extras)
 
+    # -------- output DF (events as rows, buckets as columns) --------
+    # columns in chronological order
+    col_order = sort_key["_bucket_label"].tolist()
+    if not col_order:
+        col_order = sorted(agg["_bucket_label"].unique().tolist())
+
+    out_df = (
+        agg.pivot_table(index="event", columns="_bucket_label", values="count", aggfunc="sum", fill_value=0)
+           .reindex(index=category_order, fill_value=0)
+           .reindex(columns=col_order, fill_value=0)
+           .reset_index()
+           .rename(columns={"event": "Event"})
+    )
+    out_df.columns.name = None
+
+    # -------- figure --------
     fig = px.bar(
         agg,
         x="_bucket_label",
@@ -422,25 +437,20 @@ def stacked_events_bar_fig(events_df, ts_col=None):
         custom_data=["_hover_label", "event", "count"],
     )
 
-    # clean hover
     fig.update_traces(
         hovertemplate="%{customdata[0]}<br>%{customdata[1]}: %{customdata[2]}<extra></extra>"
     )
 
-    # remove legend title, keep legend ordered
     fig.update_layout(
         legend_title_text="",
         xaxis_title=None,
         yaxis_title=None,
+        legend_traceorder="reversed",
     )
 
-    fig.update_layout(legend_traceorder="reversed")
-
     fig.update_xaxes(type="category", tickangle=0)
-            
-    # zoom only on X (lock Y)
     fig.update_yaxes(fixedrange=True)
-    
+
     # -------- partial bucket warning --------
     warning = None
     if bucket != "All":
@@ -473,6 +483,6 @@ def stacked_events_bar_fig(events_df, ts_col=None):
         if (tmin0 > first_bucket_start) or (tmax0 < last_bucket_end):
             warning = "⚠️ Time buckets may be partial at the edges (data doesn’t cover full calendar buckets)."
 
-    return fig, warning
+    return fig, warning, out_df
 
 
