@@ -100,7 +100,7 @@ if user_id:
             st.caption("Shows how interactions flow from starting point to deeper engagement, step by step.")
             st.divider()
         
-            join_likes_comments = st.checkbox("Join likes & comments sent", key="join_likes_comments_tab1", on_change=sync_from_tab1)
+            join_likes_comments = st.checkbox("Join comments & likes sent", key="join_likes_comments_tab1", on_change=sync_from_tab1)
             c1, c2 = st.columns(2)
             convo_min_mins = c1.number_input("Minimum conversation duration (min)", min_value=0, step=1, width="stretch", key="convo_min_mins_tab1", on_change=sync_from_tab1, help="Sets the minimum duration required for an interaction to count as a conversation.")
             convo_min_messages = c2.number_input("Minimum messages per conversation", min_value=0, step=1, width="stretch", key="convo_min_messages_tab1", on_change=sync_from_tab1, help="Sets the minimum number of messages required to count as a conversation.")
@@ -128,14 +128,13 @@ if user_id:
                                             Using like time asks “How did my likes perform by when they were sent?”
                                             Using event time asks “What happened in each time period?”
                                         """)
-            join_likes_comments = st.checkbox("Join likes & comments sent", key="join_likes_comments_tab2", on_change=sync_from_tab2)
+            
+            join_likes_comments = st.checkbox("Join comments & likes sent", key="join_likes_comments_tab2", on_change=sync_from_tab2)
             c1, c2 = st.columns(2)
             convo_min_mins = c1.number_input("Minimum conversation duration (min)", min_value=0, step=1, width="stretch", key="convo_min_mins_tab2", on_change=sync_from_tab2, help="Sets the minimum duration required for an interaction to count as a conversation.")
             convo_min_messages = c2.number_input("Minimum messages per conversation", min_value=0, step=1, width="stretch", key="convo_min_messages_tab2", on_change=sync_from_tab2, help="Sets the minimum number of messages required to count as a conversation.")
         
-            engagements_over_time = ds.events_over_time_df(engagements, min_messages=convo_min_messages, min_minutes=convo_min_mins, join_comments_and_likes_sent=join_likes_comments)
-
-
+            engagements_over_time = ds.events_over_time_df(engagements, min_messages=convo_min_messages, min_minutes=convo_min_mins, join_comments_and_likes_sent=join_likes_comments, use_like_timestamp=use_like_time)
 
             
             fig_engagements_over_time, warning = viz.stacked_events_bar_fig(engagements_over_time)
