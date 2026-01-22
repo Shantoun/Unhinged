@@ -231,31 +231,31 @@ def sankey_data(data, min_messages=2, min_minutes=5, join_comments_and_likes_sen
         start_no_match = len(comments_nm) + len(likes_sent_nm)
 
         flows = [
-            (start, var.json_matches, start_matches),
+            (start, "Matches", start_matches),
             (start, "No match", start_no_match),
 
-            ("Likes received", var.json_matches, likes_received_m[var.col_match_id].nunique()),
+            ("Likes received", "Matches", likes_received_m[var.col_match_id].nunique()),
             ("Likes received", "No match", len(likes_received_nm)),
         ]
     else:
         flows = [
-            ("Comments", var.json_matches, comments_m[var.col_match_id].nunique()),
+            ("Comments", "Matches", comments_m[var.col_match_id].nunique()),
             ("Comments", "No match", len(comments_nm)),
 
-            ("Likes sent", var.json_matches, likes_sent_m[var.col_match_id].nunique()),
+            ("Likes sent", "Matches", likes_sent_m[var.col_match_id].nunique()),
             ("Likes sent", "No match", len(likes_sent_nm)),
 
-            ("Likes received", var.json_matches, likes_received_m[var.col_match_id].nunique()),
+            ("Likes received", "Matches", likes_received_m[var.col_match_id].nunique()),
             ("Likes received", "No match", len(likes_received_nm)),
         ]
 
     flows += [
-        (var.json_matches, "Conversations", matched[is_convo][var.col_match_id].nunique()),
+        ("Matches", "Conversations", matched[is_convo][var.col_match_id].nunique()),
 
-        (var.json_matches, "We met", we_met_direct[var.col_match_id].nunique()),
+        ("Matches", "We met", we_met_direct[var.col_match_id].nunique()),
         ("Conversations", "We met", we_met_via_convo[var.col_match_id].nunique()),
 
-        (var.json_matches, "Blocks", blocks_direct[var.col_match_id].nunique()),
+        ("Matches", "Blocks", blocks_direct[var.col_match_id].nunique()),
         ("Conversations", "Blocks", blocks_via_convo[var.col_match_id].nunique()),
 
         ("We met", "My type", my_type[var.col_match_id].nunique()),
