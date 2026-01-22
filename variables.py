@@ -135,3 +135,17 @@ col_avg_message_gap = "avg_message_gap"
 col_first_message_delay = "first_message_delay"
 col_like_direction = "like_direction"
 col_like_match_delay = "like_match_delay"
+
+
+####################################################### Tab Names
+tab_engagement_funnel = "Engagement Funnel"
+tab_engagement_over_time = "Engagement over Time"
+tab_outbound_timing = "Outbound Timing Performance"
+tab_distribution = "General Distributions"
+tab_drivers = "Engagement Drivers"
+tab_subscriptions = "Subscription Statistics"
+
+
+
+
+
