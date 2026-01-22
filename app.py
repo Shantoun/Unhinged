@@ -294,8 +294,28 @@ if user_id:
     
             st.plotly_chart(fig_like_match_delay, width="stretch")
 
-            st.write(engagements)
- 
+
+            st.divider() 
+            with st.expander("View as data"):
+                df_message_durations = pd.DataFrame(
+                    {"Values": [engagements[var.col_conversation_span_minutes].dropna().tolist()]},
+                    index=["Message Durations"],
+                )
+                
+                df_messages_per_session = pd.DataFrame(
+                    {"Values": [engagements[var.col_conversation_message_count].dropna().tolist()]},
+                    index=["Messages per Session"],
+                )
+                
+                df_like_to_match_time = pd.DataFrame(
+                    {"Values": [engagements[var.col_like_match_delay].dropna().tolist()]},
+                    index=["Like to Match Time"],
+                )
+                
+                st.dataframe(df_message_durations)
+                st.dataframe(df_messages_per_session)
+                st.dataframe(df_like_to_match_time)
+     
 
         
         with tab5:
