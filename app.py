@@ -170,7 +170,7 @@ if user_id:
                 st.caption(warning)  
 
             
-            st.divider()
+
             with st.expander("View as data"):
                 output_df = output_df.set_index("Event")
                 
@@ -252,7 +252,7 @@ if user_id:
             day_table = day_table.sort_values(["Score", "Likes & Comments"], ascending=[False, True])
 
 
-            st.divider()
+
             with st.expander("View as data"):
                 time_table = time_table.set_index("Time Slot")
                 st.dataframe(time_table)
@@ -358,7 +358,7 @@ if user_id:
             st.plotly_chart(fig_like_match_delay, width="stretch")
 
 
-            st.divider() 
+
             with st.expander("View as data"):
                 df_message_durations = pd.DataFrame(
                     {"Values": [engagements[var.col_conversation_span_minutes].dropna().tolist()]},
