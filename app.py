@@ -360,7 +360,7 @@ if user_id:
 
             
             with st.expander("View as data"):
-                out_df_drivers = engagements[[colx, "# of Messages per Session"]].set_index(colx).dropna()
+                out_df_drivers = engagements[[colx, "# of Messages per Session"]].set_index(colx).dropna().fillna(0)
                 st.dataframe(out_df_drivers)
                 
             # I know how this looks lol, shut up...
