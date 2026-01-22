@@ -57,7 +57,7 @@ if user_id:
         st.set_page_config(layout="wide")
         
         engagements = ds.like_events_df(user_id)
-        st.write(engagements)
+
 
         st.title("Unhinged")
 
