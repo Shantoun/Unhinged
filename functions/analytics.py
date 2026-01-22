@@ -300,7 +300,7 @@ def scatter_plot(
 
 
 
-def stacked_events_bar_fig(events_df, ts_col=None, title="Events over time"):
+def stacked_events_bar_fig(events_df, ts_col=None):
 
     df = events_df.copy()
 
