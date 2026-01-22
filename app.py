@@ -75,7 +75,7 @@ if user_id:
             st.caption("Shows how interactions flow from starting point to deeper engagement, step by step.")
             st.divider()
         
-            join_likes_comments = st.checkbox("Join likes & comments sent")
+            join_likes_comments = st.checkbox("Join likes & comments sent", key="join_likes_comments")
         
             convo_col1, convo_col2 = st.columns(2)
         
@@ -96,7 +96,7 @@ if user_id:
             st.caption("Shows what happened in each time period, so you can spot trends.")
             st.divider()
         
-            join_likes_comments = st.checkbox("Join likes & comments sent")
+            join_likes_comments = st.checkbox("Join likes & comments sent", key="join_likes_comments")
         
             convo_col1, convo_col2 = st.columns(2)
         
