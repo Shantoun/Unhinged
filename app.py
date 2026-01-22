@@ -45,6 +45,16 @@ if user_id:
 
     ################################################################################## MAIN
     else:
+
+        tzs = sorted(available_timezones())
+        
+        browser_tz = st_javascript("Intl.DateTimeFormat().resolvedOptions().timeZone")
+        default_idx = tzs.index(browser_tz) if browser_tz in tzs else 0
+        
+        with st.sidebar:
+            tz = st.selectbox("Timezone", tzs, index=default_idx)
+
+        
         # Reupload data
         if st.sidebar.button("Upload Data", width="stretch"):
             hinge_sync_dialog()
@@ -55,13 +65,7 @@ if user_id:
             st.rerun()
 
 
-        tzs = sorted(available_timezones())
-        
-        browser_tz = st_javascript("Intl.DateTimeFormat().resolvedOptions().timeZone")
-        default_idx = tzs.index(browser_tz) if browser_tz in tzs else 0
-        
-        with st.sidebar:
-            tz = st.selectbox("Timezone", tzs, index=default_idx)
+
 
 
         
