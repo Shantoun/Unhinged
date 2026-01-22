@@ -68,6 +68,7 @@ if user_id:
         # defaults (define once, before tabs)
         st.session_state.setdefault("convo_min_mins", 5)
         st.session_state.setdefault("convo_min_messages", 2)
+        st.session_state.setdefault("join_likes_comments", False)
         
         with tab1:
             st.header(var.tab_engagement_funnel)
