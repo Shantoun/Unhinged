@@ -60,7 +60,8 @@ if user_id:
 
 
         st.title("Unhinged")
-
+        st.write("The post-mortem your dating life deserves")
+        
         tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs([var.tab_engagement_funnel, var.tab_engagement_over_time, var.tab_outbound_timing, var.tab_distribution, var.tab_drivers, var.tab_subscriptions])
 
 
