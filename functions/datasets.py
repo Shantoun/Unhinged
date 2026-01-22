@@ -226,7 +226,7 @@ def sankey_data(data, min_messages=2, min_minutes=5, join_comments_and_likes_sen
     my_type = matched[is_we_met & matched[var.col_my_type].fillna(False).astype(bool)]
 
     if join_comments_and_likes_sent:
-        start = "Comments & Likes Sent"
+        start = "Comments & likes sent"
         start_matches = comments_m[var.col_match_id].nunique() + likes_sent_m[var.col_match_id].nunique()
         start_no_match = len(comments_nm) + len(likes_sent_nm)
 
@@ -461,7 +461,7 @@ def events_over_time_df(
     if join_comments_and_likes_sent:
         sent_any = df[is_sent & df[base_ts].notna()]
         likes_events = pd.DataFrame(
-            {ts_col_name: sent_any[base_ts], "event": "Comments & Likes Sent"}
+            {ts_col_name: sent_any[base_ts], "event": "Comments & likes sent"}
         )
     else:
         comments = df[is_sent & has_comment & df[base_ts].notna()]
