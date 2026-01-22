@@ -54,6 +54,7 @@ if user_id:
         with st.sidebar:
             tz = st.selectbox("Timezone", tzs, index=default_idx)
 
+        st.divider()
         
         # Reupload data
         if st.sidebar.button("Upload Data", width="stretch"):
