@@ -6,3 +6,4 @@ Authlib
 plotly
 scipy
 zoneinfo
+streamlit-javascript
