@@ -61,7 +61,7 @@ if user_id:
             st.divider()
         
         # Reupload data
-        if st.sidebar.button("Upload Data", width="stretch"):
+        if st.sidebar.button("Upload More Data", width="stretch"):
             hinge_sync_dialog()
 
         # Sign out
@@ -128,6 +128,11 @@ if user_id:
             sankey_data = ds.sankey_data(engagements, min_messages=convo_min_messages, min_minutes=convo_min_mins, join_comments_and_likes_sent=join_likes_comments)
             fig_sankey = viz.sankey(sankey_data, len(engagements))
             st.plotly_chart(fig_sankey, width="stretch")
+
+
+            st.caption("""
+                My Type takes precedence over blocks, which includes unmatches. If someone was marked as My Type and later blocked, they will still be counted as My Type.
+            """)
             
             st.divider()
             with st.expander("View as data"):
