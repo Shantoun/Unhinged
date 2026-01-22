@@ -294,7 +294,6 @@ def scatter_plot(
         fig.update_xaxes(title=x_title, hoverformat=",.0f")
 
     fig.update_yaxes(title=str(y_col), hoverformat=",.0f")
-    fig.update_layout(title=title)
 
     return fig
 
