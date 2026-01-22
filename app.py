@@ -10,7 +10,7 @@ import plotly.graph_objects as go
 import functions.datasets as ds
 import functions.analytics as viz
 import numpy as np
-from zoneinfo import available_timezones
+# from zoneinfo import available_timezones
 
 
 
@@ -55,13 +55,13 @@ if user_id:
             st.rerun()
 
 
-        tzs = sorted(available_timezones())
+        # tzs = sorted(available_timezones())
         
-        browser_tz = st_javascript("Intl.DateTimeFormat().resolvedOptions().timeZone")
-        default_idx = tzs.index(browser_tz) if browser_tz in tzs else 0
+        # browser_tz = st_javascript("Intl.DateTimeFormat().resolvedOptions().timeZone")
+        # default_idx = tzs.index(browser_tz) if browser_tz in tzs else 0
         
-        with st.sidebar:
-            tz = st.selectbox("Timezone", tzs, index=default_idx)
+        # with st.sidebar:
+        #     tz = st.selectbox("Timezone", tzs, index=default_idx)
 
 
         
