@@ -100,7 +100,7 @@ def sankey(sankey_df, numb_of_engagements):
         ]
     )
 
-    fig.update_layout(height=520, margin=dict(l=10, r=10, t=50, b=10))
+    fig.update_layout(title=title,height=520, margin=dict(l=10, r=10, t=50, b=10))
     return fig
 
 
@@ -417,7 +417,6 @@ def stacked_events_bar_fig(events_df, ts_col=None):
         y="count",
         color="event",
         barmode="stack",
-        title=title,
         category_orders={"event": category_order},
         custom_data=["_hover_label", "event", "count"],
     )
