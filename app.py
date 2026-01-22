@@ -286,5 +286,6 @@ else:
 
     st.title("Unhinged")
     st.write("The post-mortem your dating life deserves")
+    st.divider()
     
     auth.auth_screen()
