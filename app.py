@@ -98,6 +98,8 @@ if user_id:
             if warning:
                 st.caption(warning)  
 
+            
+            st.divider()
             with st.expander("View as data"):
                 st.dataframe(engagements_over_time)            
 
@@ -169,7 +171,9 @@ if user_id:
 
             time_table = time_table.sort_values(["Score", "Likes & Comments"], ascending=[False, True])
             day_table = day_table.sort_values(["Score", "Likes & Comments"], ascending=[False, True])
-            
+
+
+            st.divider()
             with st.expander("View as data"):
                 st.dataframe(time_table, hide_index=True)
                 st.dataframe(day_table, hide_index=True)
