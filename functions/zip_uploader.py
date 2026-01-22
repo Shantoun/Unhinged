@@ -37,7 +37,7 @@ def uploader():
     result = zip_uploader()
 
     if result:
-        st.caption("By continuing, you acknowledge and agree that your data will be securely stored and analyzed, including in aggregated and anonymized form.")
+        st.caption("By clicking Continue, you acknowledge and agree that your data will be securely stored and analyzed, including in aggregated and anonymized form.")
         if st.button("Continue", type="primary", width="stretch"):
             json_data = result["json"]
 
