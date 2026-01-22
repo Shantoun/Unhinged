@@ -163,7 +163,7 @@ if user_id:
             
             st.divider()
             with st.expander("View as data"):
-                output_df = output_df.reset_index(names="Event")
+                output_df = output_df.set_index("Event")
                 st.dataframe(output_df)            
 
 
