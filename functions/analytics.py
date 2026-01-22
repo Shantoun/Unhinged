@@ -480,7 +480,7 @@ def stacked_events_bar_fig(events_df, ts_col=None):
         _, last_bucket_end = bounds(tmax0, bucket)
 
         if (tmin0 > first_bucket_start) or (tmax0 < last_bucket_end):
-            warning = "⚠️ Time buckets may be partial at the edges (data doesn’t cover full calendar buckets)."
+            warning = "Time buckets may be partial at the edges (data doesn’t cover full calendar buckets)."
 
     return fig, warning, out_df
 
