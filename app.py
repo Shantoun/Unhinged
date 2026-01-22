@@ -75,7 +75,7 @@ if user_id:
             fig_sankey = viz.sankey(sankey_data, len(engagements))
             st.plotly_chart(fig_sankey, width="stretch")
     
-
+            st.divider()
             with st.expander("View as data"):
                 st.dataframe(sankey_data, hide_index=True)
 
@@ -112,8 +112,8 @@ if user_id:
             st.divider()
             
             st.caption("""
-                        The score used below is more reliable than a raw match rate. A raw rate can be misleading with very little data
-                        - for example, 1 match from 2 likes doesn’t mean a time slot is better than one with 20 matches from 100 likes. 
+                        The score used below is more reliable than a raw match rate. A raw rate can be misleading with very little data, 
+                        for example, 1 match from 2 likes doesn’t mean a time slot is better than one with 20 matches from 100 likes. 
                         This score reduces the impact of small samples so the results reflect real patterns
                     """)
             
