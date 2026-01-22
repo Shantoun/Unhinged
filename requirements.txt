@@ -5,5 +5,4 @@ supabase
 Authlib
 plotly
 scipy
-zoneinfo
 streamlit-javascript
