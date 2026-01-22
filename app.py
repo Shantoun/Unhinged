@@ -164,6 +164,13 @@ if user_id:
             st.divider()
             with st.expander("View as data"):
                 output_df = output_df.set_index("Event")
+                
+                if join_likes_comments:
+                    output_df = output_df.drop(index=["Comments", "Likes"], errors="ignore")
+                else:
+                    output_df = output_df.drop(index=["Comments & likes sent"], errors="ignore")
+
+                
                 st.dataframe(output_df)            
 
 
