@@ -78,7 +78,6 @@ if user_id:
 
 
         with tab2:
-
             engagements_over_time = ds.events_over_time_df(engagements)
     
             st.write(engagements_over_time)
@@ -98,93 +97,6 @@ if user_id:
 
 
         with tab3:
-            st.header("Messaging Analytics")
-        
-            mean_messaging_duration = int(engagements[var.col_conversation_span_minutes].mean())
-            fig_box_messaging_duration = viz.horizontal_boxplot(
-                engagements[var.col_conversation_span_minutes],
-                title="Messaging Duration - Mean: {:,} Minutes".format(mean_messaging_duration)
-            )
-    
-            st.plotly_chart(fig_box_messaging_duration, width="stretch")
-    
-            
-            mean_messaging_number = int(engagements[var.col_conversation_message_count].mean())
-            fig_box_messaging_number = viz.horizontal_boxplot(
-                engagements[var.col_conversation_message_count],
-                title="Messages per Session - Mean: {:,} Messages".format(mean_messaging_number),
-                color = "#EF553B",
-                trace_name="Messages"
-            )
-            
-            st.plotly_chart(fig_box_messaging_number, width="stretch")
-
-
-
-            st.header("Time From Like to Match")
-    
-            mean_like_match_delay = int(engagements[var.col_like_match_delay].mean())
-            fig_like_match_delay = viz.horizontal_boxplot(
-                engagements[var.col_like_match_delay],
-                title="Like to Match Time - Mean: {:,} Minutes".format(mean_like_match_delay),
-                color = "#EF553B",
-                trace_name="Minutes"
-            )
-    
-            st.plotly_chart(fig_like_match_delay, width="stretch")
-
-
-        
-
-
-        with tab4:
-            st.header("Messaging Engagement")
-    
-    
-            engagements.rename(columns={
-                var.col_avg_message_gap: "Av. Time Between Messages (Mins)",
-                var.col_first_message_delay: "Match to First Message Time (Mins)",
-                var.col_conversation_message_count: "# of Messages per Session",
-            }, inplace=True)
-            
-    
-            columns_scatter = [
-                "Av. Time Between Messages (Mins)",
-                "Match to First Message Time (Mins)",
-                "First Message: Time of Day",
-                "First Message: Day of Week",
-                "First Message: Daytime",
-            ]
-            
-            colx = st.selectbox("", columns_scatter)
-    
-            
-            fig = viz.scatter_plot(
-                engagements,
-                x_key=colx,
-                y_col="# of Messages per Session",
-                first_ts_col=var.col_first_message_timestamp,
-                title="Messaging Analytics",
-            )
-            
-            st.plotly_chart(fig, width="stretch")
-    
-    
-    
-            # I know how this looks lol, shut up...
-            engagements.rename(columns={
-                "Av. Time Between Messages (Mins)": var.col_avg_message_gap,
-                "Match to First Message Time (Mins)": var.col_first_message_delay,
-                "# of Messages per Session": var.col_conversation_message_count,
-            }, inplace=True)
-            
-
-
-
-
-        
-        with tab5:
-
             st.header("Likes & Comments Timing Performance")
             
             # Radial: Time Engagement
@@ -243,6 +155,98 @@ if user_id:
             st.dataframe(time_table, hide_index=True)
             st.dataframe(day_table, hide_index=True)
             st.dataframe(day_time_table, hide_index=True)  
+
+        
+
+
+        with tab4:
+            st.header("Messaging Analytics")
+        
+            mean_messaging_duration = int(engagements[var.col_conversation_span_minutes].mean())
+            fig_box_messaging_duration = viz.horizontal_boxplot(
+                engagements[var.col_conversation_span_minutes],
+                title="Messaging Duration - Mean: {:,} Minutes".format(mean_messaging_duration)
+            )
+    
+            st.plotly_chart(fig_box_messaging_duration, width="stretch")
+    
+            
+            mean_messaging_number = int(engagements[var.col_conversation_message_count].mean())
+            fig_box_messaging_number = viz.horizontal_boxplot(
+                engagements[var.col_conversation_message_count],
+                title="Messages per Session - Mean: {:,} Messages".format(mean_messaging_number),
+                color = "#EF553B",
+                trace_name="Messages"
+            )
+            
+            st.plotly_chart(fig_box_messaging_number, width="stretch")
+
+
+
+            st.header("Time From Like to Match")
+    
+            mean_like_match_delay = int(engagements[var.col_like_match_delay].mean())
+            fig_like_match_delay = viz.horizontal_boxplot(
+                engagements[var.col_like_match_delay],
+                title="Like to Match Time - Mean: {:,} Minutes".format(mean_like_match_delay),
+                color = "#EF553B",
+                trace_name="Minutes"
+            )
+    
+            st.plotly_chart(fig_like_match_delay, width="stretch")
+
+
+
+            
+
+            
+
+
+
+
+        
+        with tab5:
+            st.header("Messaging Engagement")
+    
+    
+            engagements.rename(columns={
+                var.col_avg_message_gap: "Av. Time Between Messages (Mins)",
+                var.col_first_message_delay: "Match to First Message Time (Mins)",
+                var.col_conversation_message_count: "# of Messages per Session",
+            }, inplace=True)
+            
+    
+            columns_scatter = [
+                "Av. Time Between Messages (Mins)",
+                "Match to First Message Time (Mins)",
+                "First Message: Time of Day",
+                "First Message: Day of Week",
+                "First Message: Daytime",
+            ]
+            
+            colx = st.selectbox("", columns_scatter)
+    
+            
+            fig = viz.scatter_plot(
+                engagements,
+                x_key=colx,
+                y_col="# of Messages per Session",
+                first_ts_col=var.col_first_message_timestamp,
+                title="Messaging Analytics",
+            )
+            
+            st.plotly_chart(fig, width="stretch")
+    
+    
+    
+            # I know how this looks lol, shut up...
+            engagements.rename(columns={
+                "Av. Time Between Messages (Mins)": var.col_avg_message_gap,
+                "Match to First Message Time (Mins)": var.col_first_message_delay,
+                "# of Messages per Session": var.col_conversation_message_count,
+            }, inplace=True)
+
+
     
     
     
