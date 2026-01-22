@@ -285,7 +285,7 @@ else:
     st.set_page_config(layout="centered")
 
     st.title("Unhinged")
-    st.write("The post-mortem your dating life deserves")
+    st.caption("The post-mortem your dating life deserves")
     st.divider()
     
     auth.auth_screen()
