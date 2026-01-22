@@ -357,8 +357,12 @@ if user_id:
             
             st.plotly_chart(fig, width="stretch")
     
-    
-    
+
+            
+            with st.expander("View as data"):
+                out_df_drivers = engagements[[colx, "# of Messages per Session"]].set_index("Event")
+                st.dataframe(out_df_drivers)
+                
             # I know how this looks lol, shut up...
             engagements.rename(columns={
                 "Av. Time Between Messages (Mins)": var.col_avg_message_gap,
@@ -367,7 +371,7 @@ if user_id:
             }, inplace=True)
 
 
-            st.write(engagements)
+            
 
         
         with tab6:
