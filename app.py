@@ -65,47 +65,68 @@ if user_id:
 
 
 
-        # defaults (define once, before tabs)
-        st.session_state.setdefault("convo_min_mins", 5)
-        st.session_state.setdefault("convo_min_messages", 2)
-        st.session_state.setdefault("join_likes_comments", False)
+        # defaults
+        if "convo_min_mins" not in st.session_state: st.session_state["convo_min_mins"] = 5
+        if "convo_min_messages" not in st.session_state: st.session_state["convo_min_messages"] = 2
+        if "join_likes_comments" not in st.session_state: st.session_state["join_likes_comments"] = False
+        
+        def sync_from_tab1():
+            st.session_state["convo_min_mins"] = st.session_state["convo_min_mins_tab1"]
+            st.session_state["convo_min_messages"] = st.session_state["convo_min_messages_tab1"]
+            st.session_state["join_likes_comments"] = st.session_state["join_likes_comments_tab1"]
+            st.session_state["convo_min_mins_tab2"] = st.session_state["convo_min_mins"]
+            st.session_state["convo_min_messages_tab2"] = st.session_state["convo_min_messages"]
+            st.session_state["join_likes_comments_tab2"] = st.session_state["join_likes_comments"]
+        
+        def sync_from_tab2():
+            st.session_state["convo_min_mins"] = st.session_state["convo_min_mins_tab2"]
+            st.session_state["convo_min_messages"] = st.session_state["convo_min_messages_tab2"]
+            st.session_state["join_likes_comments"] = st.session_state["join_likes_comments_tab2"]
+            st.session_state["convo_min_mins_tab1"] = st.session_state["convo_min_mins"]
+            st.session_state["convo_min_messages_tab1"] = st.session_state["convo_min_messages"]
+            st.session_state["join_likes_comments_tab1"] = st.session_state["join_likes_comments"]
+        
+        # seed per-tab widget state once
+        if "convo_min_mins_tab1" not in st.session_state:
+            st.session_state["convo_min_mins_tab1"] = st.session_state["convo_min_mins"]
+            st.session_state["convo_min_messages_tab1"] = st.session_state["convo_min_messages"]
+            st.session_state["join_likes_comments_tab1"] = st.session_state["join_likes_comments"]
+            st.session_state["convo_min_mins_tab2"] = st.session_state["convo_min_mins"]
+            st.session_state["convo_min_messages_tab2"] = st.session_state["convo_min_messages"]
+            st.session_state["join_likes_comments_tab2"] = st.session_state["join_likes_comments"]
         
         with tab1:
             st.header(var.tab_engagement_funnel)
             st.caption("Shows how interactions flow from starting point to deeper engagement, step by step.")
             st.divider()
         
-            join_likes_comments = st.checkbox("Join likes & comments sent", key="join_likes_comments")
-        
-            convo_col1, convo_col2 = st.columns(2)
-        
-            convo_min_mins = convo_col1.number_input("Minimum conversation duration (min)", min_value=0, step=1, width="stretch", key="convo_min_mins", help="Sets the minimum duration required for an interaction to count as a conversation.")
-            convo_min_messages = convo_col2.number_input("Minimum messages per conversation", min_value=0, step=1, width="stretch", key="convo_min_messages", help="Sets the minimum number of messages required to count as a conversation.")
+            join_likes_comments = st.checkbox("Join likes & comments sent", key="join_likes_comments_tab1", on_change=sync_from_tab1)
+            c1, c2 = st.columns(2)
+            convo_min_mins = c1.number_input("Minimum conversation duration (min)", min_value=0, step=1, width="stretch", key="convo_min_mins_tab1", on_change=sync_from_tab1, help="Sets the minimum duration required for an interaction to count as a conversation.")
+            convo_min_messages = c2.number_input("Minimum messages per conversation", min_value=0, step=1, width="stretch", key="convo_min_messages_tab1", on_change=sync_from_tab1, help="Sets the minimum number of messages required to count as a conversation.")
         
             sankey_data = ds.sankey_data(engagements, min_messages=convo_min_messages, min_minutes=convo_min_mins, join_comments_and_likes_sent=join_likes_comments)
             fig_sankey = viz.sankey(sankey_data, len(engagements))
             st.plotly_chart(fig_sankey, width="stretch")
-        
             st.divider()
             with st.expander("View as data"):
                 st.dataframe(sankey_data, hide_index=True)
-        
         
         with tab2:
             st.header(var.tab_engagement_over_time)
             st.caption("Shows what happened in each time period, so you can spot trends.")
             st.divider()
         
-            join_likes_comments = st.checkbox("Join likes & comments sent", key="join_likes_comments")
+            join_likes_comments = st.checkbox("Join likes & comments sent", key="join_likes_comments_tab2", on_change=sync_from_tab2)
+            c1, c2 = st.columns(2)
+            convo_min_mins = c1.number_input("Minimum conversation duration (min)", min_value=0, step=1, width="stretch", key="convo_min_mins_tab2", on_change=sync_from_tab2, help="Sets the minimum duration required for an interaction to count as a conversation.")
+            convo_min_messages = c2.number_input("Minimum messages per conversation", min_value=0, step=1, width="stretch", key="convo_min_messages_tab2", on_change=sync_from_tab2, help="Sets the minimum number of messages required to count as a conversation.")
         
-            convo_col1, convo_col2 = st.columns(2)
-        
-            convo_min_mins = convo_col1.number_input("Minimum conversation duration (min)", min_value=0, step=1, width="stretch", key="convo_min_mins", help="Sets the minimum duration required for an interaction to count as a conversation.")
-            convo_min_messages = convo_col2.number_input("Minimum messages per conversation", min_value=0, step=1, width="stretch", key="convo_min_messages", help="Sets the minimum number of messages required to count as a conversation.")
-        
-            engagements_over_time = ds.events_over_time_df(engagements, min_messages=convo_min_messages, min_minutes=convo_min_mins, join_comments_and_likes_sent=join_likes_comments)
-    
-    
+            engagements_over_time = ds.events_over_time_df(engagements)
+
+
+
+            
             fig_engagements_over_time, warning = viz.stacked_events_bar_fig(engagements_over_time)
             
             if fig_engagements_over_time is not None:
