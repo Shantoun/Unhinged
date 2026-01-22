@@ -14,6 +14,9 @@ from zoneinfo import available_timezones
 from streamlit_javascript import st_javascript
 
 
+st.set_page_config(initial_sidebar_state="collapsed")
+
+
 # initialize the key so it always exists
 if var.col_user_id not in st.session_state:
     st.session_state.user_id = None
@@ -45,10 +48,7 @@ if user_id:
 
     ################################################################################## MAIN
     else:
-        st.set_page_config(
-            layout="wide",
-            initial_sidebar_state="collapsed",
-        )
+        st.set_page_config(layout="wide")
         
         tzs = sorted(available_timezones())
         
