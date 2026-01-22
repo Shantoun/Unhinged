@@ -69,18 +69,16 @@ if user_id:
             st.header("Engagement Funnel")    
             # Sankey: Engagement Funnel
             sankey_data = ds.sankey_data(engagements)
-            fig = viz.sankey(sankey_data, len(engagements))
-            st.plotly_chart(fig, width="stretch")
+            fig_sankey = viz.sankey(sankey_data, len(engagements))
+            st.plotly_chart(fig_sankey, width="stretch")
     
 
-
-
+            with st.expander("View as data"):
+                st.dataframe(sankey_data)
 
 
         with tab2:
             engagements_over_time = ds.events_over_time_df(engagements)
-    
-            st.write(engagements_over_time)
     
     
             fig_engagements_over_time, warning = viz.stacked_events_bar_fig(engagements_over_time)
@@ -90,7 +88,8 @@ if user_id:
             if warning:
                 st.caption(warning)  
 
-            
+            with st.expander("View as data"):
+                st.dataframe(engagements_over_time)            
 
     
 
@@ -150,13 +149,13 @@ if user_id:
             day_table = rename_columns(day_table)
             day_time_table = rename_columns(day_time_table)
 
-        
-            
-            st.dataframe(time_table, hide_index=True)
-            st.dataframe(day_table, hide_index=True)
-            st.dataframe(day_time_table, hide_index=True)  
 
-        
+            with st.expander("View as data"):
+                st.dataframe(time_table, hide_index=True)
+                st.dataframe(day_table, hide_index=True)
+                st.dataframe(day_time_table, hide_index=True)  
+    
+            
 
 
         with tab4:
@@ -198,10 +197,6 @@ if user_id:
 
 
             
-
-            
-
-
 
 
         
