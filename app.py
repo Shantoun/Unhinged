@@ -108,6 +108,7 @@ if user_id:
             sankey_data = ds.sankey_data(engagements, min_messages=convo_min_messages, min_minutes=convo_min_mins, join_comments_and_likes_sent=join_likes_comments)
             fig_sankey = viz.sankey(sankey_data, len(engagements))
             st.plotly_chart(fig_sankey, width="stretch")
+            
             st.divider()
             with st.expander("View as data"):
                 st.dataframe(sankey_data, hide_index=True)
@@ -116,13 +117,23 @@ if user_id:
             st.header(var.tab_engagement_over_time)
             st.caption("Shows what happened in each time period, so you can spot trends.")
             st.divider()
-        
+
+            use_like_time = st.checkbox("Use like timestamp instead of event timestamp",
+                                        help="""    
+                                            Controls which timestamp is used to place events into time buckets.
+                                            When enabled, events are grouped by when the like was sent or received.
+                                            When disabled, events are grouped by when the event itself occurred (e.g., match, message).
+                                            
+                                            This answers two different questions:
+                                            Using like time asks “How did my likes perform by when they were sent?”
+                                            Using event time asks “What happened in each time period?”
+                                        """)
             join_likes_comments = st.checkbox("Join likes & comments sent", key="join_likes_comments_tab2", on_change=sync_from_tab2)
             c1, c2 = st.columns(2)
             convo_min_mins = c1.number_input("Minimum conversation duration (min)", min_value=0, step=1, width="stretch", key="convo_min_mins_tab2", on_change=sync_from_tab2, help="Sets the minimum duration required for an interaction to count as a conversation.")
             convo_min_messages = c2.number_input("Minimum messages per conversation", min_value=0, step=1, width="stretch", key="convo_min_messages_tab2", on_change=sync_from_tab2, help="Sets the minimum number of messages required to count as a conversation.")
         
-            engagements_over_time = ds.events_over_time_df(engagements)
+            engagements_over_time = ds.events_over_time_df(engagements, min_messages=convo_min_messages, min_minutes=convo_min_mins, join_comments_and_likes_sent=join_likes_comments)
 
 
 
