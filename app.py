@@ -153,7 +153,7 @@ if user_id:
             engagements_over_time = ds.events_over_time_df(engagements, min_messages=convo_min_messages, min_minutes=convo_min_mins, join_comments_and_likes_sent=join_likes_comments, use_like_timestamp=use_like_time)
 
             
-            fig_engagements_over_time, warning = viz.stacked_events_bar_fig(engagements_over_time)
+            fig_engagements_over_time, warning, output_df = viz.stacked_events_bar_fig(engagements_over_time)
             
             if fig_engagements_over_time is not None:
                 st.plotly_chart(fig_engagements_over_time, use_container_width=True)
@@ -163,7 +163,7 @@ if user_id:
             
             st.divider()
             with st.expander("View as data"):
-                st.dataframe(engagements_over_time)            
+                st.dataframe(output_df)            
 
 
 
