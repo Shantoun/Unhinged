@@ -7,6 +7,10 @@ import functions.supabase_ingest as ingest
 
 
 def zip_uploader():
+    st.markdown(
+        '[How to download my Hinge data](https://help.hinge.co/hc/en-us/articles/360011235813-How-do-I-request-a-copy-of-my-personal-data)'
+    )
+    
     uploaded = st.file_uploader("Upload ZIP file", type=["zip"], accept_multiple_files=False)
     if not uploaded:
         return None
