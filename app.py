@@ -279,7 +279,7 @@ if user_id:
                 "First Message: Daytime",
             ]
             
-            colx = st.selectbox("", columns_scatter)
+            colx = st.selectbox("Comparing", columns_scatter)
     
             
             fig = viz.scatter_plot(
@@ -346,7 +346,7 @@ if user_id:
             fig_like_match_delay = viz.horizontal_boxplot(
                 engagements[var.col_like_match_delay],
                 title="Like to Match Time - Mean: {:,} Minutes".format(mean_like_match_delay),
-                color = "#EF553B",
+                color = "#00CC96",
                 trace_name="Minutes"
             )
     
