@@ -69,9 +69,17 @@ if user_id:
             st.header(var.tab_engagement_funnel)    
             st.caption("Shows how interactions flow from starting point to deeper engagement, step by step.")
             st.divider()
+
+            join_likes_comments = st.checkbox("Join likes & comments sent")
+
+            convo_col1, convo_col2 = st.columns(2)
+
+            convo_min_mins = convo_col1.number_input("Minimum conversation duration (min)", min_value=0, value=5, step=1, width="stretch")
+            convo_min_messages = convo_col2.number_input("Minimum messages per conversation", min_value=0, value=2, step=1, width="stretch")
+
             
             # Sankey: Engagement Funnel
-            sankey_data = ds.sankey_data(engagements)
+            sankey_data = ds.sankey_data(engagements, min_messages=convo_min_messages, min_minutes=convo_min_mins, join_comments_and_likes_sent=join_likes_comments)
             fig_sankey = viz.sankey(sankey_data, len(engagements))
             st.plotly_chart(fig_sankey, width="stretch")
     
