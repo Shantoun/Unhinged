@@ -74,8 +74,8 @@ if user_id:
 
             convo_col1, convo_col2 = st.columns(2)
 
-            convo_min_mins = convo_col1.number_input("Minimum conversation duration (min)", min_value=0, value=5, step=1, width="stretch")
-            convo_min_messages = convo_col2.number_input("Minimum messages per conversation", min_value=0, value=2, step=1, width="stretch")
+            convo_min_mins = convo_col1.number_input("Minimum conversation duration (min)", min_value=0, value=5, step=1, width="stretch", help="Sets the minimum duration required for an interaction to count as a conversation.")
+            convo_min_messages = convo_col2.number_input("Minimum messages per conversation", min_value=0, value=2, step=1, width="stretch", help="Sets the minimum number of messages required to count as a conversation.")
 
             
             # Sankey: Engagement Funnel
