@@ -81,7 +81,7 @@ if user_id:
 
         st.title("Unhinged")
         
-        tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs([var.tab_engagement_funnel, var.tab_engagement_over_time, var.tab_outbound_timing, var.tab_distribution, var.tab_drivers, var.tab_subscriptions])
+        tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs([var.tab_engagement_funnel, var.tab_engagement_over_time, var.tab_outbound_timing, var.tab_drivers, var.tab_subscriptions, var.tab_distribution])
 
 
 
@@ -260,6 +260,64 @@ if user_id:
 
         
         with tab4:
+            st.header(var.tab_drivers)
+            st.caption("Highlights what factors are most linked to higher messaging engagement.")
+            st.divider()
+            
+            engagements.rename(columns={
+                var.col_avg_message_gap: "Av. Time Between Messages (Mins)",
+                var.col_first_message_delay: "Match to First Message Time (Mins)",
+                var.col_conversation_message_count: "# of Messages per Session",
+            }, inplace=True)
+            
+    
+            columns_scatter = [
+                "Match to First Message Time (Mins)",
+                "Av. Time Between Messages (Mins)",
+                "First Message: Time of Day",
+                "First Message: Day of Week",
+                "First Message: Daytime",
+            ]
+            
+            colx = st.selectbox("", columns_scatter)
+    
+            
+            fig = viz.scatter_plot(
+                engagements,
+                x_key=colx,
+                y_col="# of Messages per Session",
+                first_ts_col=var.col_first_message_timestamp,
+                title="Messaging Analytics",
+            )
+            
+            st.plotly_chart(fig, width="stretch")
+    
+
+            
+            with st.expander("View as data"):
+                out_df_drivers = engagements[[colx, "# of Messages per Session"]].set_index(colx).dropna()
+                st.dataframe(out_df_drivers)
+                
+            # I know how this looks lol, shut up...
+            engagements.rename(columns={
+                "Av. Time Between Messages (Mins)": var.col_avg_message_gap,
+                "Match to First Message Time (Mins)": var.col_first_message_delay,
+                "# of Messages per Session": var.col_conversation_message_count,
+            }, inplace=True)
+     
+
+        
+        with tab5:
+            st.header(var.tab_subscriptions)    
+            st.caption("Summarizes how your plan relates to activity and engagement.")
+            st.divider()
+
+
+            
+
+        
+        with tab6:
+
             st.header(var.tab_distribution)
             st.caption("Shows how different metrics are spread out using box plots.")
             st.divider()
@@ -321,64 +379,6 @@ if user_id:
                 st.dataframe(df_message_durations)
                 st.dataframe(df_messages_per_session)
                 st.dataframe(df_like_to_match_time)
-     
-
-        
-        with tab5:
-            st.header(var.tab_drivers)
-            st.caption("Highlights what factors are most linked to higher messaging engagement.")
-            st.divider()
-            
-            engagements.rename(columns={
-                var.col_avg_message_gap: "Av. Time Between Messages (Mins)",
-                var.col_first_message_delay: "Match to First Message Time (Mins)",
-                var.col_conversation_message_count: "# of Messages per Session",
-            }, inplace=True)
-            
-    
-            columns_scatter = [
-                "Match to First Message Time (Mins)",
-                "Av. Time Between Messages (Mins)",
-                "First Message: Time of Day",
-                "First Message: Day of Week",
-                "First Message: Daytime",
-            ]
-            
-            colx = st.selectbox("", columns_scatter)
-    
-            
-            fig = viz.scatter_plot(
-                engagements,
-                x_key=colx,
-                y_col="# of Messages per Session",
-                first_ts_col=var.col_first_message_timestamp,
-                title="Messaging Analytics",
-            )
-            
-            st.plotly_chart(fig, width="stretch")
-    
-
-            
-            with st.expander("View as data"):
-                out_df_drivers = engagements[[colx, "# of Messages per Session"]].set_index(colx).dropna()
-                st.dataframe(out_df_drivers)
-                
-            # I know how this looks lol, shut up...
-            engagements.rename(columns={
-                "Av. Time Between Messages (Mins)": var.col_avg_message_gap,
-                "Match to First Message Time (Mins)": var.col_first_message_delay,
-                "# of Messages per Session": var.col_conversation_message_count,
-            }, inplace=True)
-
-
-            
-
-        
-        with tab6:
-            st.header(var.tab_subscriptions)    
-            st.caption("Summarizes how your plan relates to activity and engagement.")
-            st.divider()
-        
 
 
         
