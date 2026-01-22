@@ -65,38 +65,44 @@ if user_id:
 
 
 
+        # defaults (define once, before tabs)
+        st.session_state.setdefault("convo_min_mins", 5)
+        st.session_state.setdefault("convo_min_messages", 2)
+        
         with tab1:
-            st.header(var.tab_engagement_funnel)    
+            st.header(var.tab_engagement_funnel)
             st.caption("Shows how interactions flow from starting point to deeper engagement, step by step.")
             st.divider()
-
+        
             join_likes_comments = st.checkbox("Join likes & comments sent")
-
+        
             convo_col1, convo_col2 = st.columns(2)
-
-            convo_min_mins = convo_col1.number_input("Minimum conversation duration (min)", min_value=0, value=5, step=1, width="stretch", help="Sets the minimum duration required for an interaction to count as a conversation.")
-            convo_min_messages = convo_col2.number_input("Minimum messages per conversation", min_value=0, value=2, step=1, width="stretch", help="Sets the minimum number of messages required to count as a conversation.")
-
-            
-            # Sankey: Engagement Funnel
+        
+            convo_min_mins = convo_col1.number_input("Minimum conversation duration (min)", min_value=0, step=1, width="stretch", key="convo_min_mins", help="Sets the minimum duration required for an interaction to count as a conversation.")
+            convo_min_messages = convo_col2.number_input("Minimum messages per conversation", min_value=0, step=1, width="stretch", key="convo_min_messages", help="Sets the minimum number of messages required to count as a conversation.")
+        
             sankey_data = ds.sankey_data(engagements, min_messages=convo_min_messages, min_minutes=convo_min_mins, join_comments_and_likes_sent=join_likes_comments)
             fig_sankey = viz.sankey(sankey_data, len(engagements))
             st.plotly_chart(fig_sankey, width="stretch")
-    
+        
             st.divider()
             with st.expander("View as data"):
                 st.dataframe(sankey_data, hide_index=True)
-
-
-
-
+        
         
         with tab2:
             st.header(var.tab_engagement_over_time)
             st.caption("Shows what happened in each time period, so you can spot trends.")
             st.divider()
-            
-            engagements_over_time = ds.events_over_time_df(engagements)
+        
+            join_likes_comments = st.checkbox("Join likes & comments sent")
+        
+            convo_col1, convo_col2 = st.columns(2)
+        
+            convo_min_mins = convo_col1.number_input("Minimum conversation duration (min)", min_value=0, step=1, width="stretch", key="convo_min_mins", help="Sets the minimum duration required for an interaction to count as a conversation.")
+            convo_min_messages = convo_col2.number_input("Minimum messages per conversation", min_value=0, step=1, width="stretch", key="convo_min_messages", help="Sets the minimum number of messages required to count as a conversation.")
+        
+            engagements_over_time = ds.events_over_time_df(engagements, min_messages=convo_min_messages, min_minutes=convo_min_mins, join_comments_and_likes_sent=join_likes_comments)
     
     
             fig_engagements_over_time, warning = viz.stacked_events_bar_fig(engagements_over_time)
