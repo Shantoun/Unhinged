@@ -87,7 +87,7 @@ if user_id:
 
         # defaults
         if "convo_min_mins" not in st.session_state: st.session_state["convo_min_mins"] = 5
-        if "convo_min_messages" not in st.session_state: st.session_state["convo_min_messages"] = 2
+        if "convo_min_messages" not in st.session_state: st.session_state["convo_min_messages"] = 3
         if "join_likes_comments" not in st.session_state: st.session_state["join_likes_comments"] = False
         
         def sync_from_tab1():
@@ -134,9 +134,18 @@ if user_id:
                 My Type takes precedence over Blocks, which includes unmatches. If someone was marked as My Type and later blocked, they will still be counted as My Type.
             """)
             
-            st.divider()
+
             with st.expander("View as data"):
                 st.dataframe(sankey_data, hide_index=True)
+
+
+
+
+
+
+
+
+
         
         with tab2:
             st.header(var.tab_engagement_over_time)
