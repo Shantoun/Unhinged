@@ -131,7 +131,7 @@ if user_id:
 
 
             st.caption("""
-                My Type takes precedence over blocks, which includes unmatches. If someone was marked as My Type and later blocked, they will still be counted as My Type.
+                My Type takes precedence over Blocks, which includes unmatches. If someone was marked as My Type and later blocked, they will still be counted as My Type.
             """)
             
             st.divider()
