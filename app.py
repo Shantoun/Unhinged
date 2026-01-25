@@ -444,8 +444,12 @@ else:
 
 
 
-    theme = st.get_option("theme.base")  # "light" or "dark"
-    prefix = "dark" if theme == "dark" else "light"
+    
+    prefers_dark = st_javascript(
+        "window.matchMedia('(prefers-color-scheme: dark)').matches"
+    )
+    
+    prefix = "dark" if prefers_dark else "light"
     
     imgs = [
         f"images/{prefix}_sankey.png",
