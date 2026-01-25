@@ -6,3 +6,4 @@ Authlib
 plotly
 scipy
 streamlit-javascript
+st.theme
