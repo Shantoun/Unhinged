@@ -431,7 +431,7 @@ else:
         st.caption("""
             **Unhinged** is open source and built in the open.
             
-            The code is publicly available on GitHub so anyone can see how the app works and how data is processed. Individual user data is not visible. Some people contribute improvements, others just review the code. Either way, openness keeps things honest.
+            The code is publicly available on GitHub so anyone can see how the app works and how data is processed. Individual user data is not visible. Openness keeps things honest.
         """)
 
     st.divider()
