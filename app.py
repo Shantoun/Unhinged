@@ -89,7 +89,7 @@ if user_id:
         
         @st.dialog("Delete My Data")
         def delete_data_dialog():
-            st.warning("This will permanently delete all your data. This cannot be undone.")
+            st.error("This will permanently delete all your data. This cannot be undone.")
         
             c1, c2 = st.columns(2)
             with c1:
