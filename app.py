@@ -36,11 +36,6 @@ if user_id:
     
     has_profile = len(res.data) > 0
 
-    # @st.dialog("Sync Your Hinge Data")
-    # def hinge_sync_dialog():
-    #     done = uploader()
-    #     if done:
-    #         st.rerun()
 
 
 
@@ -120,7 +115,7 @@ if user_id:
 
 
 
-
+        
         # ---- init once (top of app) ----
         if "show_delete_dialog" not in st.session_state:
             st.session_state.show_delete_dialog = False
@@ -137,24 +132,54 @@ if user_id:
                     st.rerun()
         
             with c2:
-                if st.button("Yes, delete", type="primary", width="stretch", key="delete_confirm"):
+                if st.button("Yes, delete data", type="primary", width="stretch", key="delete_confirm_data"):
                     with st.spinner("Deleting your data..."):
                         delete_my_data(st.session_state.user_id)
         
                     st.session_state.show_delete_dialog = False
-                    st.success("Done. Your data has been deleted.")
+                    st.success("Your data has been deleted.")
                     st.rerun()
         
+            # ---- extra: delete account (data + auth) ----
+            with st.expander("Delete data & account"):
+                st.warning("This will permanently delete your account and all associated data.")
         
-        # ---- sidebar trigger (NO st.rerun here) ----
-        if st.sidebar.button("Delete My Data", width="stretch", key="open_delete"):
-            st.session_state.show_delete_dialog = True
+                confirm_text = st.text_input(
+                    'Type "delete" to confirm',
+                    key="delete_account_confirm_text",
+                )
         
+                if confirm_text.strip().lower() == "delete":
+                    if st.button(
+                        "Delete my data & account",
+                        type="primary",
+                        width="stretch",
+                        key="delete_account_confirm_btn",
+                    ):
+                        with st.spinner("Deleting your data and account..."):
+                            delete_my_data(st.session_state.user_id)
+                            auth.supabase_admin.auth.admin.delete_user(st.session_state.user_id)
         
-        # ---- render dialog in main script flow ----
-        if st.session_state.show_delete_dialog:
-            delete_data_dialog()
-
+                        try:
+                            auth.sign_out()
+                        except Exception:
+                            pass
+        
+                        st.session_state.user_id = None
+                        st.session_state.show_delete_dialog = False
+                        st.success("Your account and data have been deleted.")
+                        st.rerun()
+                
+                
+                # ---- sidebar trigger (NO st.rerun here) ----
+                if st.sidebar.button("Delete My Data", width="stretch", key="open_delete"):
+                    st.session_state.show_delete_dialog = True
+                
+                
+                # ---- render dialog in main script flow ----
+                if st.session_state.show_delete_dialog:
+                    delete_data_dialog()
+        
 
 
 
