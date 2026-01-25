@@ -264,18 +264,20 @@ if user_id:
             time_table = time_table.sort_values(["Score", "Comments & Likes"], ascending=[False, True])
             day_table = day_table.sort_values(["Score", "Comments & Likes"], ascending=[False, True])
 
-            
-            
-            day_table["Match Rate"] = day_table["Match Rate"].map(
-                lambda x: "0%" if x == 0 else ("100%" if x == 1 else f"{x:.1%}")
-            
-            time_table["Match Rate"] = time_table["Match Rate"].map(
-                lambda x: "0%" if x == 0 else ("100%" if x == 1 else f"{x:.1%}")
-            
-            day_time_table["Match Rate"] = day_time_table["Match Rate"].map(
-                lambda x: "0%" if x == 0 else ("100%" if x == 1 else f"{x:.1%}")
 
-       
+            
+
+            def fmt_pct(x):
+                if x == 0:
+                    return "0%"
+                if x == 1:
+                    return "100%"
+                return f"{x:.1%}"
+            
+            day_table["Match Rate"] = day_table["Match Rate"].map(fmt_pct)
+            time_table["Match Rate"] = time_table["Match Rate"].map(fmt_pct)
+            day_time_table["Match Rate"] = day_time_table["Match Rate"].map(fmt_pct)
+
             day_table["Score"] = day_table["Score"].apply(lambda x: 0 if x == 0 else round(x, 1)) 
             time_table["Score"] = time_table["Score"].apply(lambda x: 0 if x == 0 else round(x, 1))          
             day_time_table["Score"] = day_time_table["Score"].apply(lambda x: 0 if x == 0 else round(x, 1))
