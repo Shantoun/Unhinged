@@ -409,7 +409,7 @@ else:
     
     st.divider()
     auth.auth_screen()
-    st.divider()
+
 
     tab1, tab2 = st.tabs(["For you", "Transparency"])
 
