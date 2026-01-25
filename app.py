@@ -433,9 +433,9 @@ else:
         """)
         
         st.caption("""
-            **Unhinged** is open source because transparency matters.
+            **Unhinged** is open source and built in the open.
             
-            You can inspect the code, contribute improvements, or verify that things work the way we say they do. That openness applies to the analysis as much as the product itself.
+            The code is publicly available on GitHub so anyone can see how the app works, how data is handled, and how analysis is done. Some people contribute improvements, others just review the code. Either way, openness keeps things honest.
         """)
 
     st.divider()
