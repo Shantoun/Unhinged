@@ -417,8 +417,7 @@ else:
 
     with tab1:
         st.caption("""
-            How you use a dating app affects your results.   
-            Sending likes or comments at the wrong times can reduce reach over time, even with a strong profile.
+            How you use a dating app affects your results. Sending likes or comments at the wrong times can reduce reach over time, even with a strong profile.
             
             **Unhinged** helps you see what converts, what does not, and where effort is being wasted.
             The goal is better outcomes with less time and energy.
