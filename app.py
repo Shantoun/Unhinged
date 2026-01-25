@@ -2,6 +2,7 @@ from functions.authentification import supabase
 import streamlit as st
 import functions.authentification as auth
 from functions.zip_uploader import uploader
+from functions.supabase_ingest import delete_my_data
 import variables as var
 
 import pandas as pd
@@ -75,6 +76,37 @@ if user_id:
 
 
 
+
+        @st.dialog("Delete all your data?")
+        def delete_data_dialog():
+            st.warning(
+                "This will permanently delete **all** of your data. "
+                "This action cannot be undone."
+            )
+        
+            col1, col2 = st.columns(2)
+        
+            with col1:
+                if st.button("Cancel", width="stretch"):
+                    st.rerun()
+        
+            with col2:
+                if st.button("Yes, delete my data", type="primary", width="stretch"):
+                    with st.spinner("Deleting your data..."):
+                        delete_my_data(st.session_state.user_id)
+        
+                    st.success("Your data has been deleted.")
+                    st.rerun()
+
+
+
+
+
+
+        
+        if st.sidebar.button("Delete My Data", width="stretch"):
+            delete_data_dialog()
+            st.rerun()
 
 
         
