@@ -445,19 +445,12 @@ else:
 
 
 
-    theme = st_javascript("""
-    (() => {
-      const app = document.querySelector('.stApp') || document.body;
-      const bg = getComputedStyle(app).backgroundColor; // "rgb(r, g, b)"
-      const m = bg.match(/\\d+/g);
-      if (!m || m.length < 3) return "dark"; // safe default
-      const r = parseInt(m[0], 10), g = parseInt(m[1], 10), b = parseInt(m[2], 10);
-      const luminance = 0.2126*r + 0.7152*g + 0.0722*b;
-      return luminance < 128 ? "dark" : "light";
-    })()
-    """, key="st_theme_detect")
+    from streamlit_theme import st_theme
     
-    prefix = "dark" if theme == "dark" else "light"
+    theme = st_theme()  # dict or None on first paint in some browsers
+    base = (theme or {}).get("base", "dark")  # "light" / "dark"
+    prefix = "dark" if base == "dark" else "light"
+
     
     imgs = [
         f"images/{prefix}_sankey.png",
