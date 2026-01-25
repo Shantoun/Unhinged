@@ -358,3 +358,25 @@ def subscriptions_ingest(json_data, user_id):
 
     if rows:
         supabase.table(var.table_subscriptions).upsert(rows).execute()
+
+
+
+
+
+
+
+
+def delete_my_data(user_id):
+    tables = [
+        var.table_messages,        # references likes + matches
+        var.table_likes,           # references matches
+        var.table_blocks,          # references matches
+        var.table_matches,         # parent
+        var.table_media,
+        var.table_prompts,
+        var.table_subscriptions,
+        var.table_user_profile,    # root record
+    ]
+
+    for table in tables:
+        supabase.table(table).delete().eq(var.col_user_id, user_id).execute()
