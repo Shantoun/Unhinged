@@ -445,14 +445,19 @@ else:
 
 
 
+    theme = st_javascript("""
+    (() => {
+      const app = document.querySelector('.stApp') || document.body;
+      const bg = getComputedStyle(app).backgroundColor; // "rgb(r, g, b)"
+      const m = bg.match(/\\d+/g);
+      if (!m || m.length < 3) return "dark"; // safe default
+      const r = parseInt(m[0], 10), g = parseInt(m[1], 10), b = parseInt(m[2], 10);
+      const luminance = 0.2126*r + 0.7152*g + 0.0722*b;
+      return luminance < 128 ? "dark" : "light";
+    })()
+    """, key="st_theme_detect")
     
-    prefers_dark = st_javascript(
-        "window.matchMedia('(prefers-color-scheme: dark)').matches",
-        key="theme_detect",
-    )
-    
-    prefix = "dark" if prefers_dark else "light"
-   
+    prefix = "dark" if theme == "dark" else "light"
     
     imgs = [
         f"images/{prefix}_sankey.png",
@@ -462,11 +467,9 @@ else:
     ]
     
     c1, c2 = st.columns(2)
-    
     with c1:
         st.image(imgs[0])
         st.image(imgs[2])
-    
     with c2:
         st.image(imgs[1])
         st.image(imgs[3])
