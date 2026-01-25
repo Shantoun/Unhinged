@@ -266,12 +266,18 @@ if user_id:
 
             
             
-            time_table["Match Rate"] = time_table["Match Rate"].map(lambda x: f"{x:.1%}")
-            day_table["Match Rate"] = day_table["Match Rate"].map(lambda x: f"{x:.1%}")
-            day_time_table["Match Rate"] = day_time_table["Match Rate"].map(lambda x: f"{x:.1%}")
+            day_table["Match Rate"] = day_table["Match Rate"].map(
+                lambda x: "0%" if x == 0 else f"{x:.1%}")
             
-            time_table["Score"] = time_table["Score"].apply(lambda x: 0 if x == 0 else round(x, 1))
-            day_table["Score"] = day_table["Score"].apply(lambda x: 0 if x == 0 else round(x, 1))            
+            time_table["Match Rate"] = time_table["Match Rate"].map(
+                lambda x: "0%" if x == 0 else f"{x:.1%}")
+            
+            day_time_table["Match Rate"] = day_time_table["Match Rate"].map(
+                lambda x: "0%" if x == 0 else f"{x:.1%}")
+
+       
+            day_table["Score"] = day_table["Score"].apply(lambda x: 0 if x == 0 else round(x, 1)) 
+            time_table["Score"] = time_table["Score"].apply(lambda x: 0 if x == 0 else round(x, 1))          
             day_time_table["Score"] = day_time_table["Score"].apply(lambda x: 0 if x == 0 else round(x, 1))
 
 
