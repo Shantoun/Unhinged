@@ -412,7 +412,7 @@ else:
 
 
 
-    tab1, tab2 = st.tabs(["For you", "Transparency"])
+    tab1, tab2 = st.tabs(["Why", "Transparency"])
 
 
     with tab1:
