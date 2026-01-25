@@ -267,13 +267,13 @@ if user_id:
             
             
             day_table["Match Rate"] = day_table["Match Rate"].map(
-                lambda x: "0%" if x == 0 else f"{x:.1%}")
+                lambda x: "0%" if x == 0 else ("100%" if x == 1 else f"{x:.1%}")
             
             time_table["Match Rate"] = time_table["Match Rate"].map(
-                lambda x: "0%" if x == 0 else f"{x:.1%}")
+                lambda x: "0%" if x == 0 else ("100%" if x == 1 else f"{x:.1%}")
             
             day_time_table["Match Rate"] = day_time_table["Match Rate"].map(
-                lambda x: "0%" if x == 0 else f"{x:.1%}")
+                lambda x: "0%" if x == 0 else ("100%" if x == 1 else f"{x:.1%}")
 
        
             day_table["Score"] = day_table["Score"].apply(lambda x: 0 if x == 0 else round(x, 1)) 
