@@ -12,7 +12,7 @@ import functions.analytics as viz
 import numpy as np
 from zoneinfo import available_timezones
 from streamlit_javascript import st_javascript
-
+from streamlit_theme import st_theme
 
 st.set_page_config(initial_sidebar_state="collapsed")
 
@@ -445,11 +445,14 @@ else:
 
 
 
-    from streamlit_theme import st_theme
+
     
-    theme = st_theme()  # dict or None on first paint in some browsers
-    base = (theme or {}).get("base", "dark")  # "light" / "dark"
-    prefix = "light" if base == "light" else "dark"
+    
+    theme = st_theme()
+    base = (theme or {}).get("base", "dark")
+    
+    # flip it
+    prefix = "light" if base == "dark" else "dark"
 
     
     imgs = [
