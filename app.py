@@ -180,13 +180,17 @@ if user_id:
 
 
 
-        def send_suggestion_email(user_id, body, images):
+
+
+
+
+        # ---------- email helper ----------
+        def send_email(subject, to, body, images=None):
             msg = EmailMessage()
-            msg["Subject"] = f"Unhinged feedback from {user_id}"
+            msg["Subject"] = subject
             msg["From"] = st.secrets["SMTP_FROM"]
-            msg["To"] = st.secrets["SMTP_TO"]
-        
-            msg.set_content(f"User ID: {user_id}\n\n{body}")
+            msg["To"] = to
+            msg.set_content(body)
         
             for img in images or []:
                 maintype, subtype = img.type.split("/")
@@ -197,63 +201,88 @@ if user_id:
                     filename=img.name,
                 )
         
-            with smtplib.SMTP_SSL(
-                st.secrets["SMTP_HOST"],
-                st.secrets["SMTP_PORT"],
-            ) as server:
-                server.login(
-                    st.secrets["SMTP_USER"],
-                    st.secrets["SMTP_PASSWORD"],
-                )
-                server.send_message(msg)
+            with smtplib.SMTP("smtp.gmail.com", 587) as s:
+                s.starttls()
+                s.login(st.secrets["SMTP_USER"], st.secrets["SMTP_PASS"])
+                s.send_message(msg)
         
-
-
-
-
-        
-
-        
+        # ---------- dialog ----------
         @st.dialog("Send feedback")
-        def suggest_edit_dialog():
-            st.markdown(
-                '[View the GitHub repo](https://github.com/Shantoun/Unhinged/tree/main)'
-            )
+        def feedback_dialog():
+            st.link_button("View the GitHub repo", st.secrets.get("GITHUB_REPO_URL", "#"))
         
-            text = st.text_area(
-                "What should be improved?",
+            feedback = st.text_area(
+                label="What should be improved?",
                 placeholder="Bug, idea, UI tweak, feature request…",
-                height=150,
+                height=140,
             )
         
             images = st.file_uploader(
                 "Optional screenshots (images only)",
-                type=["png", "jpg", "jpeg", "webp"],
+                type=["png", "jpg", "jpeg"],
                 accept_multiple_files=True,
             )
         
-            if st.button("Send", type="primary", width="stretch"):
-                if not text.strip():
-                    st.warning("Please write something.")
-                    return
+            user_email = st.session_state.get("user_email", "ahaddadproject@gmail.com")
         
-                with st.spinner("Sending..."):
-                    send_suggestion_email(
-                        user_id=st.session_state.user_id,
-                        body=text,
+            col1, col2 = st.columns(2)
+        
+            with col1:
+                if st.button("Cancel", use_container_width=True):
+                    st.rerun()
+        
+            with col2:
+                if st.button("Send", type="primary", use_container_width=True):
+                    if not feedback.strip():
+                        st.error("Write something first.")
+                        return
+        
+                    # email YOU
+                    send_email(
+                        subject="Unhinged feedback",
+                        to=st.secrets["SMTP_TO"],
+                        body=f"From: {user_email}\n\n{feedback}",
                         images=images,
                     )
         
-                st.success("Sent! Thank you 🙏")
-                st.rerun()
+                    # confirmation email to USER
+                    send_email(
+                        subject="Your feedback was logged",
+                        to=user_email,
+                        body=f"Thanks — we received this:\n\n{feedback}",
+                        images=images,
+                    )
+        
+                    st.success("Sent. Thanks 🙏")
+                    st.rerun()
+
+
+        with st.sidebar:
+            if st.button("Send feedback", use_container_width=True):
+                feedback_dialog()
 
 
 
-        if st.sidebar.button("Send feedback", width="stretch"):
-            suggest_edit_dialog()
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        
 
 
 
