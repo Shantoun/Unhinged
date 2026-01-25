@@ -67,7 +67,7 @@ if user_id:
                         delete_my_data(user_id)
     
                         # 2) delete Supabase Auth user (service role required)
-                        supabase.auth.admin.delete_user(user_id)
+                        auth.supabase_admin.auth.admin.delete_user(user_id)
     
                     # reset session + return to login
                     try:
