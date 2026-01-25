@@ -265,14 +265,17 @@ if user_id:
             day_table = day_table.sort_values(["Score", "Comments & Likes"], ascending=[False, True])
 
             
-            time_table[["Score", "Match Rate"]] = time_table[["Score", "Match Rate"]].applymap(
-                lambda x: 0 if x == 0 else round(x, 1)
-            )
+            
+            time_table["Match Rate"] = time_table["Match Rate"].map(lambda x: f"{x:.1%}")
+            day_table["Match Rate"] = day_table["Match Rate"].map(lambda x: f"{x:.1%}")
+            day_time_table["Match Rate"] = day_time_table["Match Rate"].map(lambda x: f"{x:.1%}")
+            
+            time_table["Score"] = time_table["Score"].apply(lambda x: 0 if x == 0 else round(x, 1))
+            day_table["Score"] = day_table["Score"].apply(lambda x: 0 if x == 0 else round(x, 1))            
+            day_time_table["Score"] = day_time_table["Score"].apply(lambda x: 0 if x == 0 else round(x, 1))
 
-            day_table[["Score", "Match Rate"]] = day_table[["Score", "Match Rate"]].applymap(
-                lambda x: 0 if x == 0 else round(x, 1)
-            )            
 
+            
             with st.expander("View as data"):
                 time_table = time_table.set_index("Time Slot")
                 st.dataframe(time_table)
