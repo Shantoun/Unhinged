@@ -133,9 +133,9 @@ if user_id:
             fig_sankey = viz.sankey(sankey_data, len(engagements))
             st.plotly_chart(fig_sankey, width="stretch")
 
-            st.caption("* Received likes only appear once they become matches.")
+            st.caption("✱ Received likes only appear once they become matches.")
             st.caption("""
-                ** My Type takes precedence over Blocks, which includes unmatches. If someone was marked as My Type and later blocked, they will still be counted as My Type.
+                ✱✱ My Type takes precedence over Blocks, which includes unmatches. If someone was marked as My Type and later blocked, they will still be counted as My Type.
             """)
             
 
