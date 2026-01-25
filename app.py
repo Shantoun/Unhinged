@@ -171,15 +171,15 @@ if user_id:
                         st.rerun()
                 
                 
-                # ---- sidebar trigger (NO st.rerun here) ----
-                if st.sidebar.button("Delete My Data", width="stretch", key="open_delete"):
-                    st.session_state.show_delete_dialog = True
-                
-                
-                # ---- render dialog in main script flow ----
-                if st.session_state.show_delete_dialog:
-                    delete_data_dialog()
+        # ---- sidebar trigger (NO st.rerun here) ----
+        if st.sidebar.button("Delete My Data", width="stretch", key="open_delete"):
+            st.session_state.show_delete_dialog = True
         
+        
+        # ---- render dialog in main script flow ----
+        if st.session_state.show_delete_dialog:
+            delete_data_dialog()
+
 
 
 
