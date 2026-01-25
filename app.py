@@ -121,7 +121,7 @@ if user_id:
         
         with tab1:
             st.header(var.tab_engagement_funnel)
-            st.caption("Shows how interactions flow from starting point to deeper engagement, step by step.")
+            st.caption("**Shows how interactions flow from starting point to deeper engagement, step by step**")
             st.divider()
         
             join_likes_comments = st.checkbox("Join comments & likes sent", key="join_likes_comments_tab1", on_change=sync_from_tab1)
@@ -153,7 +153,7 @@ if user_id:
         
         with tab2:
             st.header(var.tab_engagement_over_time)
-            st.caption("Shows what happened in each time period, so you can spot trends.")
+            st.caption("**Shows what happened in each time period, so you can spot trends**")
             st.divider()
 
             use_like_time = st.checkbox("Use like timestamp instead of event timestamp",
@@ -202,7 +202,7 @@ if user_id:
 
         with tab3:
             st.header(var.tab_outbound_timing)
-            st.caption("Highlights when outreach tends to perform best.")
+            st.caption("**Highlights when outreach tends to perform best**")
             st.divider()
             
             st.caption("""
@@ -294,10 +294,12 @@ if user_id:
             
 
 
+
+
         
         with tab4:
             st.header(var.tab_drivers)
-            st.caption("Highlights what factors are most linked to higher messaging engagement.")
+            st.caption("**Highlights what factors are most linked to higher messaging engagement**")
             st.divider()
             
             engagements.rename(columns={
@@ -345,7 +347,7 @@ if user_id:
         
         with tab5:
             st.header(var.tab_subscriptions)    
-            st.caption("Summarizes how your plan relates to activity and engagement.")
+            st.caption("**Summarizes how your plan relates to activity and engagement**")
             st.divider()
 
 
@@ -355,7 +357,7 @@ if user_id:
         with tab6:
 
             st.header(var.tab_distribution)
-            st.caption("Shows how different metrics are spread out using box plots.")
+            st.caption("**Shows how different metrics are spread out using box plots**")
             st.divider()
             
             mean_messaging_duration = int(engagements[var.col_conversation_span_minutes].mean())
