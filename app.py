@@ -407,26 +407,24 @@ else:
     st.title("Unhinged")
     st.caption("The post-mortem your dating life deserves")
 
-    st.markdown("""
-        How you use a dating app matters. Timing, volume, and follow-through all affect results.
-        
-        Sending likes or comments at the wrong times can quietly drag down performance, even with a strong profile. Over time, that means more effort for the same outcomes.
-        
-        **Unhinged** helps you see what actually converts. Which outreach works, what turns matches into conversations, and where effort is being wasted.
-        
-        The goal is fewer guesses, less grind, and better results with less time spent.
-    """)
         
     
-        
-        
-    st.divider()
-    auth.auth_screen()
+
 
 
     tab1, tab2 = st.tabs(["For you", "Transparency"])
 
 
     with tab1:
-        pass
+        st.caption("""
+            How you use a dating app affects your results.
+            
+            Sending likes or comments at the wrong times can reduce reach over time, even with a strong profile.
+            
+            **Unhinged** helps you see what converts, what does not, and where effort is being wasted.
+            
+            The goal is better outcomes with less time and energy.
+        """)
 
+    st.divider()
+    auth.auth_screen()
