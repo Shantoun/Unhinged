@@ -244,7 +244,7 @@ if user_id:
                 rename_map = {
                     "time_bucket": "Time Slot",
                     "day_of_week": "Day of Week",
-                    "likes": "Likes & Comments",
+                    "likes": "Comments & Likes",
                     "matches": "Matches",
                     "raw_rate": "Match Rate",
                     "smoothed_rate": "Score",
@@ -261,8 +261,8 @@ if user_id:
             day_table = rename_columns(day_table)
             day_time_table = rename_columns(day_time_table)
 
-            time_table = time_table.sort_values(["Score", "Likes & Comments"], ascending=[False, True])
-            day_table = day_table.sort_values(["Score", "Likes & Comments"], ascending=[False, True])
+            time_table = time_table.sort_values(["Score", "Comments & Likes"], ascending=[False, True])
+            day_table = day_table.sort_values(["Score", "Comments & Likes"], ascending=[False, True])
 
 
 
@@ -388,15 +388,26 @@ if user_id:
                     index=["Like to Match Time"],
                 )
                 
-
-                df_message_durations["Values"] = df_message_durations["Values"].apply(sorted)
-                df_messages_per_session["Values"] = df_messages_per_session["Values"].apply(sorted)
-                df_like_to_match_time["Values"] = df_like_to_match_time["Values"].apply(sorted)                
-                                     
+                # helpers
+                fmt_1dp = lambda x: 0 if x == 0 else round(x, 1)
+                fmt_int = lambda x: int(x)
+                
+                df_message_durations["Values"] = df_message_durations["Values"].apply(
+                    lambda lst: sorted(fmt_1dp(v) for v in lst)
+                )
+                
+                df_messages_per_session["Values"] = df_messages_per_session["Values"].apply(
+                    lambda lst: sorted(fmt_int(v) for v in lst)
+                )
+                
+                df_like_to_match_time["Values"] = df_like_to_match_time["Values"].apply(
+                    lambda lst: sorted(fmt_1dp(v) for v in lst)
+                )
                 
                 st.dataframe(df_message_durations)
                 st.dataframe(df_messages_per_session)
                 st.dataframe(df_like_to_match_time)
+
 
 
         
