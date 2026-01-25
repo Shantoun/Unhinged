@@ -436,3 +436,14 @@ else:
 
     st.divider()
     auth.auth_screen()
+    st.divider
+
+
+    st.markdown("""
+        **Notable limitations**:
+        
+        - The data only includes actions taken by you on Hinge. It does not include who you matched with, what they wrote, or whether someone unmatched or blocked you. Likes received are only visible when they result in a match.
+        
+        - Roses are not exposed separately in the data and appear the same as likes.
+    """)
+    
