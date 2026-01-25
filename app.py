@@ -50,7 +50,7 @@ if user_id:
         if done:
             st.rerun()
     
-        st.divider()
+
     
         with st.expander("Delete account"):
             st.warning("This will permanently delete your account and all uploaded data. This cannot be undone.")
