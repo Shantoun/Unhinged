@@ -56,8 +56,12 @@ if user_id:
         default_idx = tzs.index(browser_tz) if browser_tz in tzs else 0
         
         with st.sidebar:
-            tz = st.selectbox("Timezone", tzs, index=default_idx)
-
+            tz = st.selectbox(
+                "Timezone",
+                tzs,
+                index=default_idx,
+                help="Auto-detected from your browser. Timestamps do not include timezone data, so choose the timezone you mostly send from for best accuracy."
+            )
             st.divider()
         
         # Reupload data
@@ -439,6 +443,31 @@ else:
     st.divider()
 
 
+
+    theme = st.get_option("theme.base")  # "light" or "dark"
+    prefix = "dark" if theme == "dark" else "light"
+    
+    imgs = [
+        f"images/{prefix}_sankey.png",
+        f"images/{prefix}_radial.png",
+        f"images/{prefix}_stacked.png",
+        f"images/{prefix}_box.png",
+    ]
+    
+    c1, c2 = st.columns(2)
+    
+    with c1:
+        st.image(imgs[0])
+        st.image(imgs[2])
+    
+    with c2:
+        st.image(imgs[1])
+        st.image(imgs[3])
+
+
+
+    
+    st.divider()
     st.markdown("""
         **Notable limitations**:
         
