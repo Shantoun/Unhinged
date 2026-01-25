@@ -444,12 +444,19 @@ else:
 
 
 
+
     
     prefers_dark = st_javascript(
         "window.matchMedia('(prefers-color-scheme: dark)').matches"
     )
     
-    prefix = "dark" if prefers_dark else "light"
+    if "prefers_dark" not in st.session_state:
+        st.session_state.prefers_dark = prefers_dark
+    elif st.session_state.prefers_dark != prefers_dark:
+        st.session_state.prefers_dark = prefers_dark
+        st.rerun()
+    
+    prefix = "dark" if st.session_state.prefers_dark else "light"
     
     imgs = [
         f"images/{prefix}_sankey.png",
