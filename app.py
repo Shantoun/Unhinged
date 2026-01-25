@@ -409,7 +409,7 @@ else:
     st.set_page_config(layout="centered")
 
     st.title("Unhinged")
-    st.caption("The post-mortem your dating life deserves")
+    st.caption("**The post-mortem your dating life deserves**")
 
         
     
