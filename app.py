@@ -15,6 +15,10 @@ from zoneinfo import available_timezones
 from streamlit_javascript import st_javascript
 from streamlit_theme import st_theme
 
+import smtplib
+from email.message import EmailMessage
+
+
 st.set_page_config(initial_sidebar_state="collapsed")
 
 
@@ -109,12 +113,6 @@ if user_id:
             st.rerun()
 
 
-
-
-
-
-
-
         
         # ---- init once (top of app) ----
         if "show_delete_dialog" not in st.session_state:
@@ -182,10 +180,77 @@ if user_id:
 
 
 
+        def send_suggestion_email(user_id, body, images):
+            msg = EmailMessage()
+            msg["Subject"] = f"Unhinged feedback from {user_id}"
+            msg["From"] = st.secrets["SMTP_FROM"]
+            msg["To"] = st.secrets["SMTP_TO"]
+        
+            msg.set_content(f"User ID: {user_id}\n\n{body}")
+        
+            for img in images or []:
+                maintype, subtype = img.type.split("/")
+                msg.add_attachment(
+                    img.getvalue(),
+                    maintype=maintype,
+                    subtype=subtype,
+                    filename=img.name,
+                )
+        
+            with smtplib.SMTP_SSL(
+                st.secrets["SMTP_HOST"],
+                st.secrets["SMTP_PORT"],
+            ) as server:
+                server.login(
+                    st.secrets["SMTP_USER"],
+                    st.secrets["SMTP_PASSWORD"],
+                )
+                server.send_message(msg)
+        
 
 
 
 
+        
+
+        
+        @st.dialog("Send feedback")
+        def suggest_edit_dialog():
+            st.markdown(
+                '[View the GitHub repo](https://github.com/Shantoun/Unhinged/tree/main)'
+            )
+        
+            text = st.text_area(
+                "What should be improved?",
+                placeholder="Bug, idea, UI tweak, feature request…",
+                height=150,
+            )
+        
+            images = st.file_uploader(
+                "Optional screenshots (images only)",
+                type=["png", "jpg", "jpeg", "webp"],
+                accept_multiple_files=True,
+            )
+        
+            if st.button("Send", type="primary", width="stretch"):
+                if not text.strip():
+                    st.warning("Please write something.")
+                    return
+        
+                with st.spinner("Sending..."):
+                    send_suggestion_email(
+                        user_id=st.session_state.user_id,
+                        body=text,
+                        images=images,
+                    )
+        
+                st.success("Sent! Thank you 🙏")
+                st.rerun()
+
+
+
+        if st.sidebar.button("Send feedback", width="stretch"):
+            suggest_edit_dialog()
 
 
 
