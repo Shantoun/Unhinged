@@ -36,11 +36,50 @@ if user_id:
     
     has_profile = len(res.data) > 0
 
+    # @st.dialog("Sync Your Hinge Data")
+    # def hinge_sync_dialog():
+    #     done = uploader()
+    #     if done:
+    #         st.rerun()
+
+
+
     @st.dialog("Sync Your Hinge Data")
     def hinge_sync_dialog():
         done = uploader()
         if done:
             st.rerun()
+    
+        st.divider()
+    
+        with st.expander("Delete account"):
+            st.warning("This will permanently delete your account and all uploaded data. This cannot be undone.")
+    
+            confirm_text = st.text_input(
+                'Type "delete" to confirm',
+                key="delete_confirm_text",
+            )
+    
+            if confirm_text.strip().lower() == "delete":
+                if st.button("Delete my account", type="primary", width="stretch"):
+                    with st.spinner("Deleting your data..."):
+                        # 1) delete app data
+                        delete_my_data(user_id)
+    
+                        # 2) delete Supabase Auth user (service role required)
+                        supabase.auth.admin.delete_user(user_id)
+    
+                    # reset session + return to login
+                    try:
+                        auth.sign_out()
+                    except Exception:
+                        pass
+    
+                    st.session_state.user_id = None
+                    st.success("Done. Your account has been deleted.")
+                    st.rerun()
+
+
     
     
     if not has_profile:
