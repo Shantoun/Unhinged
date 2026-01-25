@@ -475,7 +475,7 @@ else:
     
     st.divider()
     st.markdown("""
-        **Notable limitations**:
+        **Notable limitations of Hinge data**:
         
         - The data only includes actions taken by you on Hinge. It does not include who you matched with, what they wrote, or whether someone unmatched or blocked you. Likes received are only visible when they result in a match.
         
