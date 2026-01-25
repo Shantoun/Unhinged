@@ -429,7 +429,7 @@ else:
 
     with tab2:
         st.caption("""
-            Keeping your data here lets us give more back. As more people opt in, we can share aggregate insights and percentiles based on real usage. Data is anonymized, shown only in aggregate, and stored securely. Anything useful we learn gets shared.
+            As more people opt in, we can share aggregate insights and percentiles based on real usage. Data is anonymized, shown only in aggregate, and stored securely. Anything useful we learn gets shared.
         """)
         
         st.caption("""
