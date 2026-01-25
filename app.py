@@ -446,5 +446,5 @@ else:
         
         - Roses are not exposed separately in the data and appear the same as likes.
         
-        - Message timestamps do not include timezone information, so it is not possible to know whether messages were sent while either person was in a different timezone.
+        - Timestamps do not include timezone information, so it is not possible to know whether messages were sent while either person was in a different timezone.
     """)
