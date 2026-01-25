@@ -445,5 +445,6 @@ else:
         - The data only includes actions taken by you on Hinge. It does not include who you matched with, what they wrote, or whether someone unmatched or blocked you. Likes received are only visible when they result in a match.
         
         - Roses are not exposed separately in the data and appear the same as likes.
+        
+        - Message timestamps do not include timezone information, so it is not possible to know whether messages were sent while either person was in a different timezone.
     """)
-    
