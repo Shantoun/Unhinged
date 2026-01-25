@@ -449,7 +449,7 @@ else:
     
     theme = st_theme()  # dict or None on first paint in some browsers
     base = (theme or {}).get("base", "dark")  # "light" / "dark"
-    prefix = "dark" if base == "dark" else "light"
+    prefix = "light" if base == "light" else "dark"
 
     
     imgs = [
