@@ -18,7 +18,10 @@ def smart_auth(email, password):
             user = supabase.auth.sign_up({"email": email, "password": password})
             if user and user.user:
                 if user.user.email_confirmed_at is None:
-                    return None, "check_email", f"Check your email ({email}) to confirm your account, then log in again."
+                    return None, "check_email", (
+                        "If this is a new account, check your email to confirm it. "
+                        "Otherwise, the email or password is incorrect."
+                    )
                 return user, "success", "Account created!"
         except Exception as e:
             if "already registered" in str(e).lower():
@@ -42,7 +45,7 @@ def auth_screen():
             user, status, msg = smart_auth(email, password)
             if status == "success":
                 st.session_state.user_email = user.user.email
-                st.session_state.user_id = user.user.id      # <-- THIS LINE
+                st.session_state.user_id = user.user.id 
                 st.success(msg)
                 st.rerun()
             elif status == "check_email":
