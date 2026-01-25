@@ -429,9 +429,9 @@ else:
         """)
         
         st.caption("""
-            **Unhinged** is open source and built in the open.
+            **Unhinged** is open source and built in the open. Openness keeps things honest.
             
-            The code is publicly available on GitHub so anyone can see how the app works and how data is processed. Individual user data is not visible. Openness keeps things honest.
+            The code is publicly available on GitHub so anyone can see how the app works and how data is processed. Individual user data is not visible.
         """)
 
     st.divider()
