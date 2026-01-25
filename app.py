@@ -406,6 +406,21 @@ else:
 
     st.title("Unhinged")
     st.caption("The post-mortem your dating life deserves")
-    st.divider()
     
+    st.divider()
     auth.auth_screen()
+    st.divider()
+
+    tab1, tab2 = st.tabs(["For you", "Transparency"])
+
+
+    with tab1:
+        st.markdown("""
+            How you use a dating app matters just as much as what is on your profile.
+            Sending a lot of likes or comments at the wrong times can hurt your results. Low response rates do not just mean fewer matches in the moment. Over time, they can make it harder to reach the people you actually want, even if your profile is solid.
+            
+            **Unhinged** helps you see where effort is paying off and where it is being wasted. It shows how outbound likes turn into matches, how matches turn into conversations, and what affects whether those conversations go anywhere.     
+            The goal is to be more intentional and put in less effort overall. Fewer wasted likes, less guessing, and better outcomes without burning time or energy.
+        """)
+
+
