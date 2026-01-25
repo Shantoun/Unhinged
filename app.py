@@ -426,9 +426,7 @@ else:
     with tab2:
         st.caption("""
             Keeping your data here lets us give more back to you.
-            
             As more people opt in, we can add percentiles, spot patterns, and run aggregate analysis to better understand how Hinge actually behaves. Your data is anonymized, results are only shown in aggregate, and anything we discover gets shared openly.
-            
             No gatekeeping. If we learn something useful, you get it too.
         """)
         
