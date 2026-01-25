@@ -6,7 +6,10 @@ supabase_url = st.secrets["SUPABASE_URL"]
 supabase_key = st.secrets["SUPABASE_KEY"]
 supabase: Client = create_client(supabase_url, supabase_key)
 
-
+supabase_admin: Client = create_client(
+    supabase_url,
+    st.secrets["SUPABASE_SERVICE_ROLE_KEY"]
+)
 
 def smart_auth(email, password):
     """Try login first, if it fails try signup"""
