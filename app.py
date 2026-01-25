@@ -77,26 +77,54 @@ if user_id:
 
 
 
-        @st.dialog("Delete all your data?")
+
+
+
+
+
+        # ---- init once (top of app) ----
+        if "show_delete_dialog" not in st.session_state:
+            st.session_state.show_delete_dialog = False
+        
+        
+        @st.dialog("Delete My Data")
         def delete_data_dialog():
-            st.warning(
-                "This will permanently delete **all** of your data. "
-                "This action cannot be undone."
-            )
+            st.warning("This will permanently delete all your data. This cannot be undone.")
         
-            col1, col2 = st.columns(2)
-        
-            with col1:
-                if st.button("Cancel", width="stretch"):
+            c1, c2 = st.columns(2)
+            with c1:
+                if st.button("Cancel", width="stretch", key="delete_cancel"):
+                    st.session_state.show_delete_dialog = False
                     st.rerun()
         
-            with col2:
-                if st.button("Yes, delete my data", type="primary", width="stretch"):
+            with c2:
+                if st.button("Yes, delete", type="primary", width="stretch", key="delete_confirm"):
                     with st.spinner("Deleting your data..."):
                         delete_my_data(st.session_state.user_id)
         
-                    st.success("Your data has been deleted.")
+                    st.session_state.show_delete_dialog = False
+                    st.success("Done. Your data has been deleted.")
                     st.rerun()
+        
+        
+        # ---- sidebar trigger (NO st.rerun here) ----
+        if st.sidebar.button("Delete My Data", width="stretch", key="open_delete"):
+            st.session_state.show_delete_dialog = True
+        
+        
+        # ---- render dialog in main script flow ----
+        if st.session_state.show_delete_dialog:
+            delete_data_dialog()
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -104,10 +132,6 @@ if user_id:
 
 
         
-        if st.sidebar.button("Delete My Data", width="stretch"):
-            delete_data_dialog()
-            st.rerun()
-
 
         
         
