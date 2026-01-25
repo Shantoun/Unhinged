@@ -394,17 +394,17 @@ if user_id:
 
             with st.expander("View as data"):
                 df_message_durations = pd.DataFrame(
-                    {"Values": [engagements[var.col_conversation_span_minutes].dropna().tolist()]},
+                    {"Minutes": [engagements[var.col_conversation_span_minutes].dropna().tolist()]},
                     index=["Message Durations"],
                 )
                 
                 df_messages_per_session = pd.DataFrame(
-                    {"Values": [engagements[var.col_conversation_message_count].dropna().tolist()]},
+                    {"Messages": [engagements[var.col_conversation_message_count].dropna().tolist()]},
                     index=["Messages per Session"],
                 )
                 
                 df_like_to_match_time = pd.DataFrame(
-                    {"Values": [engagements[var.col_like_match_delay].dropna().tolist()]},
+                    {"Minutes": [engagements[var.col_like_match_delay].dropna().tolist()]},
                     index=["Like to Match Time"],
                 )
                 
@@ -472,9 +472,6 @@ else:
     st.divider()
     auth.auth_screen()
     st.divider()
-
-
-
 
 
     
