@@ -264,7 +264,10 @@ if user_id:
             time_table = time_table.sort_values(["Score", "Comments & Likes"], ascending=[False, True])
             day_table = day_table.sort_values(["Score", "Comments & Likes"], ascending=[False, True])
 
+            time_table["Score"] = time_table["Score"].apply(lambda x: 0 if x == 0 else round(x, 1))
+            day_table["Score"] = day_table["Score"].apply(lambda x: 0 if x == 0 else round(x, 1))
 
+            
 
             with st.expander("View as data"):
                 time_table = time_table.set_index("Time Slot")
