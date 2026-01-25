@@ -408,18 +408,18 @@ else:
     st.caption("The post-mortem your dating life deserves")
 
     st.markdown("""
-        How you use a dating app matters just as much as what is on your profile.
+        How you use a dating app matters. Timing, volume, and follow-through all affect results.
         
-        Sending a lot of likes or comments at the wrong times can hurt your results. Low response rates do not just mean fewer matches in the moment. Over time, they can make it harder to reach the people you actually want, even if your profile is solid.
+        Sending likes or comments at the wrong times can quietly drag down performance, even with a strong profile. Over time, that means more effort for the same outcomes.
         
-        **Unhinged** helps you see where effort is paying off and where it is being wasted. It shows how outbound likes turn into matches, how matches turn into conversations, and what affects whether those conversations go anywhere.     
+        **Unhinged** helps you see what actually converts. Which outreach works, what turns matches into conversations, and where effort is being wasted.
         
-        The goal is to be more intentional and put in less effort overall. Fewer wasted likes, less guessing, and better outcomes without burning time or energy.
+        The goal is fewer guesses, less grind, and better results with less time spent.
     """)
+        
     
-
-    
-    
+        
+        
     st.divider()
     auth.auth_screen()
 
