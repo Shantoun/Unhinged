@@ -412,15 +412,15 @@ if user_id:
                 fmt_1dp = lambda x: 0 if x == 0 else round(x, 1)
                 fmt_int = lambda x: int(x)
                 
-                df_message_durations["Values"] = df_message_durations["Values"].apply(
+                df_message_durations["Minutes"] = df_message_durations["Minutes"].apply(
                     lambda lst: sorted(fmt_1dp(v) for v in lst)
                 )
                 
-                df_messages_per_session["Values"] = df_messages_per_session["Values"].apply(
+                df_messages_per_session["Messages"] = df_messages_per_session["Messages"].apply(
                     lambda lst: sorted(fmt_int(v) for v in lst)
                 )
                 
-                df_like_to_match_time["Values"] = df_like_to_match_time["Values"].apply(
+                df_like_to_match_time["Minutes"] = df_like_to_match_time["Minutes"].apply(
                     lambda lst: sorted(fmt_1dp(v) for v in lst)
                 )
                 
