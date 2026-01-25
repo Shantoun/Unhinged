@@ -426,13 +426,14 @@ else:
     with tab2:
         st.caption("""
             Keeping your data here lets us give more back.
-            As more people opt in, we can share aggregate insights and percentiles based on real usage. Data is anonymized, results are aggregated, and anything useful gets shared.
+            
+            As more people opt in, we can share aggregate insights and percentiles based on real usage. Data is anonymized, shown only in aggregate, and stored securely. Anything useful we learn gets shared.
         """)
         
         st.caption("""
             **Unhinged** is open source and built in the open.
             
-            The code is publicly available on GitHub so anyone can see how the app works, how data is handled, and how analysis is done. Some people contribute improvements, others just review the code. Either way, openness keeps things honest.
+            The code is publicly available on GitHub so anyone can see how the app works and how data is processed. Individual user data is not visible. Some people contribute improvements, others just review the code. Either way, openness keeps things honest.
         """)
 
     st.divider()
