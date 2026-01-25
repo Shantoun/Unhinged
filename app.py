@@ -423,5 +423,20 @@ else:
             The goal is better outcomes with less time and energy.
         """)
 
+    with tab2:
+        st.caption("""
+            Keeping your data here lets us give more back to you.
+            
+            As more people opt in, we can add percentiles, spot patterns, and run aggregate analysis to better understand how Hinge actually behaves. Your data is anonymized, results are only shown in aggregate, and anything we discover gets shared openly.
+            
+            No gatekeeping. If we learn something useful, you get it too.
+        """)
+        
+        st.caption("""
+            **Unhinged** is open source because transparency matters.
+            
+            You can inspect the code, contribute improvements, or verify that things work the way we say they do. That openness applies to the analysis as much as the product itself.
+        """)
+
     st.divider()
     auth.auth_screen()
