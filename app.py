@@ -436,7 +436,7 @@ else:
 
     st.divider()
     auth.auth_screen()
-    st.divider
+    st.divider()
 
 
     st.markdown("""
