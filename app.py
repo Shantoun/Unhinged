@@ -225,38 +225,34 @@ if user_id:
         
             user_email = st.session_state.get("user_email", "ahaddadproject@gmail.com")
         
-            col1, col2 = st.columns(2)
         
-            with col1:
-                if st.button("Cancel", use_container_width=True):
-                    st.rerun()
-        
-            with col2:
-                if st.button("Send", type="primary", use_container_width=True):
-                    if not feedback.strip():
-                        st.error("Write something first.")
-                        return
-        
-                    # email YOU
-                    send_email(
-                        subject="Unhinged feedback",
-                        to=st.secrets["SMTP_TO"],
-                        body=f"From: {user_email}\n\n{feedback}",
-                        images=images,
-                    )
-        
-                    # confirmation email to USER
-                    send_email(
-                        subject="Your feedback was logged",
-                        to=user_email,
-                        body=f"Thanks — we received this:\n\n{feedback}",
-                        images=images,
-                    )
-        
-                    st.success("Sent. Thanks 🙏")
-                    st.rerun()
+
+            if st.button("Send", type="primary", width="stretch"):
+                if not feedback.strip():
+                    st.error("Write something first.")
+                    return
+    
+                # email YOU
+                send_email(
+                    subject="Unhinged feedback",
+                    to=st.secrets["SMTP_TO"],
+                    body=f"From: {user_email}\n\n{feedback}",
+                    images=images,
+                )
+    
+                # confirmation email to USER
+                send_email(
+                    subject="Your feedback was logged",
+                    to=user_email,
+                    body=f"Thanks — we received this:\n\n{feedback}",
+                    images=images,
+                )
+    
+                st.success("Sent. Thanks 🙏")
+                st.rerun()
 
 
+        st.divider()
         with st.sidebar:
             if st.button("Send feedback", use_container_width=True):
                 feedback_dialog()
