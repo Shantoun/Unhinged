@@ -132,7 +132,7 @@ if user_id:
             def confirm_signout():
                 st.write("Are you sure you want to sign out?")
         
-                if st.button("Yes, sign out", width="stretch"):
+                if st.button("Yes, sign out", width="stretch", type="primary"):
                     auth.sign_out()
                     st.session_state.show_signout = False
                     st.rerun()
