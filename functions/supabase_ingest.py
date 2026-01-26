@@ -1,6 +1,14 @@
 import variables as var
 from functions.authentification import supabase
 
+import io
+import zipfile
+import hashlib
+from datetime import datetime, timezone
+
+
+
+
 
 # --------------------------------------------------
 # Helpers
@@ -358,6 +366,58 @@ def subscriptions_ingest(json_data, user_id):
 
     if rows:
         supabase.table(var.table_subscriptions).upsert(rows).execute()
+
+
+
+
+
+
+
+
+def store_raw_export_zip(zip_path, user_id):
+    """
+    Upload a slimmed raw export ZIP to Supabase Storage.
+    Excludes `media/` folder and any `index.html`, keeps everything else (including media.json).
+    Returns (object_path, sha256).
+    """
+
+    buf = io.BytesIO()
+
+    with zipfile.ZipFile(zip_path, "r") as zin, zipfile.ZipFile(
+        buf, "w", compression=zipfile.ZIP_DEFLATED
+    ) as zout:
+        for info in zin.infolist():
+            name = info.filename
+
+            # drop the massive media folder only
+            if name.startswith("media/") or name.startswith("media\\"):
+                continue
+
+            # drop any index.html (root or nested)
+            base = name.split("/")[-1].split("\\")[-1]
+            if base.lower() == "index.html":
+                continue
+
+            zout.writestr(info, zin.read(info.filename))
+
+    slim_bytes = buf.getvalue()
+
+    sha = hashlib.sha256(slim_bytes).hexdigest()
+    ts = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
+    object_path = f"{user_id}/{ts}_{sha}.zip"
+
+    supabase.storage.from_(var.bucket_raw_exports).upload(
+        object_path,
+        slim_bytes,
+        file_options={
+            "content-type": "application/zip",
+            "upsert": "false",
+        },
+    )
+
+    return object_path, sha
+
+
 
 
 
