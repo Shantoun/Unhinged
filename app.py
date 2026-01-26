@@ -89,6 +89,8 @@ if user_id:
     
     
     if not has_profile:
+        blank1, col, blank2 = st.columns(3)
+        col.caption("Click R to refresh")
         hinge_sync_dialog()
 
 
