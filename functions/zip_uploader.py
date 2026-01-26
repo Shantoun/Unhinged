@@ -87,3 +87,4 @@ def uploader():
                 ingest.subscriptions_ingest(json_data, st.session_state.user_id)
 
             st.success("Done!")
+            st.rerun()
