@@ -33,22 +33,34 @@ def zip_uploader():
                 with open(full, "r") as f:
                     data[key] = json.load(f)
 
-    return {"tmpdir": tmpdir, "json": data}
+    # ✅ persist across reruns
+    st.session_state.zip_path = zip_path
+    st.session_state.json_data = data
+
+    return True
 
 
 
 def uploader():
-    result = zip_uploader()
+    uploaded = zip_uploader()
 
-    if result:
-        st.caption("By clicking Continue, you acknowledge and agree that your data will be securely stored and analyzed, including in aggregated and anonymized form.")
+    if uploaded:
+        st.caption(
+            "By clicking Continue, you acknowledge and agree that your data will be securely stored and analyzed, including in aggregated and anonymized form."
+        )
+
         if st.button("Continue", type="primary", width="stretch"):
-            json_data = result["json"]
+            zip_path = st.session_state.get("zip_path")
+            json_data = st.session_state.get("json_data")
+
+            if not zip_path or not json_data:
+                st.error("Please re-upload the zip file.")
+                st.stop()
 
             with st.spinner("Syncing raw export..."):
                 try:
-                    path, sha = ingest.store_raw_export_zip(
-                        result["zip_path"],
+                    ingest.store_raw_export_zip(
+                        zip_path,
                         st.session_state.user_id
                     )
                 except Exception as e:
@@ -58,22 +70,20 @@ def uploader():
 
             with st.spinner("Syncing matches..."):
                 ingest.matches_ingest(json_data, st.session_state.user_id)
-            
+
             with st.spinner("Syncing likes..."):
-                ingest.likes_ingest(json_data, st.session_state.user_id)    
-    
+                ingest.likes_ingest(json_data, st.session_state.user_id)
+
             with st.spinner("Syncing messages..."):
-                ingest.messages_ingest(json_data, st.session_state.user_id)        
-            
+                ingest.messages_ingest(json_data, st.session_state.user_id)
+
             with st.spinner("Syncing blocks..."):
                 ingest.blocks_ingest(json_data, st.session_state.user_id)
-    
+
             with st.spinner("Syncing user profile..."):
                 ingest.user_profile_ingest(json_data, st.session_state.user_id)
                 ingest.media_ingest(json_data, st.session_state.user_id)
                 ingest.prompts_ingest(json_data, st.session_state.user_id)
                 ingest.subscriptions_ingest(json_data, st.session_state.user_id)
 
-            
             st.success("Done!")
-            return True
