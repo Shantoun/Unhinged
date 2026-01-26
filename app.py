@@ -401,7 +401,7 @@ if user_id:
         
         
         engagements = ds.like_events_df(user_id, tz)
-        st.write(engagements)
+ 
 
         st.title("Unhinged")
         
