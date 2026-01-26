@@ -146,6 +146,7 @@ tab_drivers = "Engagement Drivers"
 tab_subscriptions = "Subscription Statistics"
 
 
-
-
+####################################################### Other
+# supabase bucket
+bucket_raw_exports = "raw_exports"
 
