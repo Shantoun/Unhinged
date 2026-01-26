@@ -378,7 +378,8 @@ def subscriptions_ingest(json_data, user_id):
 def store_raw_export_zip(zip_path, user_id):
     """
     Upload a slimmed raw export ZIP to Supabase Storage.
-    Excludes `media/` folder and any `index.html`, keeps everything else (including media.json).
+    Excludes any `media` folder (any depth, case-insensitive) and any `index.html`.
+    Keeps everything else (including media.json).
     Returns (object_path, sha256).
     """
 
@@ -390,13 +391,16 @@ def store_raw_export_zip(zip_path, user_id):
         for info in zin.infolist():
             name = info.filename
 
-            # drop the massive media folder only
-            if name.startswith("media/") or name.startswith("media\\"):
+            # normalize path
+            parts = name.replace("\\", "/").split("/")
+            parts_lower = [p.lower() for p in parts if p]
+
+            # drop any media folder anywhere
+            if "media" in parts_lower:
                 continue
 
-            # drop any index.html (root or nested)
-            base = name.split("/")[-1].split("\\")[-1]
-            if base.lower() == "index.html":
+            # drop any index.html anywhere
+            if parts_lower and parts_lower[-1] == "index.html":
                 continue
 
             zout.writestr(info, zin.read(info.filename))
@@ -417,7 +421,6 @@ def store_raw_export_zip(zip_path, user_id):
     )
 
     return object_path, sha
-
 
 
 
