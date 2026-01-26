@@ -189,85 +189,6 @@ if user_id:
 
 
 
-
-
-        # ---------- email helper ----------
-        def send_email(subject, to, body, images=None):
-            msg = EmailMessage()
-            msg["Subject"] = subject
-            msg["From"] = st.secrets["SMTP_FROM"]
-            msg["To"] = to
-            msg.set_content(body)
-        
-            for img in images or []:
-                maintype, subtype = img.type.split("/")
-                msg.add_attachment(
-                    img.getvalue(),
-                    maintype=maintype,
-                    subtype=subtype,
-                    filename=img.name,
-                )
-        
-            with smtplib.SMTP("smtp.gmail.com", 587) as s:
-                s.starttls()
-                s.login(st.secrets["SMTP_USER"], st.secrets["SMTP_PASS"])
-                s.send_message(msg)
-        
-        # ---------- dialog ----------
-        @st.dialog("Send feedback")
-        def feedback_dialog():
-            st.link_button("View the GitHub repo", st.secrets.get("GITHUB_REPO_URL", "#"))
-        
-            feedback = st.text_area(
-                label="What should be improved?",
-                placeholder="Bug, idea, UI tweak, feature request…",
-                height=140,
-            )
-        
-            images = st.file_uploader(
-                "Optional screenshots (images only)",
-                type=["png", "jpg", "jpeg"],
-                accept_multiple_files=True,
-            )
-        
-            user_email = st.session_state.get("user_email", "ahaddadproject@gmail.com")
-        
-        
-
-            if st.button("Send", type="primary", width="stretch"):
-                if not feedback.strip():
-                    st.error("Write something first.")
-                    return
-    
-                # email YOU
-                send_email(
-                    subject="Unhinged feedback",
-                    to=st.secrets["SMTP_TO"],
-                    body=f"From: {user_email}\n\n{feedback}",
-                    images=images,
-                )
-    
-                # confirmation email to USER
-                send_email(
-                    subject="Your feedback was logged",
-                    to=user_email,
-                    body=f"Thanks — we received this:\n\n{feedback}",
-                    images=images,
-                )
-    
-                st.success("Sent. Thanks 🙏")
-                st.rerun()
-
-
-        
-        with st.sidebar:
-            st.divider()
-            if st.button("Send feedback", use_container_width=True):
-                feedback_dialog()
-
-
-
-
         
         
         def navigation_help_dialog():
@@ -382,7 +303,79 @@ if user_id:
 
 
 
+        # ---------- email helper ----------
+        def send_email(subject, to, body, images=None):
+            msg = EmailMessage()
+            msg["Subject"] = subject
+            msg["From"] = st.secrets["SMTP_FROM"]
+            msg["To"] = to
+            msg.set_content(body)
+        
+            for img in images or []:
+                maintype, subtype = img.type.split("/")
+                msg.add_attachment(
+                    img.getvalue(),
+                    maintype=maintype,
+                    subtype=subtype,
+                    filename=img.name,
+                )
+        
+            with smtplib.SMTP("smtp.gmail.com", 587) as s:
+                s.starttls()
+                s.login(st.secrets["SMTP_USER"], st.secrets["SMTP_PASS"])
+                s.send_message(msg)
+        
+        # ---------- dialog ----------
+        @st.dialog("Send feedback")
+        def feedback_dialog():
+            st.link_button("View the GitHub repo", st.secrets.get("GITHUB_REPO_URL", "#"))
+        
+            feedback = st.text_area(
+                label="What should be improved?",
+                placeholder="Bug, idea, UI tweak, feature request…",
+                height=140,
+            )
+        
+            images = st.file_uploader(
+                "Optional screenshots (images only)",
+                type=["png", "jpg", "jpeg"],
+                accept_multiple_files=True,
+            )
+        
+            user_email = st.session_state.get("user_email", "ahaddadproject@gmail.com")
+        
+        
 
+            if st.button("Send", type="primary", width="stretch"):
+                if not feedback.strip():
+                    st.error("Write something first.")
+                    return
+    
+                # email YOU
+                send_email(
+                    subject="Unhinged feedback",
+                    to=st.secrets["SMTP_TO"],
+                    body=f"From: {user_email}\n\n{feedback}",
+                    images=images,
+                )
+    
+                # confirmation email to USER
+                send_email(
+                    subject="Your feedback was logged",
+                    to=user_email,
+                    body=f"Thanks — we received this:\n\n{feedback}",
+                    images=images,
+                )
+    
+                st.success("Sent. Thanks 🙏")
+                st.rerun()
+
+
+        
+        with st.sidebar:
+            st.divider()
+            if st.button("Send feedback", use_container_width=True):
+                feedback_dialog()
 
 
         
