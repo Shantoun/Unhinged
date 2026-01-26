@@ -20,8 +20,8 @@ import smtplib
 from email.message import EmailMessage
 
 
-help_guide_direct = "<em style='color:#64748B;'>Guides for charts and tables are in the sidebar under <b>Quick guides</b>.</em>"
-help_guide_direct_w_box = "<em style='color:#64748B;'>Guides for charts, tables and boxplots are in the sidebar under <b>Quick guides</b>.</em>"
+help_guide_direct = "<em style='color:#6B8E7A;'>Guides for charts and tables are in the sidebar under <b>Quick guides</b>.</em>"
+help_guide_direct_w_box = "<em style='color:#6B8E7A;'>Guides for charts, tables and boxplots are in the sidebar under <b>Quick guides</b>.</em>"
 
 
 
