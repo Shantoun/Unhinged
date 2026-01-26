@@ -270,43 +270,40 @@ if user_id:
         def navigation_help_dialog():
             @st.dialog("How to navigate", width="large")
             def _dialog():
-                tab_df, tab_plotly, tab_box = st.tabs(["Streamlit tables", "Plotly charts", "Boxplots"])
+                tab_table, tab_plotly, tab_box = st.tabs(["Tables", "Plotly charts", "Boxplots"])
         
-                # -------------------- TAB 1: STREAMLIT DATAFRAMES --------------------
-                with tab_df:
+                # -------------------- TAB 1: TABLES --------------------
+                with tab_table:
                     st.markdown(
                         """
-        ### Streamlit tables (st.dataframe)
+        ### Tables
         
-        These tables are **interactive**. Here’s what you can do:
+        Tables are interactive, but **only after you click into them**.
         
-        - **Sort:** click a column header to sort (click again to reverse).
-        - **Resize columns:** drag the edge of a column.
-        - **Scroll:** tables can scroll both directions if there are lots of rows/columns.
-        - **Full screen:** use the **expand / full-screen** icon in the table toolbar (top-right of the table).
-        - **Search / quick find:** use your browser find (Ctrl/Cmd+F) for visible text.
-        - **Download as CSV:** this app may include a **Download CSV** button near tables (if you don’t see one, it’s not enabled for that table).
+        **Top-right toolbar (shows when you hover the table):**
+        - **Full screen / expand** (makes the table easier to read)
+        - **Search** (magnifying glass icon)
+        - **Download** (download the table)
+        
+        **Sorting**
+        - Click a **column name** to sort.
+        - Click again to reverse the sort.
+        
+        **Searching**
+        - Click into the table first, then use **Ctrl/Cmd+F** to find text on the screen.
+        - For searching inside the table, use the **magnifying glass** icon in the table’s top-right toolbar.
                         """
                     )
         
-                    # Tiny example table
+                    # Example table (index hidden, nicer labels)
                     df_demo = pd.DataFrame(
                         {
-                            "name": ["Ava", "Noah", "Mia", "Liam"],
-                            "score": [72, 95, 88, 60],
-                            "group": ["North", "North", "South", "South"],
+                            "Name": ["Ava", "Noah", "Mia", "Liam"],
+                            "Score": [72, 95, 88, 60],
+                            "Group": ["North", "North", "South", "South"],
                         }
                     )
-                    st.dataframe(df_demo, use_container_width=True)
-        
-                    csv = df_demo.to_csv(index=False).encode("utf-8")
-                    st.download_button(
-                        "Download this example as CSV",
-                        data=csv,
-                        file_name="example.csv",
-                        mime="text/csv",
-                        use_container_width=True,
-                    )
+                    st.dataframe(df_demo, use_container_width=True, hide_index=True)
         
                 # -------------------- TAB 2: PLOTLY --------------------
                 with tab_plotly:
@@ -314,19 +311,19 @@ if user_id:
                         """
         ### Plotly chart controls
         
-        **Hover:** move your mouse over the chart to see exact values.
+        Plotly charts are interactive.
         
-        **Legend (the colored labels):**
+        **Modebar (chart tools)**
+        When you **hover over the chart**, a row of tool icons appears in the **top-right** (zoom, pan, reset, download, etc.).  
+        [1min read: Plotly modebar guide](https://plotly.com/chart-studio-help/getting-to-know-the-plotly-modebar/)
+        
+        **Legend (the colored labels)**
         - **Click** a legend item to hide/show it.
         - **Double-click** a legend item to show *only that one* (double-click again to reset).
         
-        **Zoom & reset:**
-        - **Drag on the chart** to zoom into a region.
-        - **Double-click** the chart to reset to the original view.
-        
-        **Modebar (the chart tools):**
-        When you **hover over a Plotly chart**, a small row of tool icons appears in the **top-right** of the chart.  
-        [1min read: Plotly modebar guide](https://plotly.com/chart-studio-help/getting-to-know-the-plotly-modebar/)
+        **Zoom & reset**
+        - **Drag on the chart** to zoom into an area.
+        - **Double-click** the chart to reset.
                         """
                     )
         
@@ -346,39 +343,31 @@ if user_id:
                         """
         ### Boxplots (what each part means)
         
-        A boxplot summarizes a bunch of numbers **without showing every single row**.
+        A boxplot summarizes a bunch of numbers without showing every row.
         
-        **Key hover terms you’ll see:**
-        - **Q1 (25th percentile):** 25% of values are **below** this.
-        - **Median (50th percentile):** the “middle” value.
-        - **Q3 (75th percentile):** 75% of values are **below** this.
-        - **IQR:** the spread between Q3 and Q1 (IQR = Q3 − Q1).
+        **You’ll see these terms on hover:**
+        - **Q1 (25th percentile):** 25% of values are below this.
+        - **Median (50th percentile):** the middle value.
+        - **Q3 (75th percentile):** 75% of values are below this.
         
-        **What the lines and box mean:**
-        - The **shaded box** starts at **Q1** and ends at **Q3** (this is the “middle 50%” of values).
+        **What the shapes mean:**
+        - The **shaded box** goes from **Q1 → Q3** (where the “middle half” of the data lives).
         - The **line inside the box** is the **median**.
-        - The **whisker lines** extend to the most typical values (not extreme).
-        - Any dots beyond the whiskers are **outliers** — shown separately because they’re **so far** from the main cluster of data.
+        - The **whiskers** show the “normal range” *excluding outliers*:  
+          think of them as the **lowest** and **highest** values that are still considered part of the main cluster.
+        - **Outliers** are shown as separate dots because they’re **far away** from the main cluster (one very low or very high value can otherwise hide what most of the data looks like).
+        
+        The example below has **one low outlier** and **one high outlier** so you can see both.
                         """
                     )
         
-                    # Build data with outliers on both ends
                     np.random.seed(42)
                     core = np.random.normal(loc=50, scale=7, size=220)
                     values = np.concatenate([core, [10, 95]])  # low + high outliers
                     df_box = pd.DataFrame({"Value": values})
         
-                    # One horizontal boxplot
                     fig_box = px.box(df_box, x="Value", points="outliers", orientation="h")
                     st.plotly_chart(fig_box, use_container_width=True)
-        
-                    st.markdown(
-                        """
-        **Outliers (why they’re separate dots):**  
-        Plotly flags outliers as points beyond the usual whisker range (commonly based on the IQR rule).  
-        They’re drawn as separate dots so you can see: “Most values are here… but a few are way lower / way higher.”
-                        """
-                    )
         
             _dialog()
         
