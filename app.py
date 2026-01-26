@@ -278,10 +278,10 @@ if user_id:
                         """
         ### Tables
         
-        Tables are interactive, but **only after you click into them**.
+        Streamlit tables are interactive**.
         
         **Top-right toolbar (shows when you hover the table):**
-        - **Full screen / expand** (makes the table easier to read)
+        - **Full screen / expand** (makes the table easier to read, not shown in this example)
         - **Search** (magnifying glass icon)
         - **Download** (download the table)
         
@@ -290,8 +290,8 @@ if user_id:
         - Click again to reverse the sort.
         
         **Searching**
-        - Click into the table first, then use **Ctrl/Cmd+F** to find text on the screen.
-        - For searching inside the table, use the **magnifying glass** icon in the table’s top-right toolbar.
+        - Click into the table first, then use **Ctrl/Cmd+F** to find text.
+        - You can also use the **magnifying glass** icon in the table’s top-right toolbar.
                         """
                     )
         
@@ -341,7 +341,7 @@ if user_id:
                 with tab_box:
                     st.markdown(
                         """
-        ### Boxplots (what each part means)
+        ### Boxplots
         
         A boxplot summarizes a bunch of numbers without showing every row.
         
