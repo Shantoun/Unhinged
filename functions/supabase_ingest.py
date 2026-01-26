@@ -377,14 +377,18 @@ def subscriptions_ingest(json_data, user_id):
 
 def store_raw_export_zip(zip_path, user_id):
     """
-    Upload a slimmed raw export ZIP to Supabase Storage.
+    Enforces: 1 user = 1 zip file in Storage
+
+    Storage path: {user_id}/latest.zip
+
     - Removes any `media` folder (any depth, case-insensitive)
     - Removes any `index.html`
     - Keeps everything else (including media.json)
-    - Overwrites the previous file for the same user
+    - Deletes any existing .zip in the user's folder, then uploads latest.zip
     - Returns (object_path, sha256)
     """
 
+    # ---------- build slim zip in memory ----------
     buf = io.BytesIO()
 
     with zipfile.ZipFile(zip_path, "r") as zin, zipfile.ZipFile(
@@ -409,9 +413,23 @@ def store_raw_export_zip(zip_path, user_id):
     slim_bytes = buf.getvalue()
     sha = hashlib.sha256(slim_bytes).hexdigest()
 
+    bucket = supabase_admin.storage.from_(var.bucket_raw_exports)
+    folder = f"{user_id}"
     object_path = f"{user_id}/latest.zip"
 
-    supabase_admin.storage.from_(var.bucket_raw_exports).upload(
+    # ---------- delete any existing zips for this user ----------
+    existing = bucket.list(folder) or []
+    to_remove = []
+    for obj in existing:
+        name = obj.get("name")
+        if name and name.lower().endswith(".zip"):
+            to_remove.append(f"{folder}/{name}")
+
+    if to_remove:
+        bucket.remove(to_remove)
+
+    # ---------- upload single canonical file ----------
+    bucket.upload(
         object_path,
         slim_bytes,
         file_options={
