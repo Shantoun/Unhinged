@@ -382,6 +382,7 @@ def store_raw_export_zip(zip_path, user_id):
     - Removes any `index.html`
     - Keeps everything else (including media.json)
     - Overwrites the previous file for the same user
+    - Returns (object_path, sha256)
     """
 
     buf = io.BytesIO()
@@ -395,15 +396,18 @@ def store_raw_export_zip(zip_path, user_id):
             parts = name.replace("\\", "/").split("/")
             parts_lower = [p.lower() for p in parts if p]
 
+            # drop any media folder anywhere
             if "media" in parts_lower:
                 continue
 
+            # drop any index.html anywhere
             if parts_lower and parts_lower[-1] == "index.html":
                 continue
 
             zout.writestr(info, zin.read(info.filename))
 
     slim_bytes = buf.getvalue()
+    sha = hashlib.sha256(slim_bytes).hexdigest()
 
     object_path = f"{user_id}/latest.zip"
 
@@ -416,7 +420,7 @@ def store_raw_export_zip(zip_path, user_id):
         },
     )
 
-    return object_path
+    return object_path, sha
 
 
 
