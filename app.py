@@ -268,65 +268,68 @@ if user_id:
         
         
         def navigation_help_dialog():
-            @st.dialog("How to navigate charts", width="large")
+            @st.dialog("How to navigate", width="large")
             def _dialog():
-                tab_box, tab_plotly = st.tabs(["Boxplots (30s)", "Plotly controls (30s)"])
+                tab_df, tab_plotly, tab_box = st.tabs(["Streamlit tables", "Plotly charts", "Boxplots"])
         
-                with tab_box:
+                # -------------------- TAB 1: STREAMLIT DATAFRAMES --------------------
+                with tab_df:
                     st.markdown(
                         """
-        **What a boxplot shows**
-        - **Middle line** = median (50th percentile)
-        - **Box** = middle 50% of values (25th → 75th percentile)
-        - **Whiskers** = typical range (values not considered outliers)
-        - **Dots** = outliers (unusually high/low values)
+        ### Streamlit tables (st.dataframe)
         
-        **How to read it fast**
-        - Higher median = generally higher values
-        - Taller box = more variability
-        - Lots of outliers = some extreme cases
+        These tables are **interactive**. Here’s what you can do:
+        
+        - **Sort:** click a column header to sort (click again to reverse).
+        - **Resize columns:** drag the edge of a column.
+        - **Scroll:** tables can scroll both directions if there are lots of rows/columns.
+        - **Full screen:** use the **expand / full-screen** icon in the table toolbar (top-right of the table).
+        - **Search / quick find:** use your browser find (Ctrl/Cmd+F) for visible text.
+        - **Download as CSV:** this app may include a **Download CSV** button near tables (if you don’t see one, it’s not enabled for that table).
                         """
                     )
         
-                    # Example boxplot
-                    np.random.seed(7)
-                    df_box = pd.DataFrame(
+                    # Tiny example table
+                    df_demo = pd.DataFrame(
                         {
-                            "Group": np.repeat(["A", "B"], 120),
-                            "Value": np.concatenate(
-                                [
-                                    np.random.normal(10, 2, 120),
-                                    np.random.normal(12, 3, 120),
-                                ]
-                            ),
+                            "name": ["Ava", "Noah", "Mia", "Liam"],
+                            "score": [72, 95, 88, 60],
+                            "group": ["North", "North", "South", "South"],
                         }
                     )
+                    st.dataframe(df_demo, use_container_width=True)
         
-                    fig_box = px.box(df_box, x="Group", y="Value", points="outliers")
-                    st.plotly_chart(fig_box, use_container_width=True)
+                    csv = df_demo.to_csv(index=False).encode("utf-8")
+                    st.download_button(
+                        "Download this example as CSV",
+                        data=csv,
+                        file_name="example.csv",
+                        mime="text/csv",
+                        use_container_width=True,
+                    )
         
+                # -------------------- TAB 2: PLOTLY --------------------
                 with tab_plotly:
                     st.markdown(
                         """
-        **How to use Plotly charts**
-        - **Hover** to see exact values
-        - **Legend click** hides/shows a series
-        - **Legend double-click** isolates a series (click again to reset)
-        - **Drag** to zoom (box zoom)
-        - **Double-click the plot** to reset zoom
-        - Use the **modebar** (icons on the chart) for zoom/pan/save/etc.
+        ### Plotly chart controls
         
-        **Common “exclude/include” patterns**
-        - Hide categories by clicking legend items
-        - If you have a filter UI (checkbox/selectbox), use it to *include only* what you want
+        **Hover:** move your mouse over the chart to see exact values.
+        
+        **Legend (the colored labels):**
+        - **Click** a legend item to hide/show it.
+        - **Double-click** a legend item to show *only that one* (double-click again to reset).
+        
+        **Zoom & reset:**
+        - **Drag on the chart** to zoom into a region.
+        - **Double-click** the chart to reset to the original view.
+        
+        **Modebar (the chart tools):**
+        When you **hover over a Plotly chart**, a small row of tool icons appears in the **top-right** of the chart.  
+        [1min read: Plotly modebar guide](https://plotly.com/chart-studio-help/getting-to-know-the-plotly-modebar/)
                         """
                     )
         
-                    st.markdown(
-                        "[Plotly modebar reference](https://plotly.com/python/configuration-options/#removing-the-modebar)"
-                    )
-        
-                    # Example stacked bar chart
                     df_bar = pd.DataFrame(
                         {
                             "Week": ["W1", "W1", "W1", "W2", "W2", "W2", "W3", "W3", "W3"],
@@ -337,24 +340,53 @@ if user_id:
                     fig_bar = px.bar(df_bar, x="Week", y="Count", color="Type", barmode="stack")
                     st.plotly_chart(fig_bar, use_container_width=True)
         
+                # -------------------- TAB 3: BOXPLOTS --------------------
+                with tab_box:
+                    st.markdown(
+                        """
+        ### Boxplots (what each part means)
+        
+        A boxplot summarizes a bunch of numbers **without showing every single row**.
+        
+        **Key hover terms you’ll see:**
+        - **Q1 (25th percentile):** 25% of values are **below** this.
+        - **Median (50th percentile):** the “middle” value.
+        - **Q3 (75th percentile):** 75% of values are **below** this.
+        - **IQR:** the spread between Q3 and Q1 (IQR = Q3 − Q1).
+        
+        **What the lines and box mean:**
+        - The **shaded box** starts at **Q1** and ends at **Q3** (this is the “middle 50%” of values).
+        - The **line inside the box** is the **median**.
+        - The **whisker lines** extend to the most typical values (not extreme).
+        - Any dots beyond the whiskers are **outliers** — shown separately because they’re **so far** from the main cluster of data.
+                        """
+                    )
+        
+                    # Build data with outliers on both ends
+                    np.random.seed(42)
+                    core = np.random.normal(loc=50, scale=7, size=220)
+                    values = np.concatenate([core, [10, 95]])  # low + high outliers
+                    df_box = pd.DataFrame({"Value": values})
+        
+                    # One horizontal boxplot
+                    fig_box = px.box(df_box, x="Value", points="outliers", orientation="h")
+                    st.plotly_chart(fig_box, use_container_width=True)
+        
+                    st.markdown(
+                        """
+        **Outliers (why they’re separate dots):**  
+        Plotly flags outliers as points beyond the usual whisker range (commonly based on the IQR rule).  
+        They’re drawn as separate dots so you can see: “Most values are here… but a few are way lower / way higher.”
+                        """
+                    )
+        
             _dialog()
         
         
-        # ---- Sidebar button ----
         with st.sidebar:
             if st.button("Learn how to navigate", width="stretch"):
                 navigation_help_dialog()
-
-
-
-
-
-
-
-
-
-
-
+        
 
 
 
