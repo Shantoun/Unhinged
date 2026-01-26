@@ -379,12 +379,12 @@ def store_raw_export_zip(zip_path, user_id):
     """
     Enforces: 1 user = 1 zip file in Storage
 
-    Storage path: {user_id}/latest.zip
+    Storage path: {user_id}/raw.zip
 
     - Removes any `media` folder (any depth, case-insensitive)
     - Removes any `index.html`
     - Keeps everything else (including media.json)
-    - Deletes any existing .zip in the user's folder, then uploads latest.zip
+    - Deletes any existing .zip in the user's folder, then uploads raw.zip
     - Returns (object_path, sha256)
     """
 
@@ -415,7 +415,7 @@ def store_raw_export_zip(zip_path, user_id):
 
     bucket = supabase_admin.storage.from_(var.bucket_raw_exports)
     folder = f"{user_id}"
-    object_path = f"{user_id}/latest.zip"
+    object_path = f"{user_id}/raw.zip"
 
     # ---------- delete any existing zips for this user ----------
     existing = bucket.list(folder) or []
