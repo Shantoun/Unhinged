@@ -141,28 +141,26 @@ def sankey(sankey_df, numb_of_engagements):
         for i in range(len(labels))
     }
 
-    def pct_of_prev(v, prev_idx):
-        denom = node_value.get(prev_idx, 0.0)
+    def pct_of_source(v, source_idx):
+        denom = node_value.get(source_idx, 0.0)
         return (float(v) / denom) if denom else 0.0
 
     def left_html(s):
         return f"<span style='display:block;text-align:left;'>{s}</span>"
 
     # -------------------- link hover --------------------
-    # want: 10 (60.0%) from Matches
+    # phrasing: "67% of all Matches: 22"
     link_custom = []
     for s_i, t_i, v in zip(df["s_idx"], df["t_idx"], df["Value"]):
-        s_label = labels[int(s_i)]
-        t_label = labels[int(t_i)]
-        pct = pct_of_prev(v, int(s_i))
-        txt = f"{s_label} → {t_label}<br>{int(v)} ({pct:.1%}) from {s_label}"
+        s_i = int(s_i)
+        t_i = int(t_i)
+        s_label = labels[s_i]
+        t_label = labels[t_i]
+        pct = pct_of_source(v, s_i)
+        txt = f"{s_label} → {t_label}<br>{pct:.1%} of all {s_label}: {int(v)}"
         link_custom.append(left_html(txt))
 
     # -------------------- node hover --------------------
-    # want:
-    # Total: 34
-    # 10 (3.9%) from Comments
-    # 34 (100.0%) from Likes received
     incoming = df.groupby(["t_idx", "s_idx"])["Value"].sum().reset_index()
     node_custom = [""] * len(labels)
 
@@ -178,15 +176,15 @@ def sankey(sankey_df, numb_of_engagements):
             node_custom[t_i] = left_html(f"Total: {int(total)}")
             continue
 
-        # sort biggest contributors first (nicer)
+        # biggest contributors first
         rows = rows.sort_values("Value", ascending=False)
 
         lines = [f"Total: {int(total)}"]
         for _, r in rows.iterrows():
             s_i = int(r["s_idx"])
             v = float(r["Value"])
-            pct = pct_of_prev(v, s_i)
-            lines.append(f"{int(v)} ({pct:.1%}) from {labels[s_i]}")
+            pct = pct_of_source(v, s_i)
+            lines.append(f"{pct:.1%} of all {labels[s_i]}: {int(v)}")
 
         node_custom[t_i] = left_html("<br>".join(lines))
 
@@ -214,6 +212,7 @@ def sankey(sankey_df, numb_of_engagements):
 
     fig.update_layout(title=title, height=520, margin=dict(l=10, r=10, t=50, b=10))
     return fig
+
 
 
 
