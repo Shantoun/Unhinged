@@ -93,7 +93,7 @@ if user_id:
     
     if not has_profile:
         st.set_page_config(layout="centered")
-        st.title("Sync Your Hinge Data")
+        st.header("Sync Your Hinge Data")
         hinge_sync()
 
 
