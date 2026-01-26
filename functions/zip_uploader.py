@@ -33,7 +33,7 @@ def zip_uploader():
                 with open(full, "r") as f:
                     data[key] = json.load(f)
 
-    return {"tmpdir": tmpdir, "json": data}
+    return {"tmpdir": tmpdir, "zip_path": zip_path, "json": data}
 
 
 
