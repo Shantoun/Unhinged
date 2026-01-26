@@ -252,8 +252,9 @@ if user_id:
                 st.rerun()
 
 
-        st.divider()
+        
         with st.sidebar:
+            st.divider()
             if st.button("Send feedback", use_container_width=True):
                 feedback_dialog()
 
