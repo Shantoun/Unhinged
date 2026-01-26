@@ -50,8 +50,8 @@ if user_id:
 
 
 
-    @st.dialog("Sync Your Hinge Data")
-    def hinge_sync_dialog():
+
+    def hinge_sync():
         done = uploader()
         if done:
             st.rerun()
@@ -85,13 +85,14 @@ if user_id:
                     st.success("Done. Your account has been deleted.")
                     st.rerun()
 
-
     
+    @st.dialog("Sync Your Hinge Data")
+    def hinge_sync_dialog():
+        hinge_sync()
+        
     
     if not has_profile:
-        blank1, col, blank2 = st.columns(3)
-        col.caption("Click R to refresh")
-        hinge_sync_dialog()
+        hinge_sync()
 
 
     ################################################################################## MAIN
