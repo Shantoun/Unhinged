@@ -20,8 +20,9 @@ import smtplib
 from email.message import EmailMessage
 
 
-help_guide_direct = "_Guides for charts and tables are in the sidebar under **Quick guides**._"
-help_guide_direct_w_box = "_Guides for charts, tables and boxplots are in the sidebar under **Quick guides**._"
+help_guide_direct = "<em style='color:#64748B;'>Guides for charts and tables are in the sidebar under <b>Quick guides</b>.</em>"
+help_guide_direct_w_box = "<em style='color:#64748B;'>Guides for charts, tables and boxplots are in the sidebar under <b>Quick guides</b>.</em>"
+
 
 
 
@@ -434,12 +435,22 @@ if user_id:
             st.session_state["convo_min_mins_tab2"] = st.session_state["convo_min_mins"]
             st.session_state["convo_min_messages_tab2"] = st.session_state["convo_min_messages"]
             st.session_state["join_likes_comments_tab2"] = st.session_state["join_likes_comments"]
+
+
+
+
+
+
+
+
+
+
         
         with tab1:
             st.header(var.tab_engagement_funnel)
             st.caption("**Shows how interactions flow from starting point to deeper engagement, step by step**")
             st.divider()
-            st.caption(help_guide_direct)
+            st.markdown(help_guide_direct, unsafe_allow_html=True)
             
             join_likes_comments = st.checkbox("Join comments & likes sent", key="join_likes_comments_tab1", on_change=sync_from_tab1)
             c1, c2 = st.columns(2)
@@ -472,7 +483,7 @@ if user_id:
             st.header(var.tab_engagement_over_time)
             st.caption("**Shows what happened in each time period, so you can spot trends**")
             st.divider()
-            st.caption(help_guide_direct)
+            st.markdown(help_guide_direct, unsafe_allow_html=True)
             
             use_like_time = st.checkbox("Use like timestamp instead of event timestamp",
                                         help="""    
@@ -522,7 +533,7 @@ if user_id:
             st.header(var.tab_outbound_timing)
             st.caption("**Highlights when outreach tends to perform best**")
             st.divider()
-            st.caption(help_guide_direct)
+            st.markdown(help_guide_direct, unsafe_allow_html=True)
             
             st.caption("""
                         The score used below is more reliable than a raw match rate. A raw rate can be misleading with very little data, 
@@ -620,7 +631,7 @@ if user_id:
             st.header(var.tab_drivers)
             st.caption("**Highlights what factors are most linked to higher messaging engagement**")
             st.divider()
-            st.caption(help_guide_direct)
+            st.markdown(help_guide_direct, unsafe_allow_html=True)
             
             engagements.rename(columns={
                 var.col_avg_message_gap: "Av. Time Between Messages (Mins)",
@@ -669,7 +680,7 @@ if user_id:
             st.header(var.tab_subscriptions)    
             st.caption("**Summarizes how your plan relates to activity and engagement**")
             st.divider()
-            st.caption(help_guide_direct)
+            st.markdown(help_guide_direct, unsafe_allow_html=True)
 
             
 
@@ -679,7 +690,7 @@ if user_id:
             st.header(var.tab_distribution)
             st.caption("**Shows how different metrics are spread out using box plots**")
             st.divider()
-            st.caption(help_guide_direct_w_box)
+            st.markdown(help_guide_direct_w_box, unsafe_allow_html=True)
             
             mean_messaging_duration = int(engagements[var.col_conversation_span_minutes].mean())
             fig_box_messaging_duration = viz.horizontal_boxplot(
