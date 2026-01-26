@@ -378,9 +378,10 @@ def subscriptions_ingest(json_data, user_id):
 def store_raw_export_zip(zip_path, user_id):
     """
     Upload a slimmed raw export ZIP to Supabase Storage.
-    Excludes any `media` folder (any depth, case-insensitive) and any `index.html`.
-    Keeps everything else (including media.json).
-    Returns (object_path, sha256).
+    - Removes any `media` folder (any depth, case-insensitive)
+    - Removes any `index.html`
+    - Keeps everything else (including media.json)
+    - Overwrites the previous file for the same user
     """
 
     buf = io.BytesIO()
@@ -391,15 +392,12 @@ def store_raw_export_zip(zip_path, user_id):
         for info in zin.infolist():
             name = info.filename
 
-            # normalize path
             parts = name.replace("\\", "/").split("/")
             parts_lower = [p.lower() for p in parts if p]
 
-            # drop any media folder anywhere
             if "media" in parts_lower:
                 continue
 
-            # drop any index.html anywhere
             if parts_lower and parts_lower[-1] == "index.html":
                 continue
 
@@ -407,21 +405,18 @@ def store_raw_export_zip(zip_path, user_id):
 
     slim_bytes = buf.getvalue()
 
-    sha = hashlib.sha256(slim_bytes).hexdigest()
-    ts = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
-    object_path = f"{user_id}/{ts}_{sha}.zip"
+    object_path = f"{user_id}/latest.zip"
 
     supabase_admin.storage.from_(var.bucket_raw_exports).upload(
         object_path,
         slim_bytes,
         file_options={
             "content-type": "application/zip",
-            "upsert": "false",
+            "upsert": "true",
         },
     )
 
-    return object_path, sha
-
+    return object_path
 
 
 
