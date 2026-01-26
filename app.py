@@ -261,7 +261,89 @@ if user_id:
 
 
 
-
+        import streamlit as st
+        import pandas as pd
+        import numpy as np
+        import plotly.express as px
+        
+        
+        def navigation_help_dialog():
+            @st.dialog("How to navigate charts", width="large")
+            def _dialog():
+                tab_box, tab_plotly = st.tabs(["Boxplots (30s)", "Plotly controls (30s)"])
+        
+                with tab_box:
+                    st.markdown(
+                        """
+        **What a boxplot shows**
+        - **Middle line** = median (50th percentile)
+        - **Box** = middle 50% of values (25th → 75th percentile)
+        - **Whiskers** = typical range (values not considered outliers)
+        - **Dots** = outliers (unusually high/low values)
+        
+        **How to read it fast**
+        - Higher median = generally higher values
+        - Taller box = more variability
+        - Lots of outliers = some extreme cases
+                        """
+                    )
+        
+                    # Example boxplot
+                    np.random.seed(7)
+                    df_box = pd.DataFrame(
+                        {
+                            "Group": np.repeat(["A", "B"], 120),
+                            "Value": np.concatenate(
+                                [
+                                    np.random.normal(10, 2, 120),
+                                    np.random.normal(12, 3, 120),
+                                ]
+                            ),
+                        }
+                    )
+        
+                    fig_box = px.box(df_box, x="Group", y="Value", points="outliers")
+                    st.plotly_chart(fig_box, use_container_width=True)
+        
+                with tab_plotly:
+                    st.markdown(
+                        """
+        **How to use Plotly charts**
+        - **Hover** to see exact values
+        - **Legend click** hides/shows a series
+        - **Legend double-click** isolates a series (click again to reset)
+        - **Drag** to zoom (box zoom)
+        - **Double-click the plot** to reset zoom
+        - Use the **modebar** (icons on the chart) for zoom/pan/save/etc.
+        
+        **Common “exclude/include” patterns**
+        - Hide categories by clicking legend items
+        - If you have a filter UI (checkbox/selectbox), use it to *include only* what you want
+                        """
+                    )
+        
+                    st.markdown(
+                        "[Plotly modebar reference](https://plotly.com/python/configuration-options/#removing-the-modebar)"
+                    )
+        
+                    # Example stacked bar chart
+                    df_bar = pd.DataFrame(
+                        {
+                            "Week": ["W1", "W1", "W1", "W2", "W2", "W2", "W3", "W3", "W3"],
+                            "Type": ["Like", "Match", "Message"] * 3,
+                            "Count": [30, 12, 5, 25, 14, 7, 18, 10, 9],
+                        }
+                    )
+                    fig_bar = px.bar(df_bar, x="Week", y="Count", color="Type", barmode="stack")
+                    st.plotly_chart(fig_bar, use_container_width=True)
+        
+            _dialog()
+        
+        
+        # ---- Sidebar button ----
+        with st.sidebar:
+            if st.button("Learn how to navigate", width="stretch"):
+                navigation_help_dialog()
 
 
 
