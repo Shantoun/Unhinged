@@ -33,7 +33,7 @@ def zip_uploader():
                 with open(full, "r") as f:
                     data[key] = json.load(f)
 
-    return {"tmpdir": tmpdir, "zip_path": zip_path, "json": data}
+    return {"tmpdir": tmpdir, "json": data}
 
 
 
@@ -51,7 +51,6 @@ def uploader():
                         result["zip_path"],
                         st.session_state.user_id
                     )
-                    st.info(f"Raw export saved to: {path}")
                 except Exception as e:
                     st.error("Raw export upload failed")
                     st.exception(e)
