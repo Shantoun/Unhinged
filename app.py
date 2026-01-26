@@ -333,14 +333,6 @@ if user_id:
                 "[View the GitHub repo](https://github.com/Shantoun/Unhinged/tree/main)"
             )
 
-            st.markdown(
-                "<a href='https://github.com/Shantoun/Unhinged/tree/main' target='_blank' style='font-size:0.85em;'>View the GitHub repo</a>",
-                unsafe_allow_html=True,
-            )
-
-
-
-
             
             feedback = st.text_area(
                 label="What should be improved?",
