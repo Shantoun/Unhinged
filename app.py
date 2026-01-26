@@ -132,20 +132,12 @@ if user_id:
         def delete_data_dialog():
             st.error("This will permanently delete all your data. This cannot be undone.")
         
-            c1, c2 = st.columns(2)
-            with c1:
-                if st.button("Cancel", width="stretch", key="delete_cancel"):
-                    st.session_state.show_delete_dialog = False
-                    st.rerun()
-        
-            with c2:
-                if st.button("Yes, delete data", type="primary", width="stretch", key="delete_confirm_data"):
-                    with st.spinner("Deleting your data..."):
-                        delete_my_data(st.session_state.user_id)
-        
-                    st.session_state.show_delete_dialog = False
-                    st.success("Your data has been deleted.")
-                    st.rerun()
+            delete_data_clicked = st.button(
+                "Yes, delete my data",
+                type="primary",
+                width="stretch",
+                key="delete_confirm_data",
+            )
         
             # ---- extra: delete account (data + auth) ----
             with st.expander("Delete data & account"):
@@ -156,26 +148,39 @@ if user_id:
                     key="delete_account_confirm_text",
                 )
         
-                if confirm_text.strip().lower() == "delete":
-                    if st.button(
+                delete_account_clicked = (
+                    confirm_text.strip().lower() == "delete"
+                    and st.button(
                         "Delete my data & account",
                         type="primary",
                         width="stretch",
                         key="delete_account_confirm_btn",
-                    ):
-                        with st.spinner("Deleting your data and account..."):
-                            delete_my_data(st.session_state.user_id)
-                            auth.supabase_admin.auth.admin.delete_user(st.session_state.user_id)
+                    )
+                )
         
-                        try:
-                            auth.sign_out()
-                        except Exception:
-                            pass
+            # ---------- actions (NOT in columns) ----------
+            if delete_data_clicked:
+                with st.spinner("Deleting your data..."):
+                    delete_my_data(st.session_state.user_id)
         
-                        st.session_state.user_id = None
-                        st.session_state.show_delete_dialog = False
-                        st.success("Your account and data have been deleted.")
-                        st.rerun()
+                st.session_state.show_delete_dialog = False
+                st.success("Your data has been deleted.")
+                st.rerun()
+        
+            if delete_account_clicked:
+                with st.spinner("Deleting your data and account..."):
+                    delete_my_data(st.session_state.user_id)
+                    auth.supabase_admin.auth.admin.delete_user(st.session_state.user_id)
+        
+                try:
+                    auth.sign_out()
+                except Exception:
+                    pass
+        
+                st.session_state.user_id = None
+                st.session_state.show_delete_dialog = False
+                st.success("Your account and data have been deleted.")
+                st.rerun()
                 
                 
         # ---- sidebar trigger (NO st.rerun here) ----
