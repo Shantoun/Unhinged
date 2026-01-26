@@ -46,7 +46,16 @@ def uploader():
             json_data = result["json"]
 
             with st.spinner("Syncing raw export..."):
-                ingest.store_raw_export_zip(result["zip_path"], st.session_state.user_id)
+                try:
+                    path, sha = ingest.store_raw_export_zip(
+                        result["zip_path"],
+                        st.session_state.user_id
+                    )
+                    st.info(f"Raw export saved to: {path}")
+                except Exception as e:
+                    st.error("Raw export upload failed")
+                    st.exception(e)
+                    st.stop()
 
             with st.spinner("Syncing matches..."):
                 ingest.matches_ingest(json_data, st.session_state.user_id)
