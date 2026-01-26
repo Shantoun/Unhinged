@@ -119,10 +119,26 @@ if user_id:
         if st.sidebar.button("Upload More Data", width="stretch"):
             hinge_sync_dialog()
 
+
+
+        
         # Sign out
         if st.sidebar.button("Sign Out", width="stretch"):
-            auth.sign_out()
-            st.rerun()
+            st.session_state.show_signout = True
+        
+        
+        if st.session_state.get("show_signout"):
+            @st.dialog("Sign out?")
+            def confirm_signout():
+                st.write("Are you sure you want to sign out?")
+        
+                if st.button("Yes, sign out", width="stretch"):
+                    auth.sign_out()
+                    st.session_state.show_signout = False
+                    st.rerun()
+        
+            confirm_signout()
+
 
 
         
