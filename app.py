@@ -7,6 +7,7 @@ import variables as var
 
 import pandas as pd
 import plotly.graph_objects as go
+import plotly.express as px
 
 import functions.datasets as ds
 import functions.analytics as viz
@@ -17,6 +18,11 @@ from streamlit_theme import st_theme
 
 import smtplib
 from email.message import EmailMessage
+
+
+help_guide_direct = "_Guides for charts and tables are in the sidebar under **Quick guides**._"
+help_guide_direct_w_box = "_Guides for charts, tables and boxplots are in the sidebar under **Quick guides**._"
+
 
 
 st.set_page_config(initial_sidebar_state="collapsed")
@@ -261,14 +267,10 @@ if user_id:
 
 
 
-        import streamlit as st
-        import pandas as pd
-        import numpy as np
-        import plotly.express as px
         
         
         def navigation_help_dialog():
-            @st.dialog("How to navigate", width="large")
+            @st.dialog("Quick Guides", width="large")
             def _dialog():
                 tab_table, tab_plotly, tab_box = st.tabs(["Tables", "Plotly charts", "Boxplots"])
         
@@ -276,22 +278,22 @@ if user_id:
                 with tab_table:
                     st.markdown(
                         """
-        ### Tables
-        
-        Streamlit tables are interactive**.
-        
-        **Top-right toolbar (shows when you hover the table):**
-        - **Full screen / expand** (makes the table easier to read, not shown in this example)
-        - **Search** (magnifying glass icon)
-        - **Download** (download the table)
-        
-        **Sorting**
-        - Click a **column name** to sort.
-        - Click again to reverse the sort.
-        
-        **Searching**
-        - Click into the table first, then use **Ctrl/Cmd+F** to find text.
-        - You can also use the **magnifying glass** icon in the table’s top-right toolbar.
+                            ### Tables
+                            
+                            Streamlit tables are interactive.
+                            
+                            **Top-right toolbar (shows when you hover the table):**
+                            - **Full screen / expand** (makes the table easier to read, not shown in this example)
+                            - **Search** (magnifying glass icon)
+                            - **Download** (download the table)
+                            
+                            **Sorting**
+                            - Click a **column name** to sort.
+                            - Click again to reverse the sort.
+                            
+                            **Searching**
+                            - Click into the table first, then use **Ctrl/Cmd+F** to find text.
+                            - You can also use the **magnifying glass** icon in the table’s top-right toolbar.
                         """
                     )
         
@@ -309,21 +311,21 @@ if user_id:
                 with tab_plotly:
                     st.markdown(
                         """
-        ### Plotly chart controls
-        
-        Plotly charts are interactive.
-        
-        **Modebar (chart tools)**
-        When you **hover over the chart**, a row of tool icons appears in the **top-right** (zoom, pan, reset, download, etc.).  
-        [1min read: Plotly modebar guide](https://plotly.com/chart-studio-help/getting-to-know-the-plotly-modebar/)
-        
-        **Legend (the colored labels)**
-        - **Click** a legend item to hide/show it.
-        - **Double-click** a legend item to show *only that one* (double-click again to reset).
-        
-        **Zoom & reset**
-        - **Drag on the chart** to zoom into an area.
-        - **Double-click** the chart to reset.
+                            ### Plotly chart controls
+                            
+                            Plotly charts are interactive.
+                            
+                            **Modebar (chart tools)**
+                            When you **hover over the chart**, a row of tool icons appears in the **top-right** (zoom, pan, reset, download, etc.).  
+                            [1min read: Plotly modebar guide](https://plotly.com/chart-studio-help/getting-to-know-the-plotly-modebar/)
+                            
+                            **Legend (the colored labels)**
+                            - **Click** a legend item to hide/show it.
+                            - **Double-click** a legend item to show *only that one* (double-click again to reset).
+                            
+                            **Zoom & reset**
+                            - **Drag on the chart** to zoom into an area.
+                            - **Double-click** the chart to reset.
                         """
                     )
         
@@ -341,23 +343,23 @@ if user_id:
                 with tab_box:
                     st.markdown(
                         """
-        ### Boxplots
-        
-        A boxplot summarizes a bunch of numbers without showing every row.
-        
-        **You’ll see these terms on hover:**
-        - **Q1 (25th percentile):** 25% of values are below this.
-        - **Median (50th percentile):** the middle value.
-        - **Q3 (75th percentile):** 75% of values are below this.
-        
-        **What the shapes mean:**
-        - The **shaded box** goes from **Q1 → Q3** (where the “middle half” of the data lives).
-        - The **line inside the box** is the **median**.
-        - The **whiskers** show the “normal range” *excluding outliers*:  
-          think of them as the **lowest** and **highest** values that are still considered part of the main cluster.
-        - **Outliers** are shown as separate dots because they’re **far away** from the main cluster (one very low or very high value can otherwise hide what most of the data looks like).
-        
-        The example below has **one low outlier** and **one high outlier** so you can see both.
+                            ### Boxplots
+                            
+                            A boxplot summarizes a bunch of numbers without showing every row.
+                            
+                            **You’ll see these terms on hover:**
+                            - **Q1 (25th percentile):** 25% of values are below this.
+                            - **Median (50th percentile):** the middle value.
+                            - **Q3 (75th percentile):** 75% of values are below this.
+                            
+                            **What the shapes mean:**
+                            - The **shaded box** goes from **Q1 → Q3** (where the “middle half” of the data lives).
+                            - The **line inside the box** is the **median**.
+                            - The **whiskers** show the “normal range” *excluding outliers*:  
+                              think of them as the **lowest** and **highest** values that are still considered part of the main cluster.
+                            - **Outliers** are shown as separate dots because they’re **far away** from the main cluster (one very low or very high value can otherwise hide what most of the data looks like).
+                            
+                            The example below has **one low outlier** and **one high outlier** so you can see both.
                         """
                     )
         
@@ -373,7 +375,7 @@ if user_id:
         
         
         with st.sidebar:
-            if st.button("Learn how to navigate", width="stretch"):
+            if st.button("Quick guides", width="stretch"):
                 navigation_help_dialog()
         
 
@@ -437,7 +439,8 @@ if user_id:
             st.header(var.tab_engagement_funnel)
             st.caption("**Shows how interactions flow from starting point to deeper engagement, step by step**")
             st.divider()
-        
+            st.caption(help_guide_direct)
+            
             join_likes_comments = st.checkbox("Join comments & likes sent", key="join_likes_comments_tab1", on_change=sync_from_tab1)
             c1, c2 = st.columns(2)
             convo_min_mins = c1.number_input("Minimum conversation duration (min)", min_value=0, step=1, width="stretch", key="convo_min_mins_tab1", on_change=sync_from_tab1, help="Sets the minimum duration required for an interaction to count as a conversation.")
@@ -469,7 +472,8 @@ if user_id:
             st.header(var.tab_engagement_over_time)
             st.caption("**Shows what happened in each time period, so you can spot trends**")
             st.divider()
-
+            st.caption(help_guide_direct)
+            
             use_like_time = st.checkbox("Use like timestamp instead of event timestamp",
                                         help="""    
                                             Controls which timestamp is used to place events into time buckets.
@@ -518,6 +522,7 @@ if user_id:
             st.header(var.tab_outbound_timing)
             st.caption("**Highlights when outreach tends to perform best**")
             st.divider()
+            st.caption(help_guide_direct)
             
             st.caption("""
                         The score used below is more reliable than a raw match rate. A raw rate can be misleading with very little data, 
@@ -615,6 +620,7 @@ if user_id:
             st.header(var.tab_drivers)
             st.caption("**Highlights what factors are most linked to higher messaging engagement**")
             st.divider()
+            st.caption(help_guide_direct)
             
             engagements.rename(columns={
                 var.col_avg_message_gap: "Av. Time Between Messages (Mins)",
@@ -663,7 +669,7 @@ if user_id:
             st.header(var.tab_subscriptions)    
             st.caption("**Summarizes how your plan relates to activity and engagement**")
             st.divider()
-
+            st.caption(help_guide_direct)
 
             
 
@@ -673,6 +679,7 @@ if user_id:
             st.header(var.tab_distribution)
             st.caption("**Shows how different metrics are spread out using box plots**")
             st.divider()
+            st.caption(help_guide_direct_w_box)
             
             mean_messaging_duration = int(engagements[var.col_conversation_span_minutes].mean())
             fig_box_messaging_duration = viz.horizontal_boxplot(
