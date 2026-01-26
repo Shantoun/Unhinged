@@ -385,7 +385,8 @@ def stacked_events_bar_fig(events_df, ts_col=None):
         df["_hover_label"] = df["_bucket_dt"].dt.strftime("%b %Y")
 
     elif bucket == "Week":
-        df["_bucket_dt"] = df[ts_col].dt.to_period("W-MON").dt.start_time
+        # Week starts Monday (period ends Sunday)
+        df["_bucket_dt"] = df[ts_col].dt.to_period("W-SUN").dt.start_time   # or "W"
         week_end = df["_bucket_dt"] + pd.Timedelta(days=6)
         df["_bucket_label"] = df["_bucket_dt"].dt.strftime("%Y-%m-%d")
         df["_hover_label"] = (
