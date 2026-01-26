@@ -297,6 +297,7 @@ if user_id:
         
         
         with st.sidebar:
+            st.divider()
             if st.button("Quick guides", width="stretch"):
                 navigation_help_dialog()
         
@@ -373,7 +374,6 @@ if user_id:
 
         
         with st.sidebar:
-            st.divider()
             if st.button("Send feedback", use_container_width=True):
                 feedback_dialog()
 
