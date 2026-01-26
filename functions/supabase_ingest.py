@@ -1,5 +1,6 @@
 import variables as var
 from functions.authentification import supabase
+from functions.authentification import supabase_admin
 
 import io
 import zipfile
@@ -406,7 +407,7 @@ def store_raw_export_zip(zip_path, user_id):
     ts = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
     object_path = f"{user_id}/{ts}_{sha}.zip"
 
-    supabase.storage.from_(var.bucket_raw_exports).upload(
+    supabase_admin.storage.from_(var.bucket_raw_exports).upload(
         object_path,
         slim_bytes,
         file_options={
