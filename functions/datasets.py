@@ -85,9 +85,13 @@ def like_events_df(user_id, tz="America/Toronto"):
             if c.endswith("_timestamp"):
                 # Fix malformed timezone format
                 if df[c].dtype == 'object':
+                    before = df[c].iloc[0] if len(df) > 0 else None
                     df[c] = df[c].str.replace(r'(\+\d{2}):(\d{2})$', r'\1\2', regex=True)
-                
-                s = pd.to_datetime(df[c], errors="coerce")
+                    after = df[c].iloc[0] if len(df) > 0 else None
+                    if before != after:
+                        st.write(f"Fixed {c}: {before} -> {after}")
+            
+            s = pd.to_datetime(df[c], errors="coerce")
     
                 # make everything tz-aware in UTC
                 if getattr(s.dt, "tz", None) is None:
