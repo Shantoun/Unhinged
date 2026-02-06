@@ -84,12 +84,10 @@ def like_events_df(user_id, tz="America/Toronto"):
     for df in [likes_df, messages_df, matches_df, blocks_df]:
         for c in df.columns:
             if c.endswith("_timestamp"):
-                # Nuclear option: handle each value individually
                 def parse_ts(val):
                     if pd.isna(val) or val is None or val == '':
                         return pd.NaT
                     try:
-                        # Remove colon from timezone
                         val_str = str(val)
                         if val_str.endswith('+00:00'):
                             val_str = val_str[:-6] + '+0000'
@@ -97,7 +95,7 @@ def like_events_df(user_id, tz="America/Toronto"):
                             val_str = val_str[:-6] + '-0000'
                         
                         dt = pd.to_datetime(val_str, utc=True)
-                        return dt.tz_convert(tz).tz_localize(None).floor('s')
+                        return dt.tz_localize(None)  # Keep UTC but make naive
                     except:
                         return pd.NaT
                 
