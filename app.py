@@ -725,65 +725,65 @@ if user_id:
             st.write(engagements[var.col_like_match_delay])
             st.write(engagements[var.col_like_match_delay].mean())            
             
-            mean_like_match_delay = int(engagements[var.col_like_match_delay].dropna().mean() or 0)
-            fig_box_messaging_number = viz.horizontal_boxplot(
-                engagements[var.col_conversation_message_count],
-                title="Messages per Session - Mean: {:,} Messages".format(mean_messaging_number),
-                color = "#EF553B",
-                trace_name="Messages"
-            )
+            # mean_like_match_delay = int(engagements[var.col_like_match_delay].dropna().mean() or 0)
+            # fig_box_messaging_number = viz.horizontal_boxplot(
+            #     engagements[var.col_conversation_message_count],
+            #     title="Messages per Session - Mean: {:,} Messages".format(mean_messaging_number),
+            #     color = "#EF553B",
+            #     trace_name="Messages"
+            # )
             
-            st.plotly_chart(fig_box_messaging_number, width="stretch")
+            # st.plotly_chart(fig_box_messaging_number, width="stretch")
 
 
             
-            mean_like_match_delay = int(engagements[var.col_like_match_delay].dropna().mean())
-            fig_like_match_delay = viz.horizontal_boxplot(
-                engagements[var.col_like_match_delay],
-                title="Like to Match Time - Mean: {:,} Minutes".format(mean_like_match_delay),
-                color = "#00CC96",
-                trace_name="Minutes"
-            )
+            # mean_like_match_delay = int(engagements[var.col_like_match_delay].dropna().mean())
+            # fig_like_match_delay = viz.horizontal_boxplot(
+            #     engagements[var.col_like_match_delay],
+            #     title="Like to Match Time - Mean: {:,} Minutes".format(mean_like_match_delay),
+            #     color = "#00CC96",
+            #     trace_name="Minutes"
+            # )
     
-            st.plotly_chart(fig_like_match_delay, width="stretch")
+            # st.plotly_chart(fig_like_match_delay, width="stretch")
 
 
 
-            with st.expander("View as data"):
-                df_message_durations = pd.DataFrame(
-                    {"Minutes": [engagements[var.col_conversation_span_minutes].dropna().tolist()]},
-                    index=["Message Durations"],
-                )
+            # with st.expander("View as data"):
+            #     df_message_durations = pd.DataFrame(
+            #         {"Minutes": [engagements[var.col_conversation_span_minutes].dropna().tolist()]},
+            #         index=["Message Durations"],
+            #     )
                 
-                df_messages_per_session = pd.DataFrame(
-                    {"Messages": [engagements[var.col_conversation_message_count].dropna().tolist()]},
-                    index=["Messages per Session"],
-                )
+            #     df_messages_per_session = pd.DataFrame(
+            #         {"Messages": [engagements[var.col_conversation_message_count].dropna().tolist()]},
+            #         index=["Messages per Session"],
+            #     )
                 
-                df_like_to_match_time = pd.DataFrame(
-                    {"Minutes": [engagements[var.col_like_match_delay].dropna().tolist()]},
-                    index=["Like to Match Time"],
-                )
+            #     df_like_to_match_time = pd.DataFrame(
+            #         {"Minutes": [engagements[var.col_like_match_delay].dropna().tolist()]},
+            #         index=["Like to Match Time"],
+            #     )
                 
-                # helpers
-                fmt_1dp = lambda x: 0 if x == 0 else round(x, 1)
-                fmt_int = lambda x: int(x)
+            #     # helpers
+            #     fmt_1dp = lambda x: 0 if x == 0 else round(x, 1)
+            #     fmt_int = lambda x: int(x)
                 
-                df_message_durations["Minutes"] = df_message_durations["Minutes"].apply(
-                    lambda lst: sorted(fmt_1dp(v) for v in lst)
-                )
+            #     df_message_durations["Minutes"] = df_message_durations["Minutes"].apply(
+            #         lambda lst: sorted(fmt_1dp(v) for v in lst)
+            #     )
                 
-                df_messages_per_session["Messages"] = df_messages_per_session["Messages"].apply(
-                    lambda lst: sorted(fmt_int(v) for v in lst)
-                )
+            #     df_messages_per_session["Messages"] = df_messages_per_session["Messages"].apply(
+            #         lambda lst: sorted(fmt_int(v) for v in lst)
+            #     )
                 
-                df_like_to_match_time["Minutes"] = df_like_to_match_time["Minutes"].apply(
-                    lambda lst: sorted(fmt_1dp(v) for v in lst)
-                )
+            #     df_like_to_match_time["Minutes"] = df_like_to_match_time["Minutes"].apply(
+            #         lambda lst: sorted(fmt_1dp(v) for v in lst)
+            #     )
                 
-                st.dataframe(df_message_durations)
-                st.dataframe(df_messages_per_session)
-                st.dataframe(df_like_to_match_time)
+            #     st.dataframe(df_message_durations)
+            #     st.dataframe(df_messages_per_session)
+            #     st.dataframe(df_like_to_match_time)
 
 
 
