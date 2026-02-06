@@ -101,14 +101,14 @@ def like_events_df(user_id, tz="America/Toronto"):
             
             s = pd.to_datetime(df[c], errors="coerce")
     
-                # make everything tz-aware in UTC
-                if getattr(s.dt, "tz", None) is None:
-                    s = s.dt.tz_localize("UTC")
-                else:
-                    s = s.dt.tz_convert("UTC")
-    
-                # then convert to local naive + floor
-                df[c] = s.dt.tz_convert(tz).dt.tz_localize(None).dt.floor("s")
+            # make everything tz-aware in UTC
+            if getattr(s.dt, "tz", None) is None:
+                s = s.dt.tz_localize("UTC")
+            else:
+                s = s.dt.tz_convert("UTC")
+
+            # then convert to local naive + floor
+            df[c] = s.dt.tz_convert(tz).dt.tz_localize(None).dt.floor("s")
 
     st.write(matches_df)
     # comments (messages tied to like_id)
