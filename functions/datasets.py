@@ -81,7 +81,10 @@ def like_events_df(user_id, tz="America/Toronto"):
     for df in [likes_df, messages_df, matches_df, blocks_df]:
         for c in df.columns:
             if c.endswith("_timestamp"):
-                df[c] = pd.to_datetime(df[c], errors="coerce")
+                df[c] = (
+                    pd.to_datetime(df[c], errors="coerce")
+                    .dt.floor("s")   # DROP milliseconds
+                )
 
     # comments (messages tied to like_id)
     comments = (
