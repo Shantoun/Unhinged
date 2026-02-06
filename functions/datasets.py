@@ -84,10 +84,10 @@ def like_events_df(user_id, tz="America/Toronto"):
     for df in [likes_df, messages_df, matches_df, blocks_df]:
         for c in df.columns:
             if c.endswith("_timestamp"):
-                df[c] = (
-                    pd.to_datetime(df[c], errors="coerce")
-                    .dt.floor("s")   # DROP milliseconds
-                )
+                s = pd.to_datetime(df[c], errors="coerce")
+                if s.dt.tz is not None:
+                    s = s.dt.tz_convert("UTC").dt.tz_localize(None)
+                df[c] = s.dt.floor("s")
 
     # comments (messages tied to like_id)
     comments = (
@@ -148,7 +148,6 @@ def like_events_df(user_id, tz="America/Toronto"):
     sent = sent.merge(convo_agg, on=var.col_match_id, how="left")
     sent = sent.merge(blocks_agg, on=var.col_match_id, how="left")
 
-    st.write(sent)
     # received likes
     like_match_ids = set(likes_df[var.col_match_id].dropna().unique()) if var.col_match_id in likes_df.columns else set()
     received_matches = matches_df[~matches_df[var.col_match_id].isin(like_match_ids)].copy()
@@ -168,9 +167,7 @@ def like_events_df(user_id, tz="America/Toronto"):
     received = received[sent.columns]
 
     base_df = pd.concat([sent, received], ignore_index=True)
-    
-    st.write("base")
-    st.write(base_df)
+
     # TZ CONVERSION (UTC -> tz, then drop tz info; do upstream once)
     def _to_local_naive(s):
         s = pd.to_datetime(s, errors="coerce")
@@ -182,7 +179,6 @@ def like_events_df(user_id, tz="America/Toronto"):
         if c.endswith("_timestamp"):
             base_df[c] = _to_local_naive(base_df[c])
 
-    st.write(base_df)
     
     base_df[var.col_like_direction] = base_df[var.col_like_id].isna().map({True: "received", False: "sent"})
     
