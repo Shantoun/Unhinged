@@ -140,6 +140,7 @@ def like_events_df(user_id, tz="America/Toronto"):
         [var.col_match_id, var.col_match_timestamp, var.col_we_met, var.col_my_type, var.col_we_met_timestamp]
     ].copy()
 
+    st.write(matches_sub)
     # sent likes
     sent = likes_df.copy()
     sent = sent.merge(comments, on=var.col_like_id, how="left")
@@ -147,6 +148,7 @@ def like_events_df(user_id, tz="America/Toronto"):
     sent = sent.merge(convo_agg, on=var.col_match_id, how="left")
     sent = sent.merge(blocks_agg, on=var.col_match_id, how="left")
 
+    st.write(sent)
     # received likes
     like_match_ids = set(likes_df[var.col_match_id].dropna().unique()) if var.col_match_id in likes_df.columns else set()
     received_matches = matches_df[~matches_df[var.col_match_id].isin(like_match_ids)].copy()
@@ -166,7 +168,9 @@ def like_events_df(user_id, tz="America/Toronto"):
     received = received[sent.columns]
 
     base_df = pd.concat([sent, received], ignore_index=True)
-
+    
+    st.write("base")
+    st.write(base_df)
     # TZ CONVERSION (UTC -> tz, then drop tz info; do upstream once)
     def _to_local_naive(s):
         s = pd.to_datetime(s, errors="coerce")
@@ -178,8 +182,10 @@ def like_events_df(user_id, tz="America/Toronto"):
         if c.endswith("_timestamp"):
             base_df[c] = _to_local_naive(base_df[c])
 
+    st.write(base_df)
+    
     base_df[var.col_like_direction] = base_df[var.col_like_id].isna().map({True: "received", False: "sent"})
-
+    
     base_df[var.col_first_message_delay] = (
         (base_df[var.col_first_message_timestamp] - base_df[var.col_match_timestamp])
         .dt.total_seconds() / 60
