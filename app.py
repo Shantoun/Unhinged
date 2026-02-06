@@ -734,7 +734,7 @@ if user_id:
             st.plotly_chart(fig_box_messaging_number, width="stretch")
 
     
-            mean_like_match_delay = int(engagements[var.col_like_match_delay].mean())
+            mean_like_match_delay = int(engagements[var.col_like_match_delay].dropna().mean())
             fig_like_match_delay = viz.horizontal_boxplot(
                 engagements[var.col_like_match_delay],
                 title="Like to Match Time - Mean: {:,} Minutes".format(mean_like_match_delay),
