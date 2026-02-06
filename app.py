@@ -723,7 +723,7 @@ if user_id:
             st.plotly_chart(fig_box_messaging_duration, width="stretch")
     
             
-            mean_messaging_number = int(engagements[var.col_conversation_message_count].mean())
+            mean_like_match_delay = int(engagements[var.col_like_match_delay].dropna().mean() or 0)
             fig_box_messaging_number = viz.horizontal_boxplot(
                 engagements[var.col_conversation_message_count],
                 title="Messages per Session - Mean: {:,} Messages".format(mean_messaging_number),
