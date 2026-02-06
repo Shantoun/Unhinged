@@ -3,6 +3,8 @@ from functions.authentification import supabase
 import variables as var
 import numpy as np
 
+import streamlit as st
+
 def _dedupe_keep_best(df):
     # priority (best first):
     # we_met True > my_type True > has block_id > has comment_message_id >
