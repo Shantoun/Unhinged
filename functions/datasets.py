@@ -80,36 +80,30 @@ def like_events_df(user_id, tz="America/Toronto"):
     )
 
 
-    st.write("Sample match_timestamp values after regex fix:")
-    st.write(matches_df['match_timestamp'].head(20).tolist())
-    
-    st.write("\nTrying manual parse on first value:")
-    test_val = matches_df['match_timestamp'].iloc[0]
-    st.write(f"Value: {test_val}")
-    try:
-        parsed = pd.to_datetime(test_val, utc=True)
-        st.write(f"Parsed successfully: {parsed}")
-    except Exception as e:
-        st.write(f"Error: {e}")    
+
         
     st.write(matches_df)
     for df in [likes_df, messages_df, matches_df, blocks_df]:
         for c in df.columns:
-            if c.endswith("_timestamp") and df[c].dtype == 'object':
-                df[c] = df[c].str.replace(r'(\+\d{2}):(\d{2})$', r'\1\2', regex=True)
-    
-    # Then process
-    for df in [likes_df, messages_df, matches_df, blocks_df]:
-        for c in df.columns:
             if c.endswith("_timestamp"):
-                s = pd.to_datetime(df[c], errors="coerce", utc=True)
-    
-                if getattr(s.dt, "tz", None) is None:
-                    s = s.dt.tz_localize("UTC")
-                else:
-                    s = s.dt.tz_convert("UTC")
-    
-                df[c] = s.dt.tz_convert(tz).dt.tz_localize(None).dt.floor("s")
+                # Nuclear option: handle each value individually
+                def parse_ts(val):
+                    if pd.isna(val) or val is None or val == '':
+                        return pd.NaT
+                    try:
+                        # Remove colon from timezone
+                        val_str = str(val)
+                        if val_str.endswith('+00:00'):
+                            val_str = val_str[:-6] + '+0000'
+                        elif val_str.endswith('-00:00'):
+                            val_str = val_str[:-6] + '-0000'
+                        
+                        dt = pd.to_datetime(val_str, utc=True)
+                        return dt.tz_convert(tz).tz_localize(None).floor('s')
+                    except:
+                        return pd.NaT
+                
+                df[c] = df[c].apply(parse_ts)
 
     st.write(matches_df)
     # comments (messages tied to like_id)
