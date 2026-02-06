@@ -95,20 +95,20 @@ def like_events_df(user_id, tz="America/Toronto"):
     st.write(matches_df)
     for df in [likes_df, messages_df, matches_df, blocks_df]:
         for c in df.columns:
+            if c.endswith("_timestamp") and df[c].dtype == 'object':
+                df[c] = df[c].str.replace(r'(\+\d{2}):(\d{2})$', r'\1\2', regex=True)
+    
+    # Then process
+    for df in [likes_df, messages_df, matches_df, blocks_df]:
+        for c in df.columns:
             if c.endswith("_timestamp"):
-                # Fix malformed timezone format
-                if df[c].dtype == 'object':
-                    df[c] = df[c].str.replace(r'(\+\d{2}):(\d{2})$', r'\1\2', regex=True)
-                
                 s = pd.to_datetime(df[c], errors="coerce", utc=True)
     
-                # make everything tz-aware in UTC
                 if getattr(s.dt, "tz", None) is None:
                     s = s.dt.tz_localize("UTC")
                 else:
                     s = s.dt.tz_convert("UTC")
     
-                # then convert to local naive + floor
                 df[c] = s.dt.tz_convert(tz).dt.tz_localize(None).dt.floor("s")
 
     st.write(matches_df)
