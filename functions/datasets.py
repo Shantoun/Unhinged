@@ -77,6 +77,7 @@ def like_events_df(user_id, tz="America/Toronto"):
         supabase.table(var.table_blocks).select("*").eq(var.col_user_id, user_id).execute().data or []
     )
 
+    st.write(matches_df)
     # timestamps (parse only; tz handled after concat)
     for df in [likes_df, messages_df, matches_df, blocks_df]:
         for c in df.columns:
