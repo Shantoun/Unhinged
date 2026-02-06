@@ -1,3 +1,4 @@
+
 from functions.authentification import supabase
 import streamlit as st
 import functions.authentification as auth
@@ -421,7 +422,7 @@ if user_id:
         
         engagements = ds.like_events_df(user_id, tz)
  
-        
+
         st.title("Unhinged")
         
         tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs([var.tab_engagement_funnel, var.tab_engagement_over_time, var.tab_outbound_timing, var.tab_drivers, var.tab_subscriptions, var.tab_distribution])
@@ -721,9 +722,9 @@ if user_id:
             )
     
             st.plotly_chart(fig_box_messaging_duration, width="stretch")
-      
+    
             
-            mean_like_match_delay = int(engagements[var.col_like_match_delay].dropna().mean() or 0)
+            mean_messaging_number = int(engagements[var.col_conversation_message_count].mean())
             fig_box_messaging_number = viz.horizontal_boxplot(
                 engagements[var.col_conversation_message_count],
                 title="Messages per Session - Mean: {:,} Messages".format(mean_messaging_number),
@@ -733,9 +734,8 @@ if user_id:
             
             st.plotly_chart(fig_box_messaging_number, width="stretch")
 
-
-            
-            mean_like_match_delay = int(engagements[var.col_like_match_delay].dropna().mean())
+    
+            mean_like_match_delay = int(engagements[var.col_like_match_delay].mean())
             fig_like_match_delay = viz.horizontal_boxplot(
                 engagements[var.col_like_match_delay],
                 title="Like to Match Time - Mean: {:,} Minutes".format(mean_like_match_delay),
@@ -866,8 +866,3 @@ else:
         
         - Timestamps do not include timezone information, so it is not possible to know whether messages were sent while either person was in a different timezone.
     """)
-
-
-
-
-
