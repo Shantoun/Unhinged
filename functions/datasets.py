@@ -81,11 +81,11 @@ def like_events_df(user_id, tz="America/Toronto"):
 
     st.write(matches_df)
     # timestamps (parse only; tz handled after concat)
-    for df in [likes_df, messages_df, matches_df, blocks_df]:
-        for c in df.columns:
-            if c.endswith("_timestamp"):
-                s = pd.to_datetime(df[c].astype("string"), errors="coerce", utc=True)
-                df[c] = s.dt.tz_convert(tz).dt.tz_localize(None).dt.floor("s")
+    # for df in [likes_df, messages_df, matches_df, blocks_df]:
+    #     for c in df.columns:
+    #         if c.endswith("_timestamp"):
+    #             s = pd.to_datetime(df[c].astype("string"), errors="coerce", utc=True)
+    #             df[c] = s.dt.tz_convert(tz).dt.tz_localize(None).dt.floor("s")
 
     st.write(matches_df)
     # comments (messages tied to like_id)
