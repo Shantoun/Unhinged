@@ -80,7 +80,17 @@ def like_events_df(user_id, tz="America/Toronto"):
     )
 
 
+    st.write("Sample match_timestamp values after regex fix:")
+    st.write(matches_df['match_timestamp'].head(20).tolist())
     
+    st.write("\nTrying manual parse on first value:")
+    test_val = matches_df['match_timestamp'].iloc[0]
+    st.write(f"Value: {test_val}")
+    try:
+        parsed = pd.to_datetime(test_val, utc=True)
+        st.write(f"Parsed successfully: {parsed}")
+    except Exception as e:
+        st.write(f"Error: {e}")    
         
     st.write(matches_df)
     for df in [likes_df, messages_df, matches_df, blocks_df]:
