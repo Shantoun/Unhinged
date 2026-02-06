@@ -421,7 +421,8 @@ if user_id:
         
         engagements = ds.like_events_df(user_id, tz)
  
-
+        st.write(engagements)
+        
         st.title("Unhinged")
         
         tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs([var.tab_engagement_funnel, var.tab_engagement_over_time, var.tab_outbound_timing, var.tab_drivers, var.tab_subscriptions, var.tab_distribution])
@@ -721,9 +722,7 @@ if user_id:
             )
     
             st.plotly_chart(fig_box_messaging_duration, width="stretch")
-
-            st.write(engagements[var.col_like_match_delay])
-            st.write(engagements[var.col_like_match_delay].mean())            
+      
             
             # mean_like_match_delay = int(engagements[var.col_like_match_delay].dropna().mean() or 0)
             # fig_box_messaging_number = viz.horizontal_boxplot(
