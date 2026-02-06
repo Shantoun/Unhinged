@@ -3,7 +3,6 @@ from functions.authentification import supabase
 import variables as var
 import numpy as np
 
-import streamlit as st
 
 def _dedupe_keep_best(df):
     # priority (best first):
@@ -155,7 +154,6 @@ def like_events_df(user_id, tz="America/Toronto"):
         [var.col_match_id, var.col_match_timestamp, var.col_we_met, var.col_my_type, var.col_we_met_timestamp]
     ].copy()
 
-    st.write(matches_sub)
     # sent likes
     sent = likes_df.copy()
     sent = sent.merge(comments, on=var.col_like_id, how="left")
