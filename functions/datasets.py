@@ -163,9 +163,11 @@ def like_events_df(user_id, tz="America/Toronto"):
 
     # TZ CONVERSION (UTC -> tz, then drop tz info; do upstream once)
     def _to_local_naive(s):
-        s = pd.to_datetime(s, utc=True, errors="coerce")
+        s = pd.to_datetime(s, errors="coerce")
+        if s.dt.tz is None:
+            s = s.dt.tz_localize("UTC")
         return s.dt.tz_convert(tz).dt.tz_localize(None)
-
+        
     for c in base_df.columns:
         if c.endswith("_timestamp"):
             base_df[c] = _to_local_naive(base_df[c])
