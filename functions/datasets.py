@@ -87,6 +87,7 @@ def like_events_df(user_id, tz="America/Toronto"):
                 s = pd.to_datetime(df[c].astype("string"), errors="coerce", utc=True)
                 df[c] = s.dt.tz_convert(tz).dt.tz_localize(None).dt.floor("s")
 
+    st.write(matches_df)
     # comments (messages tied to like_id)
     comments = (
         messages_df.dropna(subset=[var.col_like_id])[[var.col_message_id, var.col_like_id]]
