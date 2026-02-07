@@ -6,6 +6,8 @@ from functions.zip_uploader import uploader
 from functions.supabase_ingest import delete_my_data
 import variables as var
 
+import functions.filter as filter
+
 import pandas as pd
 import plotly.graph_objects as go
 import plotly.express as px
@@ -421,9 +423,16 @@ if user_id:
         
         
         engagements = ds.like_events_df(user_id, tz)
+
+
+        
+        st.write(engagements)
  
 
         st.title("Unhinged")
+
+        engagements, filter_text = filter.date_filter_ui(engagements, date_col=, key="my_filter")
+        st.caption(filter_text)       
         
         tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs([var.tab_engagement_funnel, var.tab_engagement_over_time, var.tab_outbound_timing, var.tab_drivers, var.tab_subscriptions, var.tab_distribution])
 
