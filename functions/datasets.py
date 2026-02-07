@@ -63,7 +63,7 @@ def _dedupe_keep_best(df):
 
 
 
-
+@st.cache_data
 def like_events_df(user_id, tz="America/Toronto"):
     likes_df = pd.DataFrame(
         supabase.table(var.table_likes).select("*").eq(var.col_user_id, user_id).execute().data or []
