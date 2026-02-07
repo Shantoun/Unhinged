@@ -431,7 +431,7 @@ if user_id:
 
         st.title("Unhinged")
 
-        engagements, filter_text = filter.date_filter_ui(engagements, date_col=var.col_match_timestamp, key="my_filter")
+        engagements, filter_text = filter.filter_ui(engagements, filterable_columns=[var.col_match_timestamp], key="my_filter", layout="row")
         st.caption(filter_text)       
         
         tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs([var.tab_engagement_funnel, var.tab_engagement_over_time, var.tab_outbound_timing, var.tab_drivers, var.tab_subscriptions, var.tab_distribution])
