@@ -235,12 +235,13 @@ def add_filter(column, operator, value, key, df):
             value = value[0]
 
         if col_type == "Date":
-            parsed = parse_date(value)
-            if isinstance(parsed, pd.Timestamp) and not pd.isna(parsed):
-                value = parsed
-            else:
-                st.toast(f"'{column}' filter ignored (invalid date)", icon="⚠️")
-                return
+            if not isinstance(value, (pd.Timestamp, type(pd.Timestamp.now().date()))):
+                parsed = parse_date(value)
+                if isinstance(parsed, pd.Timestamp) and not pd.isna(parsed):
+                    value = parsed
+                else:
+                    st.toast(f"'{column}' filter ignored (invalid date)", icon="⚠️")
+                    return
 
         elif col_type == "Numeric":
             try:
