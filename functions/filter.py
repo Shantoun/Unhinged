@@ -7,7 +7,7 @@ from dateutil.relativedelta import relativedelta
 
 
 ######################################## Date Input Widget
-def date_value_input(df, date_col, operator, slot, allow_future=False):
+def date_value_input(df, date_col, operator, allow_future=False, key_suffix=""):
     """
     Render the appropriate input widget for date filtering based on operator type.
     
@@ -15,74 +15,73 @@ def date_value_input(df, date_col, operator, slot, allow_future=False):
         df: DataFrame containing the date column
         date_col: Name of the date column to filter
         operator: Filter operator (Between, Window, or single date operators)
-        slot: Streamlit container to render the widget in
         allow_future: Whether to allow future date windows
+        key_suffix: Additional suffix for widget keys to avoid conflicts
         
     Returns:
         The selected date value(s)
     """
-    with slot:
-        # ---- Between ----
-        if operator == "Between":
-            if not df[date_col].isna().all():
-                min_date = pd.to_datetime(df[date_col].min(), errors="coerce")
-                max_date = pd.to_datetime(df[date_col].max(), errors="coerce")
-                default_range = (min_date.date(), max_date.date())
-            else:
-                default_range = (None, None)
-
-            date_range = st.date_input(
-                "Select date range",
-                value=default_range,
-                label_visibility="hidden",
-                key=f"date_between_{date_col}",
-            )
-            if isinstance(date_range, (list, tuple)) and len(date_range) == 2:
-                vmin, vmax = date_range
-            else:
-                vmin = vmax = date_range
-            return (vmin, vmax)
-
-        # ---- Window ----
-        elif operator == "Window":
-            options = [
-                "today", "yesterday", "this week", "last week",
-                "this month", "last month", "this quarter", "last quarter",
-                "this year", "last year", "last 7 days", "last 30 days", "last 90 days",
-            ]
-            if allow_future:
-                options += [
-                    "next week", "next month", "next quarter", "next year",
-                    "next 30 days", "next 90 days",
-                ]
-            val = st.multiselect(
-                "Select or type window",
-                options=options,
-                default=None,
-                accept_new_options=True,
-                label_visibility="hidden",
-                key=f"window_{date_col}",
-                placeholder="Type 'last x days' or pick preset",
-                help="You can type custom windows like 'last 2 quarters'.",
-            )
-            if val:
-                val = [v.strip().lower() for v in val]
-            return val
-
-        # ---- Single Date ----
+    # ---- Between ----
+    if operator == "Between":
+        if not df[date_col].isna().all():
+            min_date = pd.to_datetime(df[date_col].min(), errors="coerce")
+            max_date = pd.to_datetime(df[date_col].max(), errors="coerce")
+            default_range = (min_date.date(), max_date.date())
         else:
-            if not df[date_col].isna().all():
-                default_date = pd.to_datetime(df[date_col].max(), errors="coerce").date()
-            else:
-                default_date = None
+            default_range = (None, None)
 
-            val = st.date_input(
-                "Select date",
-                value=default_date,
-                label_visibility="hidden",
-                key=f"date_single_{date_col}",
-            )
-            return val
+        date_range = st.date_input(
+            "Select date range",
+            value=default_range,
+            label_visibility="hidden",
+            key=f"date_between_{date_col}{key_suffix}",
+        )
+        if isinstance(date_range, (list, tuple)) and len(date_range) == 2:
+            vmin, vmax = date_range
+        else:
+            vmin = vmax = date_range
+        return (vmin, vmax)
+
+    # ---- Window ----
+    elif operator == "Window":
+        options = [
+            "today", "yesterday", "this week", "last week",
+            "this month", "last month", "this quarter", "last quarter",
+            "this year", "last year", "last 7 days", "last 30 days", "last 90 days",
+        ]
+        if allow_future:
+            options += [
+                "next week", "next month", "next quarter", "next year",
+                "next 30 days", "next 90 days",
+            ]
+        val = st.multiselect(
+            "Select or type window",
+            options=options,
+            default=None,
+            accept_new_options=True,
+            label_visibility="hidden",
+            key=f"window_{date_col}{key_suffix}",
+            placeholder="Type 'last x days' or pick preset",
+            help="You can type custom windows like 'last 2 quarters'.",
+        )
+        if val:
+            val = [v.strip().lower() for v in val]
+        return val
+
+    # ---- Single Date ----
+    else:
+        if not df[date_col].isna().all():
+            default_date = pd.to_datetime(df[date_col].max(), errors="coerce").date()
+        else:
+            default_date = None
+
+        val = st.date_input(
+            "Select date",
+            value=default_date,
+            label_visibility="hidden",
+            key=f"date_single_{date_col}{key_suffix}",
+        )
+        return val
 
 
 ######################################## Add Date Filter
@@ -421,10 +420,12 @@ def date_filter_ui(df, date_col, operators=None, allow_future=False, key="date_f
                     key=f"{key}_op_row"
                 )
 
-            value = date_value_input(
-                df, date_col, operator, value_select,
-                allow_future=allow_future
-            )
+            with value_select:
+                value = date_value_input(
+                    df, date_col, operator,
+                    allow_future=allow_future,
+                    key_suffix=f"_{key}"
+                )
         else:
             operator = st.selectbox(
                 "Date Operator",
@@ -432,8 +433,9 @@ def date_filter_ui(df, date_col, operators=None, allow_future=False, key="date_f
                 key=f"{key}_op_col"
             )
             value = date_value_input(
-                df, date_col, operator, st.container(),
-                allow_future=allow_future
+                df, date_col, operator,
+                allow_future=allow_future,
+                key_suffix=f"_{key}"
             )
 
         # Action buttons (form submit buttons)
