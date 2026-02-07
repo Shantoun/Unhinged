@@ -390,7 +390,7 @@ def apply_date_filters(df, date_col, key):
 ######################################## Date Filter UI
 def date_filter_ui(df, date_col, operators=None, allow_future=False, key="date_filter", layout="row"):
     """
-    Create a date filter UI with operator and value selection.
+    Create a date filter UI with operator and value selection wrapped in a form.
     
     Args:
         df: DataFrame to filter
@@ -410,10 +410,8 @@ def date_filter_ui(df, date_col, operators=None, allow_future=False, key="date_f
     if operators is None:
         operators = ["Between", "Window", "=", "≥", "≤", "≠"]
 
-    placeholder = st.container()
-
-    if layout == "row":
-        with placeholder:
+    with st.form(key=f"{key}_form"):
+        if layout == "row":
             operator_select, value_select = st.columns([1, 2])
             
             with operator_select:
@@ -427,8 +425,7 @@ def date_filter_ui(df, date_col, operators=None, allow_future=False, key="date_f
                 df, date_col, operator, value_select,
                 allow_future=allow_future
             )
-    else:
-        with placeholder:
+        else:
             operator = st.selectbox(
                 "Date Operator",
                 operators,
@@ -439,13 +436,14 @@ def date_filter_ui(df, date_col, operators=None, allow_future=False, key="date_f
                 allow_future=allow_future
             )
 
-    # Action buttons
-    b1, b2 = st.columns(2)
-    with b1:
-        clear_clicked = st.button("Clear All", use_container_width=True, key=f"{key}_clear")
-    with b2:
-        commit_clicked = st.button("Commit", type="primary", use_container_width=True, key=f"{key}_commit")
+        # Action buttons (form submit buttons)
+        b1, b2 = st.columns(2)
+        with b1:
+            clear_clicked = st.form_submit_button("Clear All", use_container_width=True)
+        with b2:
+            commit_clicked = st.form_submit_button("Apply Filter", type="primary", use_container_width=True)
 
+    # Handle form submissions
     if commit_clicked:
         add_date_filter(date_col, operator, value, key)
     if clear_clicked:
