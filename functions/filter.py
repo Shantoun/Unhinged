@@ -7,6 +7,11 @@ from dateutil.relativedelta import relativedelta
 import re
 
 
+operators_numeric = ['=', '≠', '≥', '≤', 'Between']
+operators_text = ['=', '≠', 'Contains', 'Doesn\'t Contain', 'Starts with', 'Ends with']
+operators_date = ['Window', '=', '≥', '≤', 'Between']
+
+color_dot_separator = '#C23331'
 
 ######################################## detect column type
 def detect_column_type(df, col, return_type="operator"):
@@ -24,9 +29,9 @@ def detect_column_type(df, col, return_type="operator"):
             col_type = "text"
 
     mapping = {
-        "numeric": {"operators": var.operators_numeric, "label": "Numeric"},
-        "date": {"operators": var.operators_date, "label": "Date"},
-        "text": {"operators": var.operators_text, "label": "Text"},
+        "numeric": {"operators": operators_numeric, "label": "Numeric"},
+        "date": {"operators": operators_date, "label": "Date"},
+        "text": {"operators": operators_text, "label": "Text"},
     }
 
     if return_type == "operator":
@@ -568,50 +573,6 @@ def apply_filters(df, key):
         except Exception:
             return filtered_df.iloc[0:0]
 
-
-    
-    # ---------- Relationship logic ----------
-    rel_filters = [
-        f for f in st.session_state.get(f"filters_{key}", [])
-        if f["column"] == "Relationship"
-    ]
-
-    if rel_filters:
-        f = rel_filters[-1]
-        include_winback = f.get("include_winback", False)
-        winback_days = f.get("winback_days", 90) or 90
-        selection = f["value"]
-
-        if "full_df" in st.session_state:
-            full_df = st.session_state["full_df"]
-            date_col = var.date
-            account_col = var.account_id
-
-            full_df[date_col] = pd.to_datetime(full_df[date_col], errors="coerce")
-            filtered_df[date_col] = pd.to_datetime(filtered_df[date_col], errors="coerce")
-            min_date = filtered_df[date_col].min()
-
-            first_seen = full_df.groupby(account_col)[date_col].min()
-            last_seen_before = (
-                full_df[full_df[date_col] < min_date]
-                .groupby(account_col)[date_col]
-                .max()
-            )
-
-            def classify(acc):
-                if acc not in first_seen:
-                    return "Unknown"
-                if first_seen[acc] >= min_date:
-                    return var.new
-                if include_winback and acc in last_seen_before:
-                    gap = (min_date - last_seen_before[acc]).days
-                    if gap >= winback_days:
-                        return var.winback
-                return var.existing
-
-            filtered_df[var.relationship] = filtered_df[account_col].map(classify)
-            filtered_df = filtered_df[filtered_df[var.relationship].isin(selection)]
-
     return filtered_df.copy()
 
 
@@ -675,7 +636,7 @@ def filter_ui(df, filterable_columns, allow_future_windows=False, key=None, layo
     filtered_df = apply_filters(df, key)
     applied = [f"{f['column']} {f['operator']} {f['value']}" for f in st.session_state[key_name]]
     filter_text = (
-        f" <span style='color:{var.color_dot_separator}'>•</span> ".join(applied)
+        f" <span style='color:{color_dot_separator}'>•</span> ".join(applied)
         if applied else "No filters applied"
     )
     return filtered_df, filter_text
@@ -722,7 +683,7 @@ def apply_date_filters(df, key, date_col):
     full_list = st.session_state.get(key_name, [])
     date_filters = [f for f in full_list if f.get("column") == date_col]
     
-    if not date_filters:
+    if not date_date_filters:
         return df
     
     # use a temp key so we don't overwrite the real filters
