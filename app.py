@@ -547,7 +547,7 @@ if user_id:
         
             engagements_over_time = ds.events_over_time_df(engagements_copy, min_messages=convo_min_messages, min_minutes=convo_min_mins, join_comments_and_likes_sent=join_likes_comments, use_like_timestamp=use_like_time)
 
-            ts_col_name = "Like Timestamp" if use_like_timestamp else "Event Timestamp"
+            ts_col_name = "Like Timestamp" if use_like_time else "Event Timestamp"
             
             engagements_over_time_filtered = filter.apply_date_filters(other_dataset, key="my_filter", date_col=ts_col_name)
             
