@@ -1004,7 +1004,7 @@ if user_id:
         
         with tab6:
             if filter_text:
-                st.caption(prettify_filter_text (filter_text))
+                st.caption(prettify_filter_text(filter_text))
             st.header(var.tab_distribution)
             st.caption("**Shows how different metrics are spread out using box plots**")
             st.divider()
@@ -1016,37 +1016,34 @@ if user_id:
                     engagements[var.col_conversation_span_minutes],
                     title="Messaging Duration - Mean: {:,} Minutes".format(mean_messaging_duration)
                 )
-                
                 st.plotly_chart(fig_box_messaging_duration, width="stretch")
             else:
                 st.info("No messaging data available for the selected date range")
-    
-            st.plotly_chart(fig_box_messaging_duration, width="stretch")
-    
-            
-            mean_messaging_number = int(engagements[var.col_conversation_message_count].mean())
-            fig_box_messaging_number = viz.horizontal_boxplot(
-                engagements[var.col_conversation_message_count],
-                title="Messages per Session - Mean: {:,} Messages".format(mean_messaging_number),
-                color = "#EF553B",
-                trace_name="Messages"
-            )
-            
-            st.plotly_chart(fig_box_messaging_number, width="stretch")
-
-    
-            mean_like_match_delay = int(engagements[var.col_like_match_delay].mean())
-            fig_like_match_delay = viz.horizontal_boxplot(
-                engagements[var.col_like_match_delay],
-                title="Like to Match Time - Mean: {:,} Minutes".format(mean_like_match_delay),
-                color = "#00CC96",
-                trace_name="Minutes"
-            )
-    
-            st.plotly_chart(fig_like_match_delay, width="stretch")
-
-
-
+        
+            if not engagements.empty and engagements[var.col_conversation_message_count].notna().any():
+                mean_messaging_number = int(engagements[var.col_conversation_message_count].mean())
+                fig_box_messaging_number = viz.horizontal_boxplot(
+                    engagements[var.col_conversation_message_count],
+                    title="Messages per Session - Mean: {:,} Messages".format(mean_messaging_number),
+                    color="#EF553B",
+                    trace_name="Messages"
+                )
+                st.plotly_chart(fig_box_messaging_number, width="stretch")
+            else:
+                st.info("No message count data available for the selected date range")
+        
+            if not engagements.empty and engagements[var.col_like_match_delay].notna().any():
+                mean_like_match_delay = int(engagements[var.col_like_match_delay].mean())
+                fig_like_match_delay = viz.horizontal_boxplot(
+                    engagements[var.col_like_match_delay],
+                    title="Like to Match Time - Mean: {:,} Minutes".format(mean_like_match_delay),
+                    color="#00CC96",
+                    trace_name="Minutes"
+                )
+                st.plotly_chart(fig_like_match_delay, width="stretch")
+            else:
+                st.info("No like-to-match data available for the selected date range")
+        
             with st.expander("View as data"):
                 df_message_durations = pd.DataFrame(
                     {"Minutes": [engagements[var.col_conversation_span_minutes].dropna().tolist()]},
