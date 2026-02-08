@@ -362,6 +362,7 @@ def subscriptions_ingest(json_data, user_id):
             var.col_subscription_price:    s.get(var.json_sub_price),
             var.col_subscription_currency: s.get(var.json_sub_currency),
             var.col_subscription_type:     s.get(var.json_sub_type),
+            var.col_subscription_duration: s.get(var.json_subscription_duration),
             var.col_user_id:               user_id,
         })
 
