@@ -485,7 +485,7 @@ if user_id:
 
         
         with date_filter.expander(":material/filter_alt: Date", expanded=True):
-            engagements, filter_text = filter.filter_ui(engagements, filterable_columns=[var.col_like_timestamp], key="my_filter", layout="column")
+            engagements, filter_text = filter.filter_ui(engagements, filterable_columns=[var.col_like_timestamp], key="my_filter", layout="column", user_id=user_id)
 
         
              
