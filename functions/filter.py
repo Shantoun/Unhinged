@@ -5,7 +5,7 @@ import variables as var
 from datetime import timedelta
 from dateutil.relativedelta import relativedelta
 import re
-
+from forex_python.converter import CurrencyRates
 
 operators_numeric = ['=', '≠', '≥', '≤', 'Between']
 operators_text = ['=', '≠', 'Contains', 'Doesn\'t Contain', 'Starts with', 'Ends with']
@@ -617,38 +617,95 @@ def filter_ui(df, filterable_columns, allow_future_windows=False, key=None, layo
     subscription_ranges = None
     if user_id:
         from functions.authentification import supabase
+        import forex_python.converter as fx
+        
         subs_df = pd.DataFrame(
             supabase.table(var.table_subscriptions).select("*").eq(var.col_user_id, user_id).execute().data or []
         )
+        
         if not subs_df.empty:
-            # Build display dataframe
-            def build_name(row):
-                if pd.notna(row.get('tag')) and row.get('tag'):
-                    return row['tag']
-                currency = row.get('currency', '')
-                price = row.get('price', '')
-                duration = row.get('subscription_duration', '')
-                return f"{currency} {price} - {duration}"
-            
             subs_df['start_timestamp'] = pd.to_datetime(subs_df['start_timestamp'], errors='coerce')
             subs_df['end_timestamp'] = pd.to_datetime(subs_df['end_timestamp'], errors='coerce')
+            subs_df = subs_df.sort_values('start_timestamp')
             
+            # Group renewals (only for rows with no tag)
+            grouped_rows = []
+            
+            for idx, row in subs_df.iterrows():
+                # If has tag, don't group - add as-is
+                if pd.notna(row.get('tag')) and row.get('tag'):
+                    grouped_rows.append({
+                        'name': row['tag'],
+                        'start': row['start_timestamp'],
+                        'end': row['end_timestamp'],
+                        'currency': row.get('currency'),
+                        'price': row.get('price')
+                    })
+                    continue
+                
+                # Check if this should merge with previous group
+                if (grouped_rows and 
+                    not grouped_rows[-1].get('is_tagged') and
+                    grouped_rows[-1]['end'] == row['start_timestamp'] and
+                    grouped_rows[-1].get('duration') == row.get('subscription_duration')):
+                    
+                    # Merge with previous
+                    prev = grouped_rows[-1]
+                    
+                    # Convert currencies if needed
+                    prev_price = prev['price']
+                    curr_price = row.get('price', 0)
+                    prev_currency = prev['currency']
+                    curr_currency = row.get('currency')
+                    
+                    # Use latest currency as target
+                    target_currency = curr_currency
+                    
+                    if prev_currency != target_currency:
+                        try:
+                            c = CurrencyRates()
+                            prev_price = c.convert(prev_currency, target_currency, prev_price)
+                        except:
+                            # If conversion fails, just use original values
+                            pass
+                    
+                    # Average the prices
+                    count = prev.get('count', 1)
+                    new_avg = ((prev_price * count) + curr_price) / (count + 1)
+                    
+                    prev['end'] = row['end_timestamp']
+                    prev['price'] = new_avg
+                    prev['currency'] = target_currency
+                    prev['count'] = count + 1
+                    
+                else:
+                    # New group
+                    grouped_rows.append({
+                        'name': f"{row.get('currency')} {row.get('price')} - {row.get('subscription_duration')}",
+                        'start': row['start_timestamp'],
+                        'end': row['end_timestamp'],
+                        'currency': row.get('currency'),
+                        'price': row.get('price'),
+                        'duration': row.get('subscription_duration'),
+                        'count': 1,
+                        'is_tagged': False
+                    })
+            
+            # Build display dataframe
             subscription_ranges = pd.DataFrame({
-                'Name': subs_df.apply(build_name, axis=1),
-                'Start': subs_df['start_timestamp'].dt.strftime('%b %d, %Y'),
-                'End': subs_df['end_timestamp'].dt.strftime('%b %d, %Y'),
-                '_start_ts': subs_df['start_timestamp'],  # hidden columns for filtering
-                '_end_ts': subs_df['end_timestamp']
+                'Name': [r['name'] for r in grouped_rows],
+                'Start': [r['start'].strftime('%b %d, %Y') for r in grouped_rows],
+                'End': [r['end'].strftime('%b %d, %Y') for r in grouped_rows],
+                '_start_ts': [r['start'] for r in grouped_rows],
+                '_end_ts': [r['end'] for r in grouped_rows]
             })
     
     # Tab selection (only show if we have subscription ranges)
     if subscription_ranges is not None:
         tab1, tab2 = st.tabs(["Ranges", "Filter"])
-        active_tab = 0 if st.session_state.get(f"{key}_active_tab", 0) == 0 else 1
     else:
         tab1 = st.container()
         tab2 = None
-        active_tab = 1  # force filter mode if no ranges
     
     # ========== RANGES TAB ==========
     if subscription_ranges is not None:
@@ -759,6 +816,7 @@ def filter_ui(df, filterable_columns, allow_future_windows=False, key=None, layo
             filter_text = None
     
     return filtered_df, filter_text
+
 
 ######################################## get_window_selected
 def get_window_selected(key):
