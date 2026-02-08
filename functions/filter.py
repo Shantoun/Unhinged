@@ -290,7 +290,7 @@ def add_filter(column, operator, value, key, df):
 
 
 ######################################## apply_filters
-pythondef apply_filters(df, key):
+def apply_filters(df, key):
     key_name = f"filters_{key}"
     if key_name not in st.session_state or not st.session_state[key_name]:
         return df
