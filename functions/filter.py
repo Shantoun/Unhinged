@@ -328,9 +328,20 @@ def apply_filters(df, key):
                     if end_ts.tz is not None:
                         end_ts = end_ts.tz_localize(None)
                 
-                if not pd.isna(start_ts) and not pd.isna(end_ts):
+                # Handle missing dates
+                if pd.isna(start_ts) and pd.isna(end_ts):
+                    continue  # skip if both are missing
+                elif pd.isna(start_ts):
+                    # No start date = less than or equal to end
+                    cond = filtered_df[col] <= end_ts
+                elif pd.isna(end_ts):
+                    # No end date = greater than or equal to start
+                    cond = filtered_df[col] >= start_ts
+                else:
+                    # Both dates present = between
                     cond = (filtered_df[col] >= start_ts) & (filtered_df[col] <= end_ts)
-                    mask |= cond
+                
+                mask |= cond
             
             filtered_df = filtered_df[mask]
             continue
