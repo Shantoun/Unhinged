@@ -694,8 +694,8 @@ def filter_ui(df, filterable_columns, allow_future_windows=False, key=None, layo
             # Build display dataframe
             subscription_ranges = pd.DataFrame({
                 'Name': [r['name'] for r in grouped_rows],
-                'Start': [r['start'].strftime('%b %d, %Y') for r in grouped_rows],
-                'End': [r['end'].strftime('%b %d, %Y') for r in grouped_rows],
+                'Start': [r['start'].strftime('%b %d, %Y') if pd.notna(r['start']) else '' for r in grouped_rows],
+                'End': [r['end'].strftime('%b %d, %Y') if pd.notna(r['end']) else '' for r in grouped_rows],
                 '_start_ts': [r['start'] for r in grouped_rows],
                 '_end_ts': [r['end'] for r in grouped_rows]
             })
