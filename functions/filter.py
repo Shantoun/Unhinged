@@ -592,7 +592,7 @@ def filter_ui(df, filterable_columns, allow_future_windows=False, key=None, layo
             operator_select, value_select = st.columns(2)
             
             if df[filter_col].dropna().empty:
-                return df, "No filters applied"
+                return df, None
 
             operators = detect_column_type(df, filter_col)
             col_type = detect_column_type(df, filter_col, "label")
@@ -610,7 +610,7 @@ def filter_ui(df, filterable_columns, allow_future_windows=False, key=None, layo
             filter_col = filterable_columns[0]
         
             if df[filter_col].dropna().empty:
-                return df, "No filters applied"
+                return df, None
             operators = detect_column_type(df, filter_col)
             col_type = detect_column_type(df, filter_col, "label")
             operator = st.selectbox("Operator", operators, key=f"{key}_op_col", label_visibility="hidden")
@@ -640,7 +640,7 @@ def filter_ui(df, filterable_columns, allow_future_windows=False, key=None, layo
         f = st.session_state[key_name][0]
         filter_text = f"{f['column']} {f['operator']} {f['value']}"
     else:
-        filter_text = "No filters applied"
+        filter_text = None
     
     return filtered_df, filter_text
 
