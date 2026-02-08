@@ -190,16 +190,14 @@ def value_input(df, filter_col, operator, slot, allow_future=False, layout="row"
 
 
 
-######################################## add_filter
+######################################## add_filter (OVERWRITES NOW)
 def add_filter(column, operator, value, key, df):
     key_name = f"filters_{key}"
-    if key_name not in st.session_state:
-        st.session_state[key_name] = []
-
+    
     def parse_date(v):
         if isinstance(v, (list, tuple)):
             return [parse_date(x) for x in v]
-        if isinstance(v, (pd.Timestamp, type(pd.Timestamp.now().date))):
+        if isinstance(v, (pd.Timestamp, type(pd.Timestamp.now().date()))):
             return pd.to_datetime(v, errors="coerce")
         if isinstance(v, str):
             v = v.strip().replace("/", "-")
@@ -283,9 +281,10 @@ def add_filter(column, operator, value, key, df):
             st.toast(f"'{column}' filter ignored (unrecognized window)", icon="⚠️")
             return
 
-    st.session_state[key_name].append(
+    # OVERWRITE - only keep the latest filter
+    st.session_state[key_name] = [
         {"column": column, "operator": operator, "value": value}
-    )
+    ]
 
 
 
@@ -601,7 +600,7 @@ def filter_ui(df, filterable_columns, allow_future_windows=False, key=None, layo
             with operator_select:
                 operator = st.selectbox("Operator", operators, key=f"{key}_op_row", label_visibility="hidden")
 
-            from functions.filter import value_input  # ensure dependency stays in sync
+            from functions.filter import value_input
             value = value_input(
                 df, filter_col, operator, value_select,
                 allow_future=allow_future_windows if col_type == "Date" else False,
@@ -635,11 +634,14 @@ def filter_ui(df, filterable_columns, allow_future_windows=False, key=None, layo
 
     from functions.filter import apply_filters
     filtered_df = apply_filters(df, key)
-    applied = [f"{f['column']} {f['operator']} {f['value']}" for f in st.session_state[key_name]]
-    filter_text = (
-        f" <span style='color:{color_dot_separator}'>•</span> ".join(applied)
-        if applied else "No filters applied"
-    )
+    
+    # Show only the single active filter
+    if st.session_state[key_name]:
+        f = st.session_state[key_name][0]
+        filter_text = f"{f['column']} {f['operator']} {f['value']}"
+    else:
+        filter_text = "No filters applied"
+    
     return filtered_df, filter_text
 
 
@@ -684,7 +686,7 @@ def apply_date_filters(df, key, date_col):
     full_list = st.session_state.get(key_name, [])
     date_filters = [f for f in full_list if f.get("column") == date_col]
     
-    if not date_date_filters:
+    if not date_filters:
         return df
     
     # use a temp key so we don't overwrite the real filters
