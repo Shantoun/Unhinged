@@ -1,4 +1,3 @@
-
 from functions.authentification import supabase
 import streamlit as st
 import functions.authentification as auth
@@ -256,7 +255,7 @@ if user_id:
                             "Group": ["North", "North", "South", "South"],
                         }
                     )
-                    st.dataframe(df_demo, use_container_width=True, hide_index=True)
+                    st.dataframe(df_demo, width="stretch", hide_index=True)
         
                 # -------------------- TAB 2: PLOTLY --------------------
                 with tab_plotly:
