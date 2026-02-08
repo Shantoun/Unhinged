@@ -1010,11 +1010,16 @@ if user_id:
             st.divider()
             st.markdown(help_guide_direct_w_box, unsafe_allow_html=True)
             
-            mean_messaging_duration = int(engagements[var.col_conversation_span_minutes].mean())
-            fig_box_messaging_duration = viz.horizontal_boxplot(
-                engagements[var.col_conversation_span_minutes],
-                title="Messaging Duration - Mean: {:,} Minutes".format(mean_messaging_duration)
-            )
+            if not engagements.empty and engagements[var.col_conversation_span_minutes].notna().any():
+                mean_messaging_duration = int(engagements[var.col_conversation_span_minutes].mean())
+                fig_box_messaging_duration = viz.horizontal_boxplot(
+                    engagements[var.col_conversation_span_minutes],
+                    title="Messaging Duration - Mean: {:,} Minutes".format(mean_messaging_duration)
+                )
+                
+                st.plotly_chart(fig_box_messaging_duration, width="stretch")
+            else:
+                st.info("No messaging data available for the selected date range")
     
             st.plotly_chart(fig_box_messaging_duration, width="stretch")
     
