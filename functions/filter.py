@@ -707,57 +707,53 @@ def filter_ui(df, filterable_columns, allow_future_windows=False, key=None, layo
                 '_end_ts': [r['end'] for r in grouped_rows]
             })
     
-    # Tab selection (only show if we have subscription ranges)
+    # Mode selection (only show if we have subscription ranges)
     if subscription_ranges is not None:
-        tab1, tab2 = st.tabs(["Ranges", "Filter"])
+        mode = st.radio("Filter Mode", ["Ranges", "Custom Filter"], horizontal=True, key=f"{key}_mode", label_visibility="collapsed")
     else:
-        tab1 = st.container()
-        tab2 = None
+        mode = "Custom Filter"
     
-    # ========== RANGES TAB ==========
-    if subscription_ranges is not None:
-        with tab1:
-            st.dataframe(
-                subscription_ranges[['Name', 'Start', 'End']],
-                use_container_width=True,
-                hide_index=True,
-                on_select="rerun",
-                selection_mode="multi-row",
-                key=f"{key}_range_table"
-            )
+    # ========== RANGES MODE ==========
+    if subscription_ranges is not None and mode == "Ranges":
+        st.dataframe(
+            subscription_ranges[['Name', 'Start', 'End']],
+            use_container_width=True,
+            hide_index=True,
+            on_select="rerun",
+            selection_mode="multi-row",
+            key=f"{key}_range_table"
+        )
+        
+        # Add the same 2-button layout as Filter tab
+        b1, b2 = st.columns(2)
+        with b1:
+            clear_clicked_ranges = st.button("Clear All", use_container_width=True, key=f"{key}_clear_ranges")
+        with b2:
+            commit_clicked_ranges = st.button("Commit", type="primary", use_container_width=True, key=f"{key}_commit_ranges")
+        
+        if commit_clicked_ranges:
+            selected_indices = st.session_state.get(f"{key}_range_table", {}).get("selection", {}).get("rows", [])
             
-            # Add the same 2-button layout as Filter tab
-            b1, b2 = st.columns(2)
-            with b1:
-                clear_clicked_ranges = st.button("Clear All", use_container_width=True, key=f"{key}_clear_ranges")
-            with b2:
-                commit_clicked_ranges = st.button("Commit", type="primary", use_container_width=True, key=f"{key}_commit_ranges")
-            
-            if commit_clicked_ranges:
-                selected_indices = st.session_state.get(f"{key}_range_table", {}).get("selection", {}).get("rows", [])
+            if selected_indices:
+                # Build OR filter from selected ranges
+                filter_col = filterable_columns[0]
+                selected_ranges = subscription_ranges.iloc[selected_indices]
                 
-                if selected_indices:
-                    # Build OR filter from selected ranges
-                    filter_col = filterable_columns[0]
-                    selected_ranges = subscription_ranges.iloc[selected_indices]
-                    
-                    # Store as special "ranges" filter
-                    st.session_state[key_name] = [{
-                        "column": filter_col,
-                        "operator": "Ranges",
-                        "value": selected_ranges[['_start_ts', '_end_ts']].values.tolist(),
-                        "display": selected_ranges['Name'].tolist()
-                    }]
-                else:
-                    st.session_state[key_name] = []
-            
-            if clear_clicked_ranges:
+                # Store as special "ranges" filter
+                st.session_state[key_name] = [{
+                    "column": filter_col,
+                    "operator": "Ranges",
+                    "value": selected_ranges[['_start_ts', '_end_ts']].values.tolist(),
+                    "display": selected_ranges['Name'].tolist()
+                }]
+            else:
                 st.session_state[key_name] = []
+        
+        if clear_clicked_ranges:
+            st.session_state[key_name] = []
     
-    # ========== FILTER TAB ==========
-    filter_tab_container = tab2 if tab2 is not None else tab1
-    
-    with filter_tab_container:
+    # ========== CUSTOM FILTER MODE ==========
+    elif mode == "Custom Filter":
         placeholder = st.container()
         
         if layout == "row":
@@ -833,7 +829,6 @@ def filter_ui(df, filterable_columns, allow_future_windows=False, key=None, layo
             filter_text = None
     
     return filtered_df, filter_text
-
 
 ######################################## get_window_selected
 def get_window_selected(key):
