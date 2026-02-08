@@ -390,7 +390,7 @@ if user_id:
                 user_created = subs_df[has_tag].copy()
                 hinge_subs = subs_df[~has_tag].copy()
                 
-                # Build display dataframe
+                # Build display dataframe - SHOW ALL
                 display_rows = []
                 
                 # Add hinge subscriptions (not selectable)
@@ -415,10 +415,13 @@ if user_id:
                 
                 display_df = pd.DataFrame(display_rows)
                 
-                # Show table
+                # Show ALL ranges, but only make user-created ones selectable
                 if not user_created.empty:
+                    # Show user-created (selectable) with checkboxes
+                    st.markdown("**Your Custom Ranges** (selectable)")
+                    selectable_df = display_df[display_df['selectable']]
                     st.dataframe(
-                        display_df[display_df['selectable']][['Name', 'Start', 'End']],
+                        selectable_df[['Name', 'Start', 'End']],
                         use_container_width=True,
                         hide_index=True,
                         on_select="rerun",
@@ -431,15 +434,25 @@ if user_id:
                         selected_indices = st.session_state.get("manage_ranges_table", {}).get("selection", {}).get("rows", [])
                         
                         if selected_indices:
-                            selectable_df = display_df[display_df['selectable']].reset_index(drop=True)
-                            ids_to_delete = selectable_df.iloc[selected_indices]['subscription_id'].tolist()
+                            ids_to_delete = selectable_df.reset_index(drop=True).iloc[selected_indices]['subscription_id'].tolist()
                             
                             for sub_id in ids_to_delete:
                                 supabase.table(var.table_subscriptions).delete().eq('subscription_id', sub_id).execute()
                             
                             st.success(f"Deleted {len(ids_to_delete)} range(s)")
                             st.rerun()
+                    
+                    # Show hinge subscriptions (read-only) if any exist
+                    if not hinge_subs.empty:
+                        st.divider()
+                        st.markdown("**Hinge Subscriptions** (read-only)")
+                        st.dataframe(
+                            display_df[~display_df['selectable']][['Name', 'Start', 'End']],
+                            use_container_width=True,
+                            hide_index=True
+                        )
                 else:
+                    # No user-created ranges, just show all as read-only
                     st.dataframe(
                         display_df[['Name', 'Start', 'End']],
                         use_container_width=True,
