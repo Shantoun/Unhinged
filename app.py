@@ -550,7 +550,8 @@ if user_id:
             ts_col_name = "Like Timestamp" if use_like_time else "Event Timestamp"
             
             engagements_over_time_filtered = filter.apply_date_filters(engagements_over_time, key="my_filter", date_col=ts_col_name)
-            
+            st.write(engagements_over_time_filtered)
+                
             fig_engagements_over_time, warning, output_df = viz.stacked_events_bar_fig(engagements_over_time_filtered)
             
             if fig_engagements_over_time is not None:
