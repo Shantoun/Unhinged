@@ -399,21 +399,27 @@ def likes_matches_agg(data, by="time", m=100):
             [_DOW_ORDER, _TIME_ORDER],
             names=["day_of_week", "time_bucket"]
         )
-
+    
+        # Add categorical columns to the dataframe temporarily
+        df['_like_day'] = like_day
+        df['_like_time'] = like_time
+        match_df['_match_day'] = match_day
+        match_df['_match_time'] = match_time
+    
         likes = (
-            df.groupby([like_day, like_time], dropna=False)[var.col_like_id]
+            df.groupby(['_like_day', '_like_time'], dropna=False)[var.col_like_id]
               .nunique()
               .reindex(full_index, fill_value=0)
               .rename(var.table_likes)
         )
-
+    
         matches = (
-            match_df.groupby([match_day, match_time], dropna=False)[var.col_match_id]
+            match_df.groupby(['_match_day', '_match_time'], dropna=False)[var.col_match_id]
                     .nunique()
                     .reindex(full_index, fill_value=0)
                     .rename(var.json_matches)
         )
-
+    
         out = pd.concat([likes, matches], axis=1).fillna(0).reset_index()
         out["day_of_week"] = pd.Categorical(out.day_of_week, categories=_DOW_ORDER, ordered=True)
         out["time_bucket"] = pd.Categorical(out.time_bucket, categories=_TIME_ORDER, ordered=True)
