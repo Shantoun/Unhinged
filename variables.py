@@ -52,7 +52,7 @@ json_user_location    = "location"
 json_user_identity    = "identity"
 json_user_profile     = "profile"
 json_user_account     = "account"
-
+json_subscription_duration = "subscription_duration"
 
 ####################################################### Table Names
 table_matches       = "matches"
@@ -77,7 +77,7 @@ col_we_met_timestamp = "we_met_timestamp"
 col_comment_message_id = "comment_message_id"
 col_conversation_span_minutes = "conversation_span_minutes"
 col_first_message_timestamp = "first_message_timestamp"
-
+col_subscription_duration = "subscription_duration"
 
 col_match_timestamp = "match_timestamp"
 
