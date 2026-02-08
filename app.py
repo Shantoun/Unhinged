@@ -30,8 +30,6 @@ def prettify_filter_text(filter_text):
     if not filter_text:
         return filter_text
     
-    import re
-    import pandas as pd
     
     # Replace column name with "Date"
     filter_text = re.sub(r'^[a-z_]+\s+', 'Date ', filter_text)
@@ -670,14 +668,7 @@ if user_id:
                 feedback_dialog()
 
 
-        
 
-
-
-
-
-
-        
 
         
         
@@ -685,13 +676,9 @@ if user_id:
         engagements = ds.like_events_df(user_id, tz)
 
         engagements_copy = engagements.copy()
-        
-        st.write(engagements)
- 
+         
 
         st.title("Unhinged")
-
-        st.write("showing dates between..")
         
         # Before your filter_ui call
         key_name = "filters_my_filter"
