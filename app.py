@@ -551,7 +551,8 @@ if user_id:
             st.write(ts_col_name)
             engagements_over_time_filtered = filter.apply_date_filters(engagements_over_time, key="my_filter", date_col=ts_col_name)
             st.write(engagements_over_time_filtered)
-                
+            st.write("Date filters found:", [f for f in st.session_state.get("filters_my_filter", []) if f.get("column") == ts_col_name])
+            
             fig_engagements_over_time, warning, output_df = viz.stacked_events_bar_fig(engagements_over_time_filtered)
             
             if fig_engagements_over_time is not None:
