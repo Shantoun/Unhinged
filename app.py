@@ -424,14 +424,15 @@ if user_id:
         
         engagements = ds.like_events_df(user_id, tz)
 
-        st.write(engagements['match_timestamp'].dtype)
-        st.write(engagements['match_timestamp'].head())
+        engagements_copy = engagements.copy()
         
         st.write(engagements)
  
 
         st.title("Unhinged")
 
+        st.write("showing dates between..")
+        
         # Before your filter_ui call
         key_name = "filters_my_filter"
         flag_key = "initialized_my_filter"
@@ -439,8 +440,9 @@ if user_id:
         if not st.session_state.get(flag_key, False):
             st.session_state[key_name] = []
             st.session_state[flag_key] = True
-        
-        engagements, filter_text = filter.filter_ui(engagements, filterable_columns=[var.col_match_timestamp], key="my_filter", layout="row")
+
+        with st.expander("Filter"):
+            engagements, filter_text = filter.filter_ui(engagements, filterable_columns=[var.col_like_timestamp], key="my_filter", layout="row")
 
         st.caption(filter_text)       
         
