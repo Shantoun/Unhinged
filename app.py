@@ -115,7 +115,13 @@ if user_id:
                 index=default_idx,
                 help="Auto-detected from your browser. Timestamps do not include timezone data, so choose the timezone you mostly send from for best accuracy."
             )
+
+            date_filter = st.empty()
             st.divider()
+
+
+
+
         
         # Reupload data
         if st.sidebar.button("Upload More Data", width="stretch"):
@@ -440,9 +446,11 @@ if user_id:
             st.session_state[key_name] = []
             st.session_state[flag_key] = True
 
-        with st.expander("Filter"):
-            engagements, filter_text = filter.filter_ui(engagements, filterable_columns=[var.col_like_timestamp], key="my_filter", layout="row")
+        
+        with date_filter.expander(":material/filter_alt: Date"):
+            engagements, filter_text = filter.filter_ui(engagements, filterable_columns=[var.col_like_timestamp], key="my_filter", layout="column")
 
+        
         st.caption(filter_text)       
         
         tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs([var.tab_engagement_funnel, var.tab_engagement_over_time, var.tab_outbound_timing, var.tab_drivers, var.tab_subscriptions, var.tab_distribution])
