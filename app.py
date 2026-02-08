@@ -545,9 +545,10 @@ if user_id:
             convo_min_mins = c1.number_input("Minimum conversation duration (min)", min_value=0, step=1, width="stretch", key="convo_min_mins_tab2", on_change=sync_from_tab2, help="Sets the minimum duration required for an interaction to count as a conversation.")
             convo_min_messages = c2.number_input("Minimum messages per conversation", min_value=0, step=1, width="stretch", key="convo_min_messages_tab2", on_change=sync_from_tab2, help="Sets the minimum number of messages required to count as a conversation.")
         
-            engagements_over_time = ds.events_over_time_df(engagements, min_messages=convo_min_messages, min_minutes=convo_min_mins, join_comments_and_likes_sent=join_likes_comments, use_like_timestamp=use_like_time)
+            engagements_over_time = ds.events_over_time_df(engagements_copy, min_messages=convo_min_messages, min_minutes=convo_min_mins, join_comments_and_likes_sent=join_likes_comments, use_like_timestamp=use_like_time)
 
-            
+            st.write(engagements_over_time)
+         
             fig_engagements_over_time, warning, output_df = viz.stacked_events_bar_fig(engagements_over_time)
             
             if fig_engagements_over_time is not None:
