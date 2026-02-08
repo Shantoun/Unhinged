@@ -497,7 +497,8 @@ if user_id:
 
         
         with tab1:
-            st.caption(filter_text)
+            if filter_text:
+                st.caption(filter_text)
             st.header(var.tab_engagement_funnel)
             st.caption("**Shows how interactions flow from starting point to deeper engagement, step by step**")
             st.divider()
@@ -531,7 +532,8 @@ if user_id:
 
         
         with tab2:
-            st.caption(filter_text)
+            if filter text:
+                st.caption(filter_text)
             st.header(var.tab_engagement_over_time)
             st.caption("**Shows what happened in each time period, so you can spot trends**")
             st.divider()
@@ -585,7 +587,8 @@ if user_id:
         
 
         with tab3:
-            st.caption(filter_text)
+            if filter text:
+                st.caption(filter_text)
             st.header(var.tab_outbound_timing)
             st.caption("**Highlights when outreach tends to perform best**")
             st.divider()
@@ -684,7 +687,8 @@ if user_id:
 
         
         with tab4:
-            st.caption(filter_text)
+            if filter text:
+                st.caption(filter_text)
             st.header(var.tab_drivers)
             st.caption("**Highlights what factors are most linked to higher messaging engagement**")
             st.divider()
@@ -734,7 +738,8 @@ if user_id:
 
         
         with tab5:
-            st.caption(filter_text)
+            if filter text:
+                st.caption(filter_text)
             st.header(var.tab_subscriptions)    
             st.caption("**Summarizes how your plan relates to activity and engagement**")
             st.divider()
@@ -744,7 +749,8 @@ if user_id:
 
         
         with tab6:
-            st.caption(filter_text)
+            if filter text:
+                st.caption(filter_text)
             st.header(var.tab_distribution)
             st.caption("**Shows how different metrics are spread out using box plots**")
             st.divider()
