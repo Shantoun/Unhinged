@@ -290,7 +290,7 @@ def add_filter(column, operator, value, key, df):
 
 
 ######################################## apply_filters
-def apply_filters(df, key):
+pythondef apply_filters(df, key):
     key_name = f"filters_{key}"
     if key_name not in st.session_state or not st.session_state[key_name]:
         return df
@@ -303,6 +303,24 @@ def apply_filters(df, key):
         value = f["value"]
 
         if col not in filtered_df.columns:
+            continue
+
+        # ========== RANGES OPERATOR ==========
+        if op_ == "Ranges":
+            filtered_df[col] = pd.to_datetime(filtered_df[col], errors="coerce")
+            filtered_df = filtered_df.loc[filtered_df[col].notna()]
+            
+            mask = pd.Series(False, index=filtered_df.index)
+            
+            for start_ts, end_ts in value:
+                start_ts = pd.to_datetime(start_ts, errors="coerce")
+                end_ts = pd.to_datetime(end_ts, errors="coerce")
+                
+                if not pd.isna(start_ts) and not pd.isna(end_ts):
+                    cond = (filtered_df[col] >= start_ts) & (filtered_df[col] <= end_ts)
+                    mask |= cond
+            
+            filtered_df = filtered_df[mask]
             continue
 
         # --- detect column type ---
@@ -577,63 +595,145 @@ def apply_filters(df, key):
 
 
 
-
 ######################################## filter_ui
-def filter_ui(df, filterable_columns, allow_future_windows=False, key=None, layout="row"):
+def filter_ui(df, filterable_columns, allow_future_windows=False, key=None, layout="row", user_id=None):
     key_name = f"filters_{key}"
     if key_name not in st.session_state:
         st.session_state[key_name] = []
-    placeholder = st.container()
-    if layout == "row":
-        with placeholder:
-            filter_col = filterable_columns[0]
-            operator_select, value_select = st.columns(2)
+    
+    # Fetch subscription ranges if user_id provided
+    subscription_ranges = None
+    if user_id:
+        from functions.authentification import supabase
+        subs_df = pd.DataFrame(
+            supabase.table(var.table_subscriptions).select("*").eq(var.col_user_id, user_id).execute().data or []
+        )
+        if not subs_df.empty:
+            # Build display dataframe
+            def build_name(row):
+                if pd.notna(row.get('tag')) and row.get('tag'):
+                    return row['tag']
+                currency = row.get('currency', '')
+                price = row.get('price', '')
+                duration = row.get('subscription_duration', '')
+                return f"{currency} {price} - {duration}"
             
-            if df[filter_col].dropna().empty:
-                return df, None
+            subs_df['start_timestamp'] = pd.to_datetime(subs_df['start_timestamp'], errors='coerce')
+            subs_df['end_timestamp'] = pd.to_datetime(subs_df['end_timestamp'], errors='coerce')
             
-            operators = detect_column_type(df, filter_col)
-            col_type = detect_column_type(df, filter_col, "label")
-            with operator_select:
-                operator = st.selectbox("Operator", operators, key=f"{key}_op_row", label_visibility="hidden")
-            from functions.filter import value_input
-            value = value_input(
-                df, filter_col, operator, value_select,
-                allow_future=allow_future_windows if col_type == "Date" else False,
-                layout="row"
-            )
+            subscription_ranges = pd.DataFrame({
+                'Name': subs_df.apply(build_name, axis=1),
+                'Start': subs_df['start_timestamp'].dt.strftime('%b %d, %Y'),
+                'End': subs_df['end_timestamp'].dt.strftime('%b %d, %Y'),
+                '_start_ts': subs_df['start_timestamp'],  # hidden columns for filtering
+                '_end_ts': subs_df['end_timestamp']
+            })
+    
+    # Tab selection (only show if we have subscription ranges)
+    if subscription_ranges is not None:
+        tab1, tab2 = st.tabs(["Ranges", "Filter"])
+        active_tab = 0 if st.session_state.get(f"{key}_active_tab", 0) == 0 else 1
     else:
-        with placeholder:
-            filter_col = filterable_columns[0]
-        
-            if df[filter_col].dropna().empty:
-                return df, None
-            
-            operators = detect_column_type(df, filter_col)
-            col_type = detect_column_type(df, filter_col, "label")
-            operator = st.selectbox("Operator", operators, key=f"{key}_op_col", label_visibility="hidden")
-            from functions.filter import value_input
-            value = value_input(
-                df, filter_col, operator, st.container(),
-                allow_future=allow_future_windows if col_type == "Date" else False,
-                layout="column"
+        tab1 = st.container()
+        tab2 = None
+        active_tab = 1  # force filter mode if no ranges
+    
+    # ========== RANGES TAB ==========
+    if subscription_ranges is not None:
+        with tab1:
+            st.dataframe(
+                subscription_ranges[['Name', 'Start', 'End']],
+                use_container_width=True,
+                hide_index=True,
+                on_select="rerun",
+                selection_mode="multi-row",
+                key=f"{key}_range_table"
             )
-    b1, b2 = st.columns(2)
-    with b1:
-        clear_clicked = st.button("Clear All", use_container_width=True, key=f"{key}_clear")
-    with b2:
-        commit_clicked = st.button("Commit", type="primary", use_container_width=True, key=f"{key}_commit")
-    if commit_clicked:
-        add_filter(filter_col, operator, value, key, df)
-    if clear_clicked:
-        st.session_state[key_name] = []
+            
+            if st.button("Apply Selection", type="primary", use_container_width=True, key=f"{key}_apply_ranges"):
+                selected_indices = st.session_state.get(f"{key}_range_table", {}).get("selection", {}).get("rows", [])
+                
+                if selected_indices:
+                    # Build OR filter from selected ranges
+                    filter_col = filterable_columns[0]
+                    selected_ranges = subscription_ranges.iloc[selected_indices]
+                    
+                    # Store as special "ranges" filter
+                    st.session_state[key_name] = [{
+                        "column": filter_col,
+                        "operator": "Ranges",
+                        "value": selected_ranges[['_start_ts', '_end_ts']].values.tolist(),
+                        "display": selected_ranges['Name'].tolist()
+                    }]
+                else:
+                    st.session_state[key_name] = []
+    
+    # ========== FILTER TAB ==========
+    filter_tab_container = tab2 if tab2 is not None else tab1
+    
+    with filter_tab_container:
+        placeholder = st.container()
+        
+        if layout == "row":
+            with placeholder:
+                filter_col = filterable_columns[0]
+                operator_select, value_select = st.columns(2)
+                
+                if df[filter_col].dropna().empty:
+                    return df, None
+                
+                operators = detect_column_type(df, filter_col)
+                col_type = detect_column_type(df, filter_col, "label")
+                with operator_select:
+                    operator = st.selectbox("Operator", operators, key=f"{key}_op_row", label_visibility="hidden")
+                from functions.filter import value_input
+                value = value_input(
+                    df, filter_col, operator, value_select,
+                    allow_future=allow_future_windows if col_type == "Date" else False,
+                    layout="row"
+                )
+        else:
+            with placeholder:
+                filter_col = filterable_columns[0]
+            
+                if df[filter_col].dropna().empty:
+                    return df, None
+                
+                operators = detect_column_type(df, filter_col)
+                col_type = detect_column_type(df, filter_col, "label")
+                operator = st.selectbox("Operator", operators, key=f"{key}_op_col", label_visibility="hidden")
+                from functions.filter import value_input
+                value = value_input(
+                    df, filter_col, operator, st.container(),
+                    allow_future=allow_future_windows if col_type == "Date" else False,
+                    layout="column"
+                )
+        
+        b1, b2 = st.columns(2)
+        with b1:
+            clear_clicked = st.button("Clear All", use_container_width=True, key=f"{key}_clear")
+        with b2:
+            commit_clicked = st.button("Commit", type="primary", use_container_width=True, key=f"{key}_commit")
+        
+        if commit_clicked:
+            add_filter(filter_col, operator, value, key, df)
+        if clear_clicked:
+            st.session_state[key_name] = []
+    
+    # ========== APPLY FILTERS ==========
     from functions.filter import apply_filters
     filtered_df = apply_filters(df, key)
     
-    # Show only the single active filter
+    # ========== BUILD FILTER TEXT ==========
     if st.session_state[key_name]:
         f = st.session_state[key_name][0]
-        filter_text = f"{f['column']} {f['operator']} {f['value']}"
+        
+        if f["operator"] == "Ranges":
+            # Show range names
+            range_names = f.get("display", [])
+            filter_text = f"Date Ranges: {', '.join(range_names)}"
+        else:
+            filter_text = f"{f['column']} {f['operator']} {f['value']}"
     else:
         filter_col = filterable_columns[0]
         try:
