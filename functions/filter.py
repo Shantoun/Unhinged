@@ -719,7 +719,14 @@ def filter_ui(df, filterable_columns, allow_future_windows=False, key=None, layo
                 key=f"{key}_range_table"
             )
             
-            if st.button("Apply Selection", type="primary", use_container_width=True, key=f"{key}_apply_ranges"):
+            # Add the same 2-button layout as Filter tab
+            b1, b2 = st.columns(2)
+            with b1:
+                clear_clicked_ranges = st.button("Clear All", use_container_width=True, key=f"{key}_clear_ranges")
+            with b2:
+                commit_clicked_ranges = st.button("Commit", type="primary", use_container_width=True, key=f"{key}_commit_ranges")
+            
+            if commit_clicked_ranges:
                 selected_indices = st.session_state.get(f"{key}_range_table", {}).get("selection", {}).get("rows", [])
                 
                 if selected_indices:
@@ -736,6 +743,9 @@ def filter_ui(df, filterable_columns, allow_future_windows=False, key=None, layo
                     }]
                 else:
                     st.session_state[key_name] = []
+        
+        if clear_clicked_ranges:
+            st.session_state[key_name] = []
     
     # ========== FILTER TAB ==========
     filter_tab_container = tab2 if tab2 is not None else tab1
