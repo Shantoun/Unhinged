@@ -25,7 +25,44 @@ from email.message import EmailMessage
 help_guide_direct = "<em style='color:#6B8E7A;'>Guides for charts and tables are in the sidebar under <b>Quick guides</b>.</em>"
 help_guide_direct_w_box = "<em style='color:#6B8E7A;'>Guides for charts, tables and boxplots are in the sidebar under <b>Quick guides</b>.</em>"
 
-
+def prettify_filter_text(filter_text):
+    """Make filter text human-readable"""
+    if not filter_text:
+        return filter_text
+    
+    import re
+    import pandas as pd
+    
+    # Replace column name with "Date"
+    filter_text = re.sub(r'^[a-z_]+\s+', 'Date ', filter_text)
+    
+    # Handle Between with Timestamps
+    # Match: Between [Timestamp('2025-11-28 00:00:00'), Timestamp('2025-11-29 00:00:00')]
+    between_match = re.search(r"Between \[Timestamp\('([^']+)'\), Timestamp\('([^']+)'\)\]", filter_text)
+    if between_match:
+        start_date = pd.to_datetime(between_match.group(1)).strftime('%b %d, %Y')
+        end_date = pd.to_datetime(between_match.group(2)).strftime('%b %d, %Y')
+        filter_text = f"Date Between {start_date} and {end_date}"
+        return filter_text
+    
+    # Handle Window ['yesterday'] -> Date Window yesterday
+    window_match = re.search(r"Window \['([^']+)'\]", filter_text)
+    if window_match:
+        window_val = window_match.group(1)
+        filter_text = f"Date Window {window_val}"
+        return filter_text
+    
+    # Handle single date comparisons (>=, <=, =, ≠)
+    # Match: Date >= 2026-01-01 or Date ≥ 2026-01-01 00:00:00
+    date_match = re.search(r'(Date [><=≥≤≠]+)\s+(\d{4}-\d{2}-\d{2})', filter_text)
+    if date_match:
+        operator = date_match.group(1)
+        date_str = date_match.group(2)
+        formatted_date = pd.to_datetime(date_str).strftime('%b %d, %Y')
+        filter_text = f"{operator} {formatted_date}"
+        return filter_text
+    
+    return filter_text
 
 
 st.set_page_config(initial_sidebar_state="collapsed")
@@ -495,10 +532,10 @@ if user_id:
 
 
 
-        
+       
         with tab1:
             if filter_text:
-                st.caption(filter_text)
+                st.caption(prettify_filter_text (filter_text))
             st.header(var.tab_engagement_funnel)
             st.caption("**Shows how interactions flow from starting point to deeper engagement, step by step**")
             st.divider()
@@ -533,7 +570,7 @@ if user_id:
         
         with tab2:
             if filter_text:
-                st.caption(filter_text)
+                st.caption(prettify_filter_text (filter_text))
             st.header(var.tab_engagement_over_time)
             st.caption("**Shows what happened in each time period, so you can spot trends**")
             st.divider()
@@ -588,7 +625,7 @@ if user_id:
 
         with tab3:
             if filter_text:
-                st.caption(filter_text)
+                st.caption(prettify_filter_text (filter_text))
             st.header(var.tab_outbound_timing)
             st.caption("**Highlights when outreach tends to perform best**")
             st.divider()
@@ -688,7 +725,7 @@ if user_id:
         
         with tab4:
             if filter_text:
-                st.caption(filter_text)
+                st.caption(prettify_filter_text (filter_text))
             st.header(var.tab_drivers)
             st.caption("**Highlights what factors are most linked to higher messaging engagement**")
             st.divider()
@@ -739,7 +776,7 @@ if user_id:
         
         with tab5:
             if filter_text:
-                st.caption(filter_text)
+                st.caption(prettify_filter_text (filter_text))
             st.header(var.tab_subscriptions)    
             st.caption("**Summarizes how your plan relates to activity and engagement**")
             st.divider()
@@ -750,7 +787,7 @@ if user_id:
         
         with tab6:
             if filter_text:
-                st.caption(filter_text)
+                st.caption(prettify_filter_text (filter_text))
             st.header(var.tab_distribution)
             st.caption("**Shows how different metrics are spread out using box plots**")
             st.divider()
