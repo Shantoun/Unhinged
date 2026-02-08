@@ -549,7 +549,7 @@ if user_id:
 
             ts_col_name = "Like Timestamp" if use_like_time else "Event Timestamp"
             st.write(ts_col_name)
-            engagements_over_time_filtered = filter.apply_date_filters(engagements_over_time, key="my_filter", date_col=ts_col_name)
+            engagements_over_time_filtered = filter.apply_date_filters(engagements_over_time, key="my_filter", date_col=ts_col_name, source_date_col=var.col_like_timestamp)
             st.write(engagements_over_time_filtered)
             st.write("Date filters found:", [f for f in st.session_state.get("filters_my_filter", []) if f.get("column") == ts_col_name])
             
