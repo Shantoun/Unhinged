@@ -680,23 +680,29 @@ def apply_filters_except_date(df, key, date_col):
 
 
 ######################################## only date (intersection-based)
-def apply_date_filters(df, key, date_col):
-    """Apply ALL date filters using AND logic by reusing apply_filters"""
+def apply_date_filters(df, key, date_col, source_date_col=None):
+    """Apply date filters to a different column name"""
     key_name = f"filters_{key}"
     full_list = st.session_state.get(key_name, [])
-    date_filters = [f for f in full_list if f.get("column") == date_col]
+    
+    # if source_date_col provided, grab filters from that column instead
+    filter_col = source_date_col if source_date_col else date_col
+    date_filters = [f for f in full_list if f.get("column") == filter_col]
     
     if not date_filters:
         return df
     
-    # use a temp key so we don't overwrite the real filters
+    # replace column name to match target df
+    date_filters = [
+        {**f, "column": date_col} for f in date_filters
+    ]
+    
     temp_key = f"{key}__temp_date_only"
     st.session_state[f"filters_{temp_key}"] = date_filters
     try:
         from functions.filter import apply_filters
         out = apply_filters(df, temp_key)
     finally:
-        # clean up temp key to avoid lingering state
         if f"filters_{temp_key}" in st.session_state:
             del st.session_state[f"filters_{temp_key}"]
     return out
