@@ -752,29 +752,30 @@ if user_id:
        
         with tab1:
             if filter_text:
-                st.caption(prettify_filter_text (filter_text))
+                st.caption(prettify_filter_text(filter_text))
             st.header(var.tab_engagement_funnel)
             st.caption("**Shows how interactions flow from starting point to deeper engagement, step by step**")
             st.divider()
             st.markdown(help_guide_direct, unsafe_allow_html=True)
             
-            join_likes_comments = st.checkbox("Group comments & likes sent", key="join_likes_comments_tab1", on_change=sync_from_tab1)
-            c1, c2 = st.columns(2)
-            convo_min_mins = c1.number_input("Minimum conversation duration (min)", min_value=0, step=1, width="stretch", key="convo_min_mins_tab1", on_change=sync_from_tab1, help="Sets the minimum duration required for an interaction to count as a conversation.")
-            convo_min_messages = c2.number_input("Minimum messages per conversation", min_value=0, step=1, width="stretch", key="convo_min_messages_tab1", on_change=sync_from_tab1, help="Sets the minimum number of messages required to count as a conversation.")
-        
-            sankey_data = ds.sankey_data(engagements, min_messages=convo_min_messages, min_minutes=convo_min_mins, join_comments_and_likes_sent=join_likes_comments)
-            fig_sankey = viz.sankey(sankey_data, len(engagements))
-            st.plotly_chart(fig_sankey, width="stretch")
-
-            st.caption("Received likes only appear once they become matches.")
-            st.caption("""
-                My Type takes precedence over Blocks, which includes unmatches. If someone was marked as My Type and later blocked, they will still be counted as My Type.
-            """)
+            if engagements.empty:
+                st.info("No engagement data available for the selected date range")
+            else:
+                join_likes_comments = st.checkbox("Group comments & likes sent", key="join_likes_comments_tab1", on_change=sync_from_tab1)
+                c1, c2 = st.columns(2)
+                convo_min_mins = c1.number_input("Minimum conversation duration (min)", min_value=0, step=1, width="stretch", key="convo_min_mins_tab1", on_change=sync_from_tab1, help="Sets the minimum duration required for an interaction to count as a conversation.")
+                convo_min_messages = c2.number_input("Minimum messages per conversation", min_value=0, step=1, width="stretch", key="convo_min_messages_tab1", on_change=sync_from_tab1, help="Sets the minimum number of messages required to count as a conversation.")
             
-
-            with st.expander("View as data"):
-                st.dataframe(sankey_data, hide_index=True)
+                sankey_data = ds.sankey_data(engagements, min_messages=convo_min_messages, min_minutes=convo_min_mins, join_comments_and_likes_sent=join_likes_comments)
+                fig_sankey = viz.sankey(sankey_data, len(engagements))
+                st.plotly_chart(fig_sankey, width="stretch")
+                st.caption("Received likes only appear once they become matches.")
+                st.caption("""
+                    My Type takes precedence over Blocks, which includes unmatches. If someone was marked as My Type and later blocked, they will still be counted as My Type.
+                """)
+                
+                with st.expander("View as data"):
+                    st.dataframe(sankey_data, hide_index=True)
 
 
 
@@ -787,53 +788,52 @@ if user_id:
         
         with tab2:
             if filter_text:
-                st.caption(prettify_filter_text (filter_text))
+                st.caption(prettify_filter_text(filter_text))
             st.header(var.tab_engagement_over_time)
             st.caption("**Shows what happened in each time period, so you can spot trends**")
             st.divider()
             st.markdown(help_guide_direct, unsafe_allow_html=True)
             
-            use_like_time = st.checkbox("Use like timestamp instead of event timestamp",
-                                        help="""    
-                                            Controls which timestamp is used to place events into time buckets.
-                                            When enabled, events are grouped by when the like was sent or received.
-                                            When disabled, events are grouped by when the event itself occurred (e.g., match, message).
-                                            
-                                            This answers two different questions:
-                                            Using like time asks “How did my likes perform by when they were sent?”
-                                            Using event time asks “What happened in each time period?”
-                                        """)
-            
-            join_likes_comments = st.checkbox("Group comments & likes sent", key="join_likes_comments_tab2", on_change=sync_from_tab2)
-            c1, c2 = st.columns(2)
-            convo_min_mins = c1.number_input("Minimum conversation duration (min)", min_value=0, step=1, width="stretch", key="convo_min_mins_tab2", on_change=sync_from_tab2, help="Sets the minimum duration required for an interaction to count as a conversation.")
-            convo_min_messages = c2.number_input("Minimum messages per conversation", min_value=0, step=1, width="stretch", key="convo_min_messages_tab2", on_change=sync_from_tab2, help="Sets the minimum number of messages required to count as a conversation.")
-        
-            engagements_over_time = ds.events_over_time_df(engagements_copy, min_messages=convo_min_messages, min_minutes=convo_min_mins, join_comments_and_likes_sent=join_likes_comments, use_like_timestamp=use_like_time)
-
-            ts_col_name = "Like Timestamp" if use_like_time else "Event Timestamp"
-            engagements_over_time_filtered = filter.apply_date_filters(engagements_over_time, key="my_filter", date_col=ts_col_name, source_date_col=var.col_like_timestamp)
-        
-            
-            fig_engagements_over_time, warning, output_df = viz.stacked_events_bar_fig(engagements_over_time_filtered)
-            
-            if fig_engagements_over_time is not None:
-                st.plotly_chart(fig_engagements_over_time, use_container_width=True)
-            if warning:
-                st.caption(warning)  
-
-            
-
-            with st.expander("View as data"):
-                output_df = output_df.set_index("Event")
+            if engagements.empty:
+                st.info("No engagement data available for the selected date range")
+            else:
+                use_like_time = st.checkbox("Use like timestamp instead of event timestamp",
+                                            help="""    
+                                                Controls which timestamp is used to place events into time buckets.
+                                                When enabled, events are grouped by when the like was sent or received.
+                                                When disabled, events are grouped by when the event itself occurred (e.g., match, message).
+                                                
+                                                This answers two different questions:
+                                                Using like time asks "How did my likes perform by when they were sent?"
+                                                Using event time asks "What happened in each time period?"
+                                            """)
                 
-                if join_likes_comments:
-                    output_df = output_df.drop(index=["Comments", "Likes"], errors="ignore")
-                else:
-                    output_df = output_df.drop(index=["Comments & likes sent"], errors="ignore")
-
+                join_likes_comments = st.checkbox("Group comments & likes sent", key="join_likes_comments_tab2", on_change=sync_from_tab2)
+                c1, c2 = st.columns(2)
+                convo_min_mins = c1.number_input("Minimum conversation duration (min)", min_value=0, step=1, width="stretch", key="convo_min_mins_tab2", on_change=sync_from_tab2, help="Sets the minimum duration required for an interaction to count as a conversation.")
+                convo_min_messages = c2.number_input("Minimum messages per conversation", min_value=0, step=1, width="stretch", key="convo_min_messages_tab2", on_change=sync_from_tab2, help="Sets the minimum number of messages required to count as a conversation.")
+            
+                engagements_over_time = ds.events_over_time_df(engagements_copy, min_messages=convo_min_messages, min_minutes=convo_min_mins, join_comments_and_likes_sent=join_likes_comments, use_like_timestamp=use_like_time)
+                ts_col_name = "Like Timestamp" if use_like_time else "Event Timestamp"
+                engagements_over_time_filtered = filter.apply_date_filters(engagements_over_time, key="my_filter", date_col=ts_col_name, source_date_col=var.col_like_timestamp)
+            
                 
-                st.dataframe(output_df)            
+                fig_engagements_over_time, warning, output_df = viz.stacked_events_bar_fig(engagements_over_time_filtered)
+                
+                if fig_engagements_over_time is not None:
+                    st.plotly_chart(fig_engagements_over_time, use_container_width=True)
+                if warning:
+                    st.caption(warning)  
+                
+                with st.expander("View as data"):
+                    output_df = output_df.set_index("Event")
+                    
+                    if join_likes_comments:
+                        output_df = output_df.drop(index=["Comments", "Likes"], errors="ignore")
+                    else:
+                        output_df = output_df.drop(index=["Comments & likes sent"], errors="ignore")
+                    
+                    st.dataframe(output_df)            
 
 
 
@@ -842,97 +842,100 @@ if user_id:
 
         with tab3:
             if filter_text:
-                st.caption(prettify_filter_text (filter_text))
+                st.caption(prettify_filter_text(filter_text))
             st.header(var.tab_outbound_timing)
             st.caption("**Highlights when outreach tends to perform best**")
             st.divider()
             st.markdown(help_guide_direct, unsafe_allow_html=True)
             
-            st.caption("""
-                        The score used below is more reliable than a raw match rate. A raw rate can be misleading with very little data, 
-                        for example, 1 match from 2 likes doesn’t mean a time slot is better than one with 20 matches from 100 likes. 
-                        This score reduces the impact of small samples so the results reflect real patterns
-                    """)
-            
-            # Radial: Time Engagement
-            time_table = ds.likes_matches_agg(engagements, "time")
-            day_table  = ds.likes_matches_agg(engagements, "day")
-            day_time_table  = ds.likes_matches_agg(engagements, "day_time").sort_values(["smoothed_rate", "likes"], ascending=[False, True])
-    
-    
+            if engagements.empty or engagements[var.col_like_timestamp].notna().sum() == 0:
+                st.info("No outbound activity data available for the selected date range")
+            else:
+                st.caption("""
+                            The score used below is more reliable than a raw match rate. A raw rate can be misleading with very little data, 
+                            for example, 1 match from 2 likes doesn't mean a time slot is better than one with 20 matches from 100 likes. 
+                            This score reduces the impact of small samples so the results reflect real patterns
+                        """)
+                
+                # Radial: Time Engagement
+                time_table = ds.likes_matches_agg(engagements, "time")
+                day_table  = ds.likes_matches_agg(engagements, "day")
+                day_time_table  = ds.likes_matches_agg(engagements, "day_time").sort_values(["smoothed_rate", "likes"], ascending=[False, True])
         
-            fig_day_radial = viz.radial(day_table)
-            fig_time_radial = viz.radial(time_table, day_col="time_bucket")
+        
             
-            col1, col2 = st.columns(2)
-            col1.plotly_chart(fig_day_radial, width="stretch", config={"scrollZoom": False, "doubleClick": False, "dragmode": False, "displaylogo": False, "modeBarButtonsToRemove": ["zoom","pan","select","lasso","zoomIn","zoomOut","autoScale","resetScale"]})
-            col2.plotly_chart(fig_time_radial, width="stretch", config={"scrollZoom": False, "doubleClick": False, "dragmode": False, "displaylogo": False, "modeBarButtonsToRemove": ["zoom","pan","select","lasso","zoomIn","zoomOut","autoScale","resetScale"]})
-    
-    
-            best  = (day_time_table .head(3).iloc[:, 0] + " " + day_time_table .head(3).iloc[:, 1]).reset_index(drop=True)
-            worst = (day_time_table .tail(3).iloc[:, 0] + " " + day_time_table .tail(3).iloc[:, 1]).reset_index(drop=True)
-            
-            out = pd.DataFrame({
-                "Peak Times": best,
-                "Off Times": worst,
-            })
-    
-            out.index = [""] * len(out)
-            
-            st.table(out, border="horizontal")
-
-
-
-            def rename_columns(df):
-                rename_map = {
-                    "time_bucket": "Time Slot",
-                    "day_of_week": "Day of Week",
-                    "likes": "Comments & Likes",
-                    "matches": "Matches",
-                    "raw_rate": "Match Rate",
-                    "smoothed_rate": "Score",
-                }
-            
-                return (
-                    df.rename(columns={k: v for k, v in rename_map.items() if k in df.columns})
-                      .reset_index(drop=True)
-                )
-            
-    
-    
-            time_table = rename_columns(time_table)
-            day_table = rename_columns(day_table)
-            day_time_table = rename_columns(day_time_table)
-
-            time_table = time_table.sort_values(["Score", "Comments & Likes"], ascending=[False, True])
-            day_table = day_table.sort_values(["Score", "Comments & Likes"], ascending=[False, True])
-
-
-            
-
-            def fmt_pct(x):
-                if x == 0:
-                    return "0%"
-                if x == 1:
-                    return "100%"
-                return f"{x:.1%}"
-            
-            day_table["Match Rate"] = day_table["Match Rate"].map(fmt_pct)
-            time_table["Match Rate"] = time_table["Match Rate"].map(fmt_pct)
-            day_time_table["Match Rate"] = day_time_table["Match Rate"].map(fmt_pct)
-
-            day_table["Score"] = day_table["Score"].apply(lambda x: 0 if x == 0 else round(x, 1)) 
-            time_table["Score"] = time_table["Score"].apply(lambda x: 0 if x == 0 else round(x, 1))          
-            day_time_table["Score"] = day_time_table["Score"].apply(lambda x: 0 if x == 0 else round(x, 1))
-
-
-            
-            with st.expander("View as data"):
-                time_table = time_table.set_index("Time Slot")
-                st.dataframe(time_table)
-                day_table = day_table.set_index("Day of Week")
-                st.dataframe(day_table)
-                st.dataframe(day_time_table, hide_index=True)
+                fig_day_radial = viz.radial(day_table)
+                fig_time_radial = viz.radial(time_table, day_col="time_bucket")
+                
+                col1, col2 = st.columns(2)
+                col1.plotly_chart(fig_day_radial, width="stretch", config={"scrollZoom": False, "doubleClick": False, "dragmode": False, "displaylogo": False, "modeBarButtonsToRemove": ["zoom","pan","select","lasso","zoomIn","zoomOut","autoScale","resetScale"]})
+                col2.plotly_chart(fig_time_radial, width="stretch", config={"scrollZoom": False, "doubleClick": False, "dragmode": False, "displaylogo": False, "modeBarButtonsToRemove": ["zoom","pan","select","lasso","zoomIn","zoomOut","autoScale","resetScale"]})
+        
+        
+                best  = (day_time_table .head(3).iloc[:, 0] + " " + day_time_table .head(3).iloc[:, 1]).reset_index(drop=True)
+                worst = (day_time_table .tail(3).iloc[:, 0] + " " + day_time_table .tail(3).iloc[:, 1]).reset_index(drop=True)
+                
+                out = pd.DataFrame({
+                    "Peak Times": best,
+                    "Off Times": worst,
+                })
+        
+                out.index = [""] * len(out)
+                
+                st.table(out, border="horizontal")
+        
+        
+        
+                def rename_columns(df):
+                    rename_map = {
+                        "time_bucket": "Time Slot",
+                        "day_of_week": "Day of Week",
+                        "likes": "Comments & Likes",
+                        "matches": "Matches",
+                        "raw_rate": "Match Rate",
+                        "smoothed_rate": "Score",
+                    }
+                
+                    return (
+                        df.rename(columns={k: v for k, v in rename_map.items() if k in df.columns})
+                          .reset_index(drop=True)
+                    )
+                
+        
+        
+                time_table = rename_columns(time_table)
+                day_table = rename_columns(day_table)
+                day_time_table = rename_columns(day_time_table)
+        
+                time_table = time_table.sort_values(["Score", "Comments & Likes"], ascending=[False, True])
+                day_table = day_table.sort_values(["Score", "Comments & Likes"], ascending=[False, True])
+        
+        
+                
+        
+                def fmt_pct(x):
+                    if x == 0:
+                        return "0%"
+                    if x == 1:
+                        return "100%"
+                    return f"{x:.1%}"
+                
+                day_table["Match Rate"] = day_table["Match Rate"].map(fmt_pct)
+                time_table["Match Rate"] = time_table["Match Rate"].map(fmt_pct)
+                day_time_table["Match Rate"] = day_time_table["Match Rate"].map(fmt_pct)
+        
+                day_table["Score"] = day_table["Score"].apply(lambda x: 0 if x == 0 else round(x, 1)) 
+                time_table["Score"] = time_table["Score"].apply(lambda x: 0 if x == 0 else round(x, 1))          
+                day_time_table["Score"] = day_time_table["Score"].apply(lambda x: 0 if x == 0 else round(x, 1))
+        
+        
+                
+                with st.expander("View as data"):
+                    time_table = time_table.set_index("Time Slot")
+                    st.dataframe(time_table)
+                    day_table = day_table.set_index("Day of Week")
+                    st.dataframe(day_table)
+                    st.dataframe(day_time_table, hide_index=True)
     
             
 
@@ -942,52 +945,54 @@ if user_id:
         
         with tab4:
             if filter_text:
-                st.caption(prettify_filter_text (filter_text))
+                st.caption(prettify_filter_text(filter_text))
             st.header(var.tab_drivers)
             st.caption("**Highlights what factors are most linked to higher messaging engagement**")
             st.divider()
             st.markdown(help_guide_direct, unsafe_allow_html=True)
             
-            engagements.rename(columns={
-                var.col_avg_message_gap: "Av. Time Between Messages (Mins)",
-                var.col_first_message_delay: "Match to First Message Time (Mins)",
-                var.col_conversation_message_count: "# of Messages per Session",
-            }, inplace=True)
-            
-    
-            columns_scatter = [
-                "Match to First Message Time (Mins)",
-                "Av. Time Between Messages (Mins)",
-                "First Message: Time of Day",
-                "First Message: Day of Week",
-                "First Message: Daytime",
-            ]
-            
-            colx = st.selectbox("Comparing", columns_scatter)
-    
-            
-            fig = viz.scatter_plot(
-                engagements,
-                x_key=colx,
-                y_col="# of Messages per Session",
-                first_ts_col=var.col_first_message_timestamp,
-                title="Messaging Analytics",
-            )
-            
-            st.plotly_chart(fig, width="stretch")
-    
-
-            
-            with st.expander("View as data"):
-                out_df_drivers = engagements[[colx, "# of Messages per Session"]].set_index(colx).dropna()
-                st.dataframe(out_df_drivers)
+            if engagements.empty or engagements[var.col_conversation_message_count].notna().sum() == 0:
+                st.info("No messaging data available for the selected date range")
+            else:
+                engagements.rename(columns={
+                    var.col_avg_message_gap: "Av. Time Between Messages (Mins)",
+                    var.col_first_message_delay: "Match to First Message Time (Mins)",
+                    var.col_conversation_message_count: "# of Messages per Session",
+                }, inplace=True)
                 
-            # I know how this looks lol, shut up...
-            engagements.rename(columns={
-                "Av. Time Between Messages (Mins)": var.col_avg_message_gap,
-                "Match to First Message Time (Mins)": var.col_first_message_delay,
-                "# of Messages per Session": var.col_conversation_message_count,
-            }, inplace=True)
+        
+                columns_scatter = [
+                    "Match to First Message Time (Mins)",
+                    "Av. Time Between Messages (Mins)",
+                    "First Message: Time of Day",
+                    "First Message: Day of Week",
+                    "First Message: Daytime",
+                ]
+                
+                colx = st.selectbox("Comparing", columns_scatter)
+        
+                
+                fig = viz.scatter_plot(
+                    engagements,
+                    x_key=colx,
+                    y_col="# of Messages per Session",
+                    first_ts_col=var.col_first_message_timestamp,
+                    title="Messaging Analytics",
+                )
+                
+                st.plotly_chart(fig, width="stretch")
+        
+                
+                with st.expander("View as data"):
+                    out_df_drivers = engagements[[colx, "# of Messages per Session"]].set_index(colx).dropna()
+                    st.dataframe(out_df_drivers)
+                    
+                # I know how this looks lol, shut up...
+                engagements.rename(columns={
+                    "Av. Time Between Messages (Mins)": var.col_avg_message_gap,
+                    "Match to First Message Time (Mins)": var.col_first_message_delay,
+                    "# of Messages per Session": var.col_conversation_message_count,
+                }, inplace=True)
      
 
         
