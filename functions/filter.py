@@ -583,9 +583,7 @@ def filter_ui(df, filterable_columns, allow_future_windows=False, key=None, layo
     key_name = f"filters_{key}"
     if key_name not in st.session_state:
         st.session_state[key_name] = []
-
     placeholder = st.container()
-
     if layout == "row":
         with placeholder:
             filter_col = filterable_columns[0]
@@ -593,12 +591,11 @@ def filter_ui(df, filterable_columns, allow_future_windows=False, key=None, layo
             
             if df[filter_col].dropna().empty:
                 return df, None
-
+            
             operators = detect_column_type(df, filter_col)
             col_type = detect_column_type(df, filter_col, "label")
             with operator_select:
                 operator = st.selectbox("Operator", operators, key=f"{key}_op_row", label_visibility="hidden")
-
             from functions.filter import value_input
             value = value_input(
                 df, filter_col, operator, value_select,
@@ -611,6 +608,7 @@ def filter_ui(df, filterable_columns, allow_future_windows=False, key=None, layo
         
             if df[filter_col].dropna().empty:
                 return df, None
+            
             operators = detect_column_type(df, filter_col)
             col_type = detect_column_type(df, filter_col, "label")
             operator = st.selectbox("Operator", operators, key=f"{key}_op_col", label_visibility="hidden")
@@ -620,18 +618,15 @@ def filter_ui(df, filterable_columns, allow_future_windows=False, key=None, layo
                 allow_future=allow_future_windows if col_type == "Date" else False,
                 layout="column"
             )
-
     b1, b2 = st.columns(2)
     with b1:
         clear_clicked = st.button("Clear All", use_container_width=True, key=f"{key}_clear")
     with b2:
         commit_clicked = st.button("Commit", type="primary", use_container_width=True, key=f"{key}_commit")
-
     if commit_clicked:
         add_filter(filter_col, operator, value, key, df)
     if clear_clicked:
         st.session_state[key_name] = []
-
     from functions.filter import apply_filters
     filtered_df = apply_filters(df, key)
     
@@ -640,10 +635,18 @@ def filter_ui(df, filterable_columns, allow_future_windows=False, key=None, layo
         f = st.session_state[key_name][0]
         filter_text = f"{f['column']} {f['operator']} {f['value']}"
     else:
-        filter_text = None
+        filter_col = filterable_columns[0]
+        try:
+            min_date = pd.to_datetime(df[filter_col], errors='coerce').min()
+            max_date = pd.to_datetime(df[filter_col], errors='coerce').max()
+            if pd.isna(min_date) or pd.isna(max_date):
+                filter_text = None
+            else:
+                filter_text = f"Date Between {min_date.strftime('%b %d, %Y')} and {max_date.strftime('%b %d, %Y')}"
+        except:
+            filter_text = None
     
     return filtered_df, filter_text
-
 
 ######################################## get_window_selected
 def get_window_selected(key):
