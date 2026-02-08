@@ -628,7 +628,6 @@ def filter_ui(df, filterable_columns, allow_future_windows=False, key=None, layo
     subscription_ranges = None
     if user_id:
         from functions.authentification import supabase
-        import forex_python.converter as fx
         
         subs_df = pd.DataFrame(
             supabase.table(var.table_subscriptions).select("*").eq(var.col_user_id, user_id).execute().data or []
@@ -639,37 +638,25 @@ def filter_ui(df, filterable_columns, allow_future_windows=False, key=None, layo
             subs_df['end_timestamp'] = pd.to_datetime(subs_df['end_timestamp'], errors='coerce')
             subs_df = subs_df.sort_values('start_timestamp')
             
-            # Group renewals (only for rows with no tag)
+            # Separate first
+            has_tag = subs_df['tag'].notna() & (subs_df['tag'] != '')
+            user_created_rows = subs_df[has_tag].copy()
+            hinge_subs = subs_df[~has_tag].copy()
+            
+            # Group hinge renewals FIRST (before mixing with user-created)
             grouped_rows = []
             
-            for idx, row in subs_df.iterrows():
-                # If has tag, don't group - add as-is
-                if pd.notna(row.get('tag')) and row.get('tag'):
-                    grouped_rows.append({
-                        'name': row['tag'],
-                        'start': row['start_timestamp'],
-                        'end': row['end_timestamp'],
-                        'currency': row.get('currency'),
-                        'price': row.get('price')
-                    })
-                    continue
-                
-                # Check if this should merge with previous group
+            for idx, row in hinge_subs.iterrows():
                 if (grouped_rows and 
-                    not grouped_rows[-1].get('is_tagged') and
                     grouped_rows[-1]['end'] == row['start_timestamp'] and
                     grouped_rows[-1].get('duration') == row.get('subscription_duration')):
                     
-                    # Merge with previous
+                    # Merge renewal
                     prev = grouped_rows[-1]
-                    
-                    # Convert currencies if needed
                     prev_price = prev['price']
                     curr_price = row.get('price', 0)
                     prev_currency = prev['currency']
                     curr_currency = row.get('currency')
-                    
-                    # Use latest currency as target
                     target_currency = curr_currency
                     
                     if prev_currency != target_currency:
@@ -677,10 +664,8 @@ def filter_ui(df, filterable_columns, allow_future_windows=False, key=None, layo
                             c = CurrencyRates()
                             prev_price = c.convert(prev_currency, target_currency, prev_price)
                         except:
-                            # If conversion fails, just use original values
                             pass
                     
-                    # Average the prices
                     count = prev.get('count', 1)
                     new_avg = ((prev_price * count) + curr_price) / (count + 1)
                     
@@ -688,7 +673,6 @@ def filter_ui(df, filterable_columns, allow_future_windows=False, key=None, layo
                     prev['price'] = new_avg
                     prev['currency'] = target_currency
                     prev['count'] = count + 1
-                    
                 else:
                     # New group
                     grouped_rows.append({
@@ -701,6 +685,18 @@ def filter_ui(df, filterable_columns, allow_future_windows=False, key=None, layo
                         'count': 1,
                         'is_tagged': False
                     })
+            
+            # Add user-created ranges
+            for _, row in user_created_rows.iterrows():
+                grouped_rows.append({
+                    'name': row['tag'],
+                    'start': row['start_timestamp'],
+                    'end': row['end_timestamp'],
+                    'is_tagged': True
+                })
+            
+            # Sort by start date
+            grouped_rows.sort(key=lambda x: x['start'] if pd.notna(x['start']) else pd.Timestamp.min)
             
             # Build display dataframe
             subscription_ranges = pd.DataFrame({
@@ -754,9 +750,9 @@ def filter_ui(df, filterable_columns, allow_future_windows=False, key=None, layo
                     }]
                 else:
                     st.session_state[key_name] = []
-        
-        if clear_clicked_ranges:
-            st.session_state[key_name] = []
+            
+            if clear_clicked_ranges:
+                st.session_state[key_name] = []
     
     # ========== FILTER TAB ==========
     filter_tab_container = tab2 if tab2 is not None else tab1
