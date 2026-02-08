@@ -414,7 +414,6 @@ if user_id:
                 supabase.table(var.table_subscriptions).insert(new_row).execute()
                 
                 st.success(f"Added '{new_name.strip()}'")
-                st.rerun()
 
 
 
@@ -536,13 +535,14 @@ if user_id:
                             selected_indices = st.session_state.get("manage_ranges_table", {}).get("selection", {}).get("rows", [])
                             
                             if selected_indices:
-                                ids_to_delete = selectable_df.reset_index(drop=True).iloc[selected_indices]['subscription_id'].tolist()
+                                selectable_df = display_df[display_df['selectable']].reset_index(drop=True)
+                                ids_to_delete = selectable_df.iloc[selected_indices]['subscription_id'].tolist()
+                                names_deleted = selectable_df.iloc[selected_indices]['Name'].tolist()
                                 
                                 for sub_id in ids_to_delete:
                                     supabase.table(var.table_subscriptions).delete().eq('subscription_id', sub_id).execute()
                                 
-                                st.success(f"Deleted {len(ids_to_delete)} range(s)")
-                                st.rerun()
+                                st.success(f"Deleted: {', '.join(names_deleted)}")
                         
                         # Show hinge subscriptions (read-only) if any exist
                         if grouped_hinge:
@@ -707,7 +707,7 @@ if user_id:
         
              
         
-        tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs([var.tab_engagement_funnel, var.tab_engagement_over_time, var.tab_outbound_timing, var.tab_drivers, var.tab_subscriptions, var.tab_distribution])
+        tab1, tab2, tab3, tab4, tab5 = st.tabs([var.tab_engagement_funnel, var.tab_engagement_over_time, var.tab_outbound_timing, var.tab_drivers, var.tab_distribution])
         
 
         # defaults
@@ -995,19 +995,10 @@ if user_id:
                 }, inplace=True)
      
 
+                
+
         
         with tab5:
-            if filter_text:
-                st.caption(prettify_filter_text (filter_text))
-            st.header(var.tab_subscriptions)    
-            st.caption("**Summarizes how your plan relates to activity and engagement**")
-            st.divider()
-            st.markdown(help_guide_direct, unsafe_allow_html=True)
-
-            
-
-        
-        with tab6:
             if filter_text:
                 st.caption(prettify_filter_text(filter_text))
             st.header(var.tab_distribution)
