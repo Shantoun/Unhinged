@@ -484,7 +484,7 @@ if user_id:
             st.session_state[flag_key] = True
 
         
-        with date_filter.expander(":material/filter_alt: Date"):
+        with date_filter.expander(":material/filter_alt: Date", expanded=True):
             engagements, filter_text = filter.filter_ui(engagements, filterable_columns=[var.col_like_timestamp], key="my_filter", layout="column")
 
         
