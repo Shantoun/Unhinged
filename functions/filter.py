@@ -590,7 +590,8 @@ def filter_ui(df, filterable_columns, allow_future_windows=False, key=None, layo
         with placeholder:
             filter_select, operator_select, value_select = st.columns(3)
             with filter_select:
-                filter_col = st.selectbox("Filter by", filterable_columns, key=f"{key}_col_row")
+                filter_col = filterable_columns[0]
+                st.info("Date", icon=":material/filter_alt:")
 
             if df[filter_col].dropna().empty:
                 return df, "No filters applied"
@@ -608,7 +609,8 @@ def filter_ui(df, filterable_columns, allow_future_windows=False, key=None, layo
             )
     else:
         with placeholder:
-            filter_col = st.selectbox("Filter by", filterable_columns, key=f"{key}_col_col")
+            filter_col = filterable_columns[0]
+            st.info("Date", icon=":material/filter_alt:")
             if df[filter_col].dropna().empty:
                 return df, "No filters applied"
             operators = detect_column_type(df, filter_col)
