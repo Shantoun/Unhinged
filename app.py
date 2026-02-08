@@ -367,6 +367,61 @@ if user_id:
             _dialog()
         
 
+
+
+        def show_create_form(user_id):
+            from functions.authentification import supabase
+            
+            st.subheader("Add New Date Range")
+            
+            new_name = st.text_input("Name (required)", key="new_range_name")
+            
+            col1, col2 = st.columns(2)
+            with col1:
+                new_start = st.date_input("Start Date (optional)", value=None, key="new_range_start")
+            with col2:
+                new_end = st.date_input("End Date (optional)", value=None, key="new_range_end")
+            
+            if st.button("Add Range", type="primary", use_container_width=True):
+                # Validation
+                if not new_name or not new_name.strip():
+                    st.error("Name is required")
+                    return
+                
+                if new_start is None and new_end is None:
+                    st.error("Must provide at least a Start or End date")
+                    return
+                
+                # Check if tag already exists for this user
+                existing = supabase.table(var.table_subscriptions).select("tag").eq(var.col_user_id, user_id).eq("tag", new_name.strip()).execute()
+                
+                if existing.data:
+                    st.error(f"You already have a date range named '{new_name.strip()}'")
+                    return
+                
+                # Create subscription_id
+                subscription_id = f"subscription_{user_id}_{new_name.strip().replace(' ', '_')}"
+                
+                # Insert into supabase
+                new_row = {
+                    'subscription_id': subscription_id,
+                    var.col_user_id: user_id,
+                    'tag': new_name.strip(),
+                    'start_timestamp': new_start.isoformat() if new_start else None,
+                    'end_timestamp': new_end.isoformat() if new_end else None,
+                }
+                
+                supabase.table(var.table_subscriptions).insert(new_row).execute()
+                
+                st.success(f"Added '{new_name.strip()}'")
+                st.rerun()
+
+
+
+
+
+
+        
         def manage_date_ranges_dialog(user_id):
             @st.dialog("Manage Date Ranges", width="large")
             def _dialog():
@@ -390,17 +445,62 @@ if user_id:
                 user_created = subs_df[has_tag].copy()
                 hinge_subs = subs_df[~has_tag].copy()
                 
-                # Build display dataframe - SHOW ALL
+                # Group hinge subscriptions (renewals)
+                grouped_hinge = []
+                for idx, row in hinge_subs.iterrows():
+                    # Check if this should merge with previous group
+                    if (grouped_hinge and 
+                        grouped_hinge[-1]['end'] == row['start_timestamp'] and
+                        grouped_hinge[-1].get('duration') == row.get('subscription_duration')):
+                        
+                        # Merge with previous
+                        prev = grouped_hinge[-1]
+                        
+                        # Convert currencies if needed
+                        prev_price = prev['price']
+                        curr_price = row.get('price', 0)
+                        prev_currency = prev['currency']
+                        curr_currency = row.get('currency')
+                        target_currency = curr_currency
+                        
+                        if prev_currency != target_currency:
+                            try:
+                                c = CurrencyRates()
+                                prev_price = c.convert(prev_currency, target_currency, prev_price)
+                            except:
+                                pass
+                        
+                        # Average the prices
+                        count = prev.get('count', 1)
+                        new_avg = ((prev_price * count) + curr_price) / (count + 1)
+                        
+                        prev['end'] = row['end_timestamp']
+                        prev['price'] = new_avg
+                        prev['currency'] = target_currency
+                        prev['count'] = count + 1
+                        
+                    else:
+                        # New group
+                        grouped_hinge.append({
+                            'name': f"{row.get('currency')} {row.get('price')} - {row.get('subscription_duration')}",
+                            'start': row['start_timestamp'],
+                            'end': row['end_timestamp'],
+                            'currency': row.get('currency'),
+                            'price': row.get('price'),
+                            'duration': row.get('subscription_duration'),
+                            'count': 1
+                        })
+                
+                # Build display rows
                 display_rows = []
                 
-                # Add hinge subscriptions (not selectable)
-                for _, row in hinge_subs.iterrows():
+                # Add grouped hinge subscriptions (not selectable)
+                for g in grouped_hinge:
                     display_rows.append({
                         'selectable': False,
-                        'subscription_id': row.get('subscription_id'),
-                        'Name': f"{row.get('currency')} {row.get('price')} - {row.get('subscription_duration')}",
-                        'Start': row['start_timestamp'].strftime('%b %d, %Y') if pd.notna(row['start_timestamp']) else '',
-                        'End': row['end_timestamp'].strftime('%b %d, %Y') if pd.notna(row['end_timestamp']) else '',
+                        'Name': g['name'],
+                        'Start': g['start'].strftime('%b %d, %Y') if pd.notna(g['start']) else '',
+                        'End': g['end'].strftime('%b %d, %Y') if pd.notna(g['end']) else '',
                     })
                 
                 # Add user-created ranges (selectable)
@@ -415,98 +515,64 @@ if user_id:
                 
                 display_df = pd.DataFrame(display_rows)
                 
-                # Show ALL ranges, but only make user-created ones selectable
+                # Create tabs if user has custom ranges
                 if not user_created.empty:
-                    # Show user-created (selectable) with checkboxes
-                    st.markdown("**Your Custom Ranges** (selectable)")
-                    selectable_df = display_df[display_df['selectable']]
-                    st.dataframe(
-                        selectable_df[['Name', 'Start', 'End']],
-                        use_container_width=True,
-                        hide_index=True,
-                        on_select="rerun",
-                        selection_mode="multi-row",
-                        key="manage_ranges_table"
-                    )
+                    tab1, tab2 = st.tabs(["Create", "Delete"])
                     
-                    # Delete button
-                    if st.button("Delete Selected", type="secondary", use_container_width=True):
-                        selected_indices = st.session_state.get("manage_ranges_table", {}).get("selection", {}).get("rows", [])
+                    with tab2:
+                        st.markdown("**Your Custom Ranges**")
+                        selectable_df = display_df[display_df['selectable']]
+                        st.dataframe(
+                            selectable_df[['Name', 'Start', 'End']],
+                            use_container_width=True,
+                            hide_index=True,
+                            on_select="rerun",
+                            selection_mode="multi-row",
+                            key="manage_ranges_table"
+                        )
                         
-                        if selected_indices:
-                            ids_to_delete = selectable_df.reset_index(drop=True).iloc[selected_indices]['subscription_id'].tolist()
+                        # Delete button
+                        if st.button("Delete Selected", type="secondary", use_container_width=True):
+                            selected_indices = st.session_state.get("manage_ranges_table", {}).get("selection", {}).get("rows", [])
                             
-                            for sub_id in ids_to_delete:
-                                supabase.table(var.table_subscriptions).delete().eq('subscription_id', sub_id).execute()
-                            
-                            st.success(f"Deleted {len(ids_to_delete)} range(s)")
-                            st.rerun()
+                            if selected_indices:
+                                ids_to_delete = selectable_df.reset_index(drop=True).iloc[selected_indices]['subscription_id'].tolist()
+                                
+                                for sub_id in ids_to_delete:
+                                    supabase.table(var.table_subscriptions).delete().eq('subscription_id', sub_id).execute()
+                                
+                                st.success(f"Deleted {len(ids_to_delete)} range(s)")
+                                st.rerun()
+                        
+                        # Show hinge subscriptions (read-only) if any exist
+                        if grouped_hinge:
+                            st.divider()
+                            st.markdown("**Hinge Subscriptions** (read-only)")
+                            st.dataframe(
+                                display_df[~display_df['selectable']][['Name', 'Start', 'End']],
+                                use_container_width=True,
+                                hide_index=True
+                            )
                     
-                    # Show hinge subscriptions (read-only) if any exist
-                    if not hinge_subs.empty:
+                    with tab1:
+                        show_create_form(user_id)
+                else:
+                    # No user ranges, just show create form and read-only list
+                    show_create_form(user_id)
+                    
+                    if grouped_hinge:
                         st.divider()
                         st.markdown("**Hinge Subscriptions** (read-only)")
                         st.dataframe(
-                            display_df[~display_df['selectable']][['Name', 'Start', 'End']],
+                            display_df[['Name', 'Start', 'End']],
                             use_container_width=True,
                             hide_index=True
                         )
-                else:
-                    # No user-created ranges, just show all as read-only
-                    st.dataframe(
-                        display_df[['Name', 'Start', 'End']],
-                        use_container_width=True,
-                        hide_index=True
-                    )
-                
-                st.divider()
-                
-                # Add new range form
-                st.subheader("Add New Date Range")
-                
-                new_name = st.text_input("Name (required)", key="new_range_name")
-                
-                col1, col2 = st.columns(2)
-                with col1:
-                    new_start = st.date_input("Start Date (optional)", value=None, key="new_range_start")
-                with col2:
-                    new_end = st.date_input("End Date (optional)", value=None, key="new_range_end")
-                
-                if st.button("Add Range", type="primary", use_container_width=True):
-                    # Validation
-                    if not new_name or not new_name.strip():
-                        st.error("Name is required")
-                        return
-                    
-                    if new_start is None and new_end is None:
-                        st.error("Must provide at least a Start or End date")
-                        return
-                    
-                    # Check if tag already exists for this user
-                    existing = supabase.table(var.table_subscriptions).select("tag").eq(var.col_user_id, user_id).eq("tag", new_name.strip()).execute()
-                    
-                    if existing.data:
-                        st.error(f"You already have a date range named '{new_name.strip()}'")
-                        return
-                    
-                    # Create subscription_id
-                    subscription_id = f"subscription_{user_id}_{new_name.strip().replace(' ', '_')}"
-                    
-                    # Insert into supabase
-                    new_row = {
-                        'subscription_id': subscription_id,
-                        var.col_user_id: user_id,
-                        'tag': new_name.strip(),
-                        'start_timestamp': new_start.isoformat() if new_start else None,
-                        'end_timestamp': new_end.isoformat() if new_end else None,
-                    }
-                    
-                    supabase.table(var.table_subscriptions).insert(new_row).execute()
-                    
-                    st.success(f"Added '{new_name.strip()}'")
-                    st.rerun()
             
             _dialog()
+        
+        
+
 
 
 
