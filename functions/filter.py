@@ -588,11 +588,9 @@ def filter_ui(df, filterable_columns, allow_future_windows=False, key=None, layo
 
     if layout == "row":
         with placeholder:
-            filter_select, operator_select, value_select = st.columns(3)
-            with filter_select:
-                filter_col = filterable_columns[0]
-                st.header(":material/filter_alt: Date")
-
+            filter_col = filterable_columns[0]
+            operator_select, value_select = st.columns(2)
+            
             if df[filter_col].dropna().empty:
                 return df, "No filters applied"
 
@@ -610,8 +608,7 @@ def filter_ui(df, filterable_columns, allow_future_windows=False, key=None, layo
     else:
         with placeholder:
             filter_col = filterable_columns[0]
-            
-            st.header(":material/filter_alt: Date")
+        
             if df[filter_col].dropna().empty:
                 return df, "No filters applied"
             operators = detect_column_type(df, filter_col)
