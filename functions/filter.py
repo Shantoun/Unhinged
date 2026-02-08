@@ -310,11 +310,23 @@ def apply_filters(df, key):
             filtered_df[col] = pd.to_datetime(filtered_df[col], errors="coerce")
             filtered_df = filtered_df.loc[filtered_df[col].notna()]
             
+            # Make sure the column is timezone-naive
+            if filtered_df[col].dt.tz is not None:
+                filtered_df[col] = filtered_df[col].dt.tz_localize(None)
+            
             mask = pd.Series(False, index=filtered_df.index)
             
             for start_ts, end_ts in value:
                 start_ts = pd.to_datetime(start_ts, errors="coerce")
                 end_ts = pd.to_datetime(end_ts, errors="coerce")
+                
+                # Make timestamps timezone-naive to match
+                if hasattr(start_ts, 'tz_localize'):
+                    if start_ts.tz is not None:
+                        start_ts = start_ts.tz_localize(None)
+                if hasattr(end_ts, 'tz_localize'):
+                    if end_ts.tz is not None:
+                        end_ts = end_ts.tz_localize(None)
                 
                 if not pd.isna(start_ts) and not pd.isna(end_ts):
                     cond = (filtered_df[col] >= start_ts) & (filtered_df[col] <= end_ts)
