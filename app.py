@@ -414,7 +414,7 @@ if user_id:
                 supabase.table(var.table_subscriptions).insert(new_row).execute()
                 
                 st.success(f"Added '{new_name.strip()}'")
-
+                st.rerun()
 
 
 
@@ -543,7 +543,8 @@ if user_id:
                                     supabase.table(var.table_subscriptions).delete().eq('subscription_id', sub_id).execute()
                                 
                                 st.success(f"Deleted: {', '.join(names_deleted)}")
-                        
+                                st.rerun()
+                                
                         # Show hinge subscriptions (read-only) if any exist
                         if grouped_hinge:
                             st.divider()
