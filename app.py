@@ -451,11 +451,10 @@ if user_id:
             engagements, filter_text = filter.filter_ui(engagements, filterable_columns=[var.col_like_timestamp], key="my_filter", layout="column")
 
         
-        st.caption(filter_text)       
+             
         
         tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs([var.tab_engagement_funnel, var.tab_engagement_over_time, var.tab_outbound_timing, var.tab_drivers, var.tab_subscriptions, var.tab_distribution])
-
-
+        st.caption(filter_text)
 
         # defaults
         if "convo_min_mins" not in st.session_state: st.session_state["convo_min_mins"] = 5
@@ -503,7 +502,7 @@ if user_id:
             st.divider()
             st.markdown(help_guide_direct, unsafe_allow_html=True)
             
-            join_likes_comments = st.checkbox("Join comments & likes sent", key="join_likes_comments_tab1", on_change=sync_from_tab1)
+            join_likes_comments = st.checkbox("Group comments & likes sent", key="join_likes_comments_tab1", on_change=sync_from_tab1)
             c1, c2 = st.columns(2)
             convo_min_mins = c1.number_input("Minimum conversation duration (min)", min_value=0, step=1, width="stretch", key="convo_min_mins_tab1", on_change=sync_from_tab1, help="Sets the minimum duration required for an interaction to count as a conversation.")
             convo_min_messages = c2.number_input("Minimum messages per conversation", min_value=0, step=1, width="stretch", key="convo_min_messages_tab1", on_change=sync_from_tab1, help="Sets the minimum number of messages required to count as a conversation.")
@@ -547,7 +546,7 @@ if user_id:
                                             Using event time asks “What happened in each time period?”
                                         """)
             
-            join_likes_comments = st.checkbox("Join comments & likes sent", key="join_likes_comments_tab2", on_change=sync_from_tab2)
+            join_likes_comments = st.checkbox("Group comments & likes sent", key="join_likes_comments_tab2", on_change=sync_from_tab2)
             c1, c2 = st.columns(2)
             convo_min_mins = c1.number_input("Minimum conversation duration (min)", min_value=0, step=1, width="stretch", key="convo_min_mins_tab2", on_change=sync_from_tab2, help="Sets the minimum duration required for an interaction to count as a conversation.")
             convo_min_messages = c2.number_input("Minimum messages per conversation", min_value=0, step=1, width="stretch", key="convo_min_messages_tab2", on_change=sync_from_tab2, help="Sets the minimum number of messages required to count as a conversation.")
@@ -556,7 +555,7 @@ if user_id:
 
             ts_col_name = "Like Timestamp" if use_like_time else "Event Timestamp"
             engagements_over_time_filtered = filter.apply_date_filters(engagements_over_time, key="my_filter", date_col=ts_col_name, source_date_col=var.col_like_timestamp)
-            st.write("Date filters found:", [f for f in st.session_state.get("filters_my_filter", []) if f.get("column") == ts_col_name])
+        
             
             fig_engagements_over_time, warning, output_df = viz.stacked_events_bar_fig(engagements_over_time_filtered)
             
