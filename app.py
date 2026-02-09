@@ -79,16 +79,18 @@ user_id = st.session_state.user_id
 if user_id:
 
     likes = auth.supabase.table(var.table_likes) \
-        .select("id", count="exact", head=True) \
+        .select("id") \
         .eq(var.col_user_id, user_id) \
+        .limit(1) \
         .execute()
     
     matches = auth.supabase.table(var.table_matches) \
-        .select("id", count="exact", head=True) \
+        .select("id") \
         .eq(var.col_user_id, user_id) \
+        .limit(1) \
         .execute()
     
-    has_profile = (likes.count or 0) > 0 or (matches.count or 0) > 0
+    has_profile = len(likes.data) > 0 or len(matches.data) > 0
 
 
 
