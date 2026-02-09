@@ -525,7 +525,7 @@ if user_id:
         
         
         def navigation_help_dialog():
-            @st.dialog("Quick Guides", width="large")
+            @st.dialog("Quick Guides", width="large", type="primary")
             def _dialog():
                 tab_table, tab_plotly, tab_box = st.tabs(["Tables", "Plotly charts", "Boxplots"])
         
