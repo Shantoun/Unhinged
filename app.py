@@ -525,7 +525,7 @@ if user_id:
         
         
         def navigation_help_dialog():
-            @st.dialog("Quick Guides", width="large", type="primary")
+            @st.dialog("Quick Guides", width="large")
             def _dialog():
                 tab_table, tab_plotly, tab_box = st.tabs(["Tables", "Plotly charts", "Boxplots"])
         
@@ -634,7 +634,7 @@ if user_id:
 
         with st.sidebar:    
             st.divider()
-            if st.button("Quick Guides", width="stretch"):
+            if st.button("Quick Guides", width="stretch", type="primary"):
                 navigation_help_dialog()
         
 
