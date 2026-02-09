@@ -449,6 +449,7 @@ def store_raw_export_zip(zip_path, user_id):
 
 
 def delete_my_data(user_id):
+    # Delete from related tables first
     tables = [
         var.table_messages,        # references likes + matches
         var.table_likes,           # references matches
@@ -457,19 +458,25 @@ def delete_my_data(user_id):
         var.table_media,
         var.table_prompts,
         var.table_subscriptions,
-        var.table_user_profile,    # root record
     ]
-
     for table in tables:
         supabase.table(table).delete().eq(var.col_user_id, user_id).execute()
-
+    
+    # Clear user_profile columns except user_id, updated_at, upload_count
+    supabase.table(var.table_user_profile).update({
+        var.json_user_preferences: None,
+        var.json_user_location: None,
+        var.json_user_identity: None,
+        var.json_user_profile: None,
+        var.json_user_account: None,
+        var.json_subscription_duration: None,
+    }).eq(var.col_user_id, user_id).execute()
+    
     # -------- delete raw export from storage --------
     bucket = supabase_admin.storage.from_(var.bucket_raw_exports)
     folder = f"{user_id}"
-
     objects = bucket.list(folder) or []
     paths = [f"{folder}/{obj['name']}" for obj in objects if obj.get("name")]
-
     if paths:
         bucket.remove(paths)
 
