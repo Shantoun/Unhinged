@@ -469,7 +469,7 @@ def delete_my_data(user_id):
         var.json_user_identity: None,
         var.json_user_profile: None,
         var.json_user_account: None,
-        var.json_subscription_duration: None,
+        var.json_selfie_verification: None,
     }).eq(var.col_user_id, user_id).execute()
     
     # -------- delete raw export from storage --------
