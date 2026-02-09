@@ -155,12 +155,18 @@ if user_id:
         default_idx = tzs.index(browser_tz) if browser_tz in tzs else 0
         
         with st.sidebar:
-            tz = st.selectbox(
+            # display-friendly labels (spaces instead of underscores)
+            tz_labels = [t.replace("_", " ") for t in tzs]
+            
+            tz_label = st.selectbox(
                 "Timezone",
-                tzs,
+                tz_labels,
                 index=default_idx,
                 help="Auto-detected from your browser. Timestamps do not include timezone data, so choose the timezone you mostly send from for best accuracy."
             )
+            
+            # convert back to underscore version
+            tz = tz_label.replace(" ", "_")
 
 
             engagements = ds.like_events_df(user_id, tz)
