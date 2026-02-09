@@ -462,7 +462,7 @@ def stacked_events_bar_fig(events_df, ts_col=None):
 
     fig.update_layout(
         legend_title_text="",
-        xaxis_title=None,
+        xaxis_title=ts_col,
         yaxis_title=None,
         legend_traceorder="reversed",
     )
