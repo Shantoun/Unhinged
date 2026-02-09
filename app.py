@@ -880,6 +880,7 @@ if user_id:
                             for example, 1 match from 2 likes doesn't mean a time slot is better than one with 20 matches from 100 likes. 
                             This score reduces the impact of small samples so the results reflect real patterns
                         """)
+                st.caption("Based on the dates & times of likes sent")
                 
                 # Radial: Time Engagement
                 time_table = ds.likes_matches_agg(engagements, "time")
