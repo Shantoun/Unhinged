@@ -5,7 +5,7 @@ json_like_key     = "like"
 json_chats        = "chats"
 json_media        = "media"
 json_user         = "user"
-json_selfie_verification = "selfie_verification"
+
 
 json_match_event  = "match"
 json_block_event  = "block"
@@ -52,6 +52,7 @@ json_user_location    = "location"
 json_user_identity    = "identity"
 json_user_profile     = "profile"
 json_user_account     = "account"
+json_selfie_verification = "selfie_verification"
 json_subscription_duration = "subscription_duration"
 
 ####################################################### Table Names
