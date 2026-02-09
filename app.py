@@ -146,6 +146,7 @@ if user_id:
     ################################################################################## MAIN
     else:
         st.set_page_config(layout="wide")
+        st.set_page_config(initial_sidebar_state="collapsed")
         
         st.title("Unhinged")
         
@@ -969,20 +970,24 @@ if user_id:
         with tab4:
             if filter_text:
                 st.caption(prettify_filter_text(filter_text))
+        
             st.header(var.tab_drivers)
             st.caption("**Highlights what factors are most linked to higher messaging engagement**")
             st.divider()
             st.markdown(help_guide_direct, unsafe_allow_html=True)
-            
+        
             if engagements.empty or engagements[var.col_conversation_message_count].notna().sum() == 0:
                 st.info("No messaging data available for the selected date range")
+        
             else:
-                engagements.rename(columns={
-                    var.col_avg_message_gap: "Av. Time Between Messages (Mins)",
-                    var.col_first_message_delay: "Match to First Message Time (Mins)",
-                    var.col_conversation_message_count: "# of Messages per Session",
-                }, inplace=True)
-                
+                # ---- Rename display columns ----
+                engagements = engagements.rename(
+                    columns={
+                        var.col_avg_message_gap: "Av. Time Between Messages (Mins)",
+                        var.col_first_message_delay: "Match to First Message Time (Mins)",
+                        var.col_conversation_message_count: "# of Messages per Session",
+                    }
+                )
         
                 columns_scatter = [
                     "Match to First Message Time (Mins)",
@@ -991,10 +996,36 @@ if user_id:
                     "First Message: Day of Week",
                     "First Message: Daytime",
                 ]
-                
+        
                 colx = st.selectbox("Comparing", columns_scatter)
         
-                
+                # ---- Materialize derived X column (UI label == dataframe column) ----
+                ts = pd.to_datetime(
+                    engagements[var.col_first_message_timestamp],
+                    errors="coerce",
+                )
+        
+                if colx not in engagements.columns:
+                    if colx == "First Message: Time of Day":
+                        engagements[colx] = _time_bin_label(ts)
+        
+                    elif colx == "First Message: Day of Week":
+                        engagements[colx] = ts.dt.day_name()
+        
+                    elif colx == "First Message: Daytime":
+                        engagements[colx] = (
+                            ts.dt.day_name().astype(str)
+                            + " • "
+                            + _time_bin_label(ts)
+                        )
+        
+                    else:
+                        engagements[colx] = pd.to_numeric(
+                            engagements[colx],
+                            errors="coerce",
+                        )
+        
+                # ---- Plot ----
                 fig = viz.scatter_plot(
                     engagements,
                     x_key=colx,
@@ -1002,20 +1033,27 @@ if user_id:
                     first_ts_col=var.col_first_message_timestamp,
                     title="Messaging Analytics",
                 )
-                
+        
                 st.plotly_chart(fig, width="stretch")
         
-                
+                # ---- View as data ----
                 with st.expander("View as data"):
-                    out_df_drivers = engagements[[colx, "# of Messages per Session"]].set_index(colx).dropna()
+                    out_df_drivers = (
+                        engagements[[colx, "# of Messages per Session"]]
+                        .dropna()
+                        .set_index(colx)
+                    )
                     st.dataframe(out_df_drivers)
-                    
-                # I know how this looks lol, shut up...
-                engagements.rename(columns={
-                    "Av. Time Between Messages (Mins)": var.col_avg_message_gap,
-                    "Match to First Message Time (Mins)": var.col_first_message_delay,
-                    "# of Messages per Session": var.col_conversation_message_count,
-                }, inplace=True)
+        
+                # ---- Restore original column names ----
+                engagements = engagements.rename(
+                    columns={
+                        "Av. Time Between Messages (Mins)": var.col_avg_message_gap,
+                        "Match to First Message Time (Mins)": var.col_first_message_delay,
+                        "# of Messages per Session": var.col_conversation_message_count,
+                    }
+                )
+
      
 
                 
