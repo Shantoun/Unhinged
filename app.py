@@ -626,7 +626,7 @@ if user_id:
 
 
 
-                
+        with st.sidebar:    
             st.divider()
             if st.button("Quick Guides", width="stretch"):
                 navigation_help_dialog()
