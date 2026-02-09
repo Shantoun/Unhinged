@@ -379,11 +379,12 @@ if user_id:
         def show_create_form(user_id):
             from functions.authentification import supabase
             
-            st.subheader("Create a Date Range")
+            
             st.caption("Date ranges let you save custom time windows and quickly reuse them in filters.") 
             st.caption("If you pick a start date without an end, it includes everything from that point forward. If you pick an end date without a start, it includes everything up to that date.")
             st.caption("Your subscriptions are automatically included as default date ranges.")
             
+            st.subheader("Create a Date Range")
             new_name = st.text_input("Name *", key="new_range_name")
             
             col1, col2 = st.columns(2)
