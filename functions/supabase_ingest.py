@@ -480,3 +480,32 @@ def delete_my_data(user_id):
     if paths:
         bucket.remove(paths)
 
+
+
+
+
+
+
+
+
+
+def delete_all_my_data(user_id):
+    tables = [
+        var.table_messages,        # references likes + matches
+        var.table_likes,           # references matches
+        var.table_blocks,          # references matches
+        var.table_matches,         # parent
+        var.table_media,
+        var.table_prompts,
+        var.table_subscriptions,
+        var.table_user_profile,    # root record
+    ]
+    for table in tables:
+        supabase.table(table).delete().eq(var.col_user_id, user_id).execute()
+    # -------- delete raw export from storage --------
+    bucket = supabase_admin.storage.from_(var.bucket_raw_exports)
+    folder = f"{user_id}"
+    objects = bucket.list(folder) or []
+    paths = [f"{folder}/{obj['name']}" for obj in objects if obj.get("name")]
+    if paths:
+        bucket.remove(paths)
