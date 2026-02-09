@@ -379,15 +379,18 @@ if user_id:
         def show_create_form(user_id):
             from functions.authentification import supabase
             
-            st.subheader("Add New Date Range")
+            st.subheader("Create a Date Range")
+            st.caption("Date ranges let you save custom time windows and quickly reuse them in filters.") 
+            st.caption("If you pick a start date without an end, it includes everything from that point forward. If you pick an end date without a start, it includes everything up to that date.")
+            st.caption("Your subscriptions are automatically included as default date ranges.")
             
-            new_name = st.text_input("Name (required)", key="new_range_name")
+            new_name = st.text_input("Name *", key="new_range_name")
             
             col1, col2 = st.columns(2)
             with col1:
-                new_start = st.date_input("Start Date (optional)", value=None, key="new_range_start")
+                new_start = st.date_input("Start Date", value=None, key="new_range_start")
             with col2:
-                new_end = st.date_input("End Date (optional)", value=None, key="new_range_end")
+                new_end = st.date_input("End Date", value=None, key="new_range_end")
             
             if st.button("Add Range", type="primary", use_container_width=True):
                 # Validation
@@ -457,7 +460,7 @@ if user_id:
                     # Check if this should merge with previous group
                     if (grouped_hinge and 
                         grouped_hinge[-1]['end'] == row['start_timestamp'] and
-                        grouped_hinge[-1].get('duration') == row.get('subscription_duration')):
+                        grouped_hinge[-1].get('duration') == row.get(var.json_subscription_duration)):
                         
                         # Merge with previous
                         prev = grouped_hinge[-1]
@@ -488,12 +491,12 @@ if user_id:
                     else:
                         # New group
                         grouped_hinge.append({
-                            'name': f"{row.get('currency')} {row.get('price')} - {row.get('subscription_duration')}",
+                            'name': f"{row.get('currency')} {row.get('price')} - {row.get(var.json_subscription_duration)}",
                             'start': row['start_timestamp'],
                             'end': row['end_timestamp'],
                             'currency': row.get('currency'),
                             'price': row.get('price'),
-                            'duration': row.get('subscription_duration'),
+                            'duration': row.get(var.json_subscription_duration),
                             'count': 1
                         })
                 
@@ -513,7 +516,7 @@ if user_id:
                 for _, row in user_created.iterrows():
                     display_rows.append({
                         'selectable': True,
-                        'subscription_id': row.get('subscription_id'),
+                        var.col_subscription_id: row.get(var.col_subscription_id),
                         'Name': row['tag'],
                         'Start': row['start_timestamp'].strftime('%b %d, %Y') if pd.notna(row['start_timestamp']) else '',
                         'End': row['end_timestamp'].strftime('%b %d, %Y') if pd.notna(row['end_timestamp']) else '',
@@ -555,7 +558,7 @@ if user_id:
                         # Show hinge subscriptions (read-only) if any exist
                         if grouped_hinge:
                             st.divider()
-                            st.markdown("**Hinge Subscriptions** (read-only)")
+                            st.markdown("**Hinge Subscriptions**")
                             st.dataframe(
                                 display_df[~display_df['selectable']][['Name', 'Start', 'End']],
                                 use_container_width=True,
@@ -570,7 +573,7 @@ if user_id:
                     
                     if grouped_hinge:
                         st.divider()
-                        st.markdown("**Hinge Subscriptions** (read-only)")
+                        st.markdown("**Hinge Subscriptions**")
                         st.dataframe(
                             display_df[['Name', 'Start', 'End']],
                             use_container_width=True,
