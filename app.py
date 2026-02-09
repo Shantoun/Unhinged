@@ -382,7 +382,7 @@ if user_id:
             
             st.caption("Date ranges let you save custom time windows and quickly reuse them in filters.") 
             st.caption("If you pick a start date without an end, it includes everything from that point forward. If you pick an end date without a start, it includes everything up to that date.")
-            st.caption("Your subscriptions are automatically included as default date ranges.")
+            
             
             st.subheader("Create a Date Range")
             new_name = st.text_input("Name *", key="new_range_name")
@@ -560,6 +560,7 @@ if user_id:
                         if grouped_hinge:
                             st.divider()
                             st.markdown("**Hinge Subscriptions**")
+                            st.caption("You cannot delete Hinge subscriptions")
                             st.dataframe(
                                 display_df[~display_df['selectable']][['Name', 'Start', 'End']],
                                 use_container_width=True,
@@ -575,6 +576,7 @@ if user_id:
                     if grouped_hinge:
                         st.divider()
                         st.markdown("**Hinge Subscriptions**")
+                        st.caption("Your subscriptions are automatically included as default date ranges.")
                         st.dataframe(
                             display_df[['Name', 'Start', 'End']],
                             use_container_width=True,
