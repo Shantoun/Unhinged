@@ -559,7 +559,7 @@ if user_id:
                         # Show hinge subscriptions (read-only) if any exist
                         if grouped_hinge:
                             st.divider()
-                            st.markdown("**Hinge Subscriptions**")
+                            st.markdown("**All Ranges**")
                             st.caption("You cannot delete Hinge subscriptions")
                             st.dataframe(
                                 display_df[~display_df['selectable']][['Name', 'Start', 'End']],
@@ -575,7 +575,7 @@ if user_id:
                     
                     if grouped_hinge:
                         st.divider()
-                        st.markdown("**Hinge Subscriptions**")
+                        st.markdown("**All Ranges**")
                         st.caption("Your subscriptions are automatically included as default date ranges.")
                         st.dataframe(
                             display_df[['Name', 'Start', 'End']],
@@ -1161,4 +1161,6 @@ else:
         - Roses are not exposed separately in the data and appear the same as likes.
         
         - Timestamps do not include timezone information, so it is not possible to know whether messages were sent while either person was in a different timezone.
+
+        - Which subscription you’re on may not be explicitly labeled (e.g. HingeX or Plus). For all subscriptions, only the price and duration are shown.
     """)
