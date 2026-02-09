@@ -996,6 +996,26 @@ if user_id:
                     "First Message: Day of Week",
                     "First Message: Daytime",
                 ]
+
+
+                _TIME_BINS = [
+                    (0, 4,  "12 - 4am"),
+                    (4, 8,  "4 - 8am"),
+                    (8, 12, "8am - 12pm"),
+                    (12, 16,"12 - 4pm"),
+                    (16, 20,"4 - 8pm"),
+                    (20, 24,"8pm - 12am"),
+                ]
+                
+                def _time_bin_label(ts):
+                    ts = pd.to_datetime(ts, errors="coerce")
+                    h = ts.dt.hour
+                    out = pd.Series(index=ts.index, dtype="object")
+                    for start, end, label in _TIME_BINS:
+                        out[(h >= start) & (h < end)] = label
+                    return out
+
+                
         
                 colx = st.selectbox("Comparing", columns_scatter)
         
