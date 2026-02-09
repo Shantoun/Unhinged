@@ -147,6 +147,8 @@ if user_id:
     else:
         st.set_page_config(layout="wide")
         
+        st.title("Unhinged")
+        
         tzs = sorted(available_timezones())
         
         browser_tz = st_javascript("Intl.DateTimeFormat().resolvedOptions().timeZone")
@@ -159,6 +161,23 @@ if user_id:
                 index=default_idx,
                 help="Auto-detected from your browser. Timestamps do not include timezone data, so choose the timezone you mostly send from for best accuracy."
             )
+
+
+            engagements = ds.like_events_df(user_id, tz)
+    
+            engagements_copy = engagements.copy()
+             
+
+            
+            # Before your filter_ui call
+            key_name = "filters_my_filter"
+            flag_key = "initialized_my_filter"
+            
+            if not st.session_state.get(flag_key, False):
+                st.session_state[key_name] = []
+                st.session_state[flag_key] = True
+
+            
 
             st.divider()
             st.write(":material/filter_alt: Date")
@@ -697,20 +716,6 @@ if user_id:
         
         
         
-        engagements = ds.like_events_df(user_id, tz)
-
-        engagements_copy = engagements.copy()
-         
-
-        st.title("Unhinged")
-        
-        # Before your filter_ui call
-        key_name = "filters_my_filter"
-        flag_key = "initialized_my_filter"
-        
-        if not st.session_state.get(flag_key, False):
-            st.session_state[key_name] = []
-            st.session_state[flag_key] = True
 
         
 
