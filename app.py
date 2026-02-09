@@ -79,13 +79,13 @@ user_id = st.session_state.user_id
 if user_id:
 
     likes = auth.supabase.table(var.table_likes) \
-        .select("id") \
+        .select(var.col_like_id) \
         .eq(var.col_user_id, user_id) \
         .limit(1) \
         .execute()
     
     matches = auth.supabase.table(var.table_matches) \
-        .select("id") \
+        .select(var.col_match_id) \
         .eq(var.col_user_id, user_id) \
         .limit(1) \
         .execute()
