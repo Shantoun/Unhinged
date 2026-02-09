@@ -381,22 +381,25 @@ def stacked_events_bar_fig(events_df, ts_col=None):
 
     elif bucket == "Month":
         df["_bucket_dt"] = df[ts_col].dt.to_period("M").dt.start_time
-        df["_bucket_label"] = df["_bucket_dt"].dt.strftime("%Y-%m")
-        df["_hover_label"] = df["_bucket_dt"].dt.strftime("%b %Y")
+        df["_bucket_label"] = df["_bucket_dt"].dt.strftime("%b %Y")  # May 2025
+        df["_hover_label"] = df["_bucket_label"]
 
     elif bucket == "Week":
         # Week starts Monday (period ends Sunday)
         df["_bucket_dt"] = df[ts_col].dt.to_period("W-SUN").dt.start_time   # or "W"
         week_end = df["_bucket_dt"] + pd.Timedelta(days=6)
-        df["_bucket_label"] = df["_bucket_dt"].dt.strftime("%Y-%m-%d")
+        df["_bucket_label"] = df["_bucket_dt"].dt.strftime("%b %d, %Y")  # May 13, 2025
+        # Hover: day of week above date range
         df["_hover_label"] = (
-            df["_bucket_dt"].dt.strftime("%d.%m.%Y") + " – " + week_end.dt.strftime("%d.%m.%Y")
+            df["_bucket_dt"].dt.strftime("%A") + "<br>" + 
+            df["_bucket_dt"].dt.strftime("%b %d, %Y") + " – " + week_end.dt.strftime("%b %d, %Y")
         )
 
     else:  # Day
         df["_bucket_dt"] = df[ts_col].dt.floor("D")
-        df["_bucket_label"] = df["_bucket_dt"].dt.strftime("%Y-%m-%d")
-        df["_hover_label"] = df["_bucket_dt"].dt.strftime("%d.%m.%Y")
+        df["_bucket_label"] = df["_bucket_dt"].dt.strftime("%b %d, %Y")  # May 13, 2025
+        # Hover: day of week above date
+        df["_hover_label"] = df["_bucket_dt"].dt.strftime("%A") + "<br>" + df["_bucket_dt"].dt.strftime("%b %d, %Y")
 
     # -------- aggregate --------
     agg = (
@@ -497,8 +500,6 @@ def stacked_events_bar_fig(events_df, ts_col=None):
         _, last_bucket_end = bounds(tmax0, bucket)
 
         if (tmin0 > first_bucket_start) or (tmax0 < last_bucket_end):
-            warning = "Time buckets may be partial at the edges (data doesn’t cover full calendar buckets)."
+            warning = "Time buckets may be partial at the edges (data doesn't cover full calendar buckets)."
 
     return fig, warning, out_df
-
-
