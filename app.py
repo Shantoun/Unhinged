@@ -2,7 +2,7 @@ from functions.authentification import supabase
 import streamlit as st
 import functions.authentification as auth
 from functions.zip_uploader import uploader
-from functions.supabase_ingest import delete_my_data
+from functions.supabase_ingest import delete_my_data, delete_all_my_data
 import variables as var
 
 import functions.filter as filter
@@ -108,7 +108,7 @@ if user_id:
                 if st.button("Delete my account", type="primary", width="stretch"):
                     with st.spinner("Deleting your data..."):
                         # 1) delete app data
-                        delete_my_data(user_id)
+                        delete_all_my_data(user_id)
     
                         # 2) delete Supabase Auth user (service role required)
                         auth.supabase_admin.auth.admin.delete_user(user_id)
@@ -232,7 +232,7 @@ if user_id:
         
             if delete_account_clicked:
                 with st.spinner("Deleting your data and account..."):
-                    delete_my_data(st.session_state.user_id)
+                    delete_all_my_data(st.session_state.user_id)
                     auth.supabase_admin.auth.admin.delete_user(st.session_state.user_id)
         
                 try:
