@@ -160,219 +160,9 @@ if user_id:
                 help="Auto-detected from your browser. Timestamps do not include timezone data, so choose the timezone you mostly send from for best accuracy."
             )
 
-            date_filter = st.empty()
             st.divider()
-
-
-
-
-        
-        # Reupload data
-        if st.sidebar.button("Upload More Data", width="stretch"):
-            hinge_sync_dialog()
-
-
-
-        
-        # Sign out
-        if st.sidebar.button("Sign Out", width="stretch"):
-            st.session_state.show_signout = True
-        
-        
-        if st.session_state.get("show_signout"):
-            @st.dialog("Sign out?")
-            def confirm_signout():
-                st.write("Are you sure you want to sign out?")
-        
-                if st.button("Yes, sign out", width="stretch", type="primary"):
-                    auth.sign_out()
-                    st.session_state.show_signout = False
-                    st.rerun()
-        
-            confirm_signout()
-
-
-
-        
-        # ---- init once (top of app) ----
-        if "show_delete_dialog" not in st.session_state:
-            st.session_state.show_delete_dialog = False
-        
-        
-        @st.dialog("Delete My Data")
-        def delete_data_dialog():
-            st.error("This will permanently delete all your data. This cannot be undone.")
-        
-            delete_data_clicked = st.button(
-                "Yes, delete my data",
-                type="primary",
-                width="stretch",
-                key="delete_confirm_data",
-            )
-        
-            # ---- extra: delete account (data + auth) ----
-            with st.expander("Delete data & account"):
-                st.warning("This will permanently delete your account and all associated data.")
-        
-                confirm_text = st.text_input(
-                    'Type "delete" to confirm',
-                    key="delete_account_confirm_text",
-                )
-        
-                delete_account_clicked = (
-                    confirm_text.strip().lower() == "delete"
-                    and st.button(
-                        "Delete my data & account",
-                        type="primary",
-                        width="stretch",
-                        key="delete_account_confirm_btn",
-                    )
-                )
-        
-            # ---------- actions (NOT in columns) ----------
-            if delete_data_clicked:
-                with st.spinner("Deleting your data..."):
-                    delete_my_data(st.session_state.user_id)
-        
-                st.session_state.show_delete_dialog = False
-                st.success("Your data has been deleted.")
-                st.rerun()
-        
-            if delete_account_clicked:
-                with st.spinner("Deleting your data and account..."):
-                    delete_all_my_data(st.session_state.user_id)
-                    auth.supabase_admin.auth.admin.delete_user(st.session_state.user_id)
-        
-                try:
-                    auth.sign_out()
-                except Exception:
-                    pass
-        
-                st.session_state.user_id = None
-                st.session_state.show_delete_dialog = False
-                st.success("Your account and data have been deleted.")
-                st.rerun()
-                
-                
-        # ---- sidebar trigger (NO st.rerun here) ----
-        if st.sidebar.button("Delete My Data", width="stretch", key="open_delete"):
-            st.session_state.show_delete_dialog = True
-        
-        
-        # ---- render dialog in main script flow ----
-        if st.session_state.show_delete_dialog:
-            delete_data_dialog()
-
-
-
-
-
-        
-        
-        def navigation_help_dialog():
-            @st.dialog("Quick Guides", width="large")
-            def _dialog():
-                tab_table, tab_plotly, tab_box = st.tabs(["Tables", "Plotly charts", "Boxplots"])
-        
-                # -------------------- TAB 1: TABLES --------------------
-                with tab_table:
-                    st.markdown(
-                        """
-                            ### Tables
-                            
-                            Streamlit tables are interactive.
-                            
-                            **Top-right toolbar (shows when you hover the table):**
-                            - **Full screen / expand** (makes the table easier to read, not shown in this example)
-                            - **Search** (magnifying glass icon)
-                            - **Download** (download the table)
-                            
-                            **Sorting**
-                            - Click a **column name** to sort.
-                            - Click again to reverse the sort.
-                            
-                            **Searching**
-                            - Click into the table first, then use **Ctrl/Cmd+F** to find text.
-                            - You can also use the **magnifying glass** icon in the table’s top-right toolbar.
-                        """
-                    )
-        
-                    # Example table (index hidden, nicer labels)
-                    df_demo = pd.DataFrame(
-                        {
-                            "Name": ["Ava", "Noah", "Mia", "Liam"],
-                            "Score": [72, 95, 88, 60],
-                            "Group": ["North", "North", "South", "South"],
-                        }
-                    )
-                    st.dataframe(df_demo, width="stretch", hide_index=True)
-        
-                # -------------------- TAB 2: PLOTLY --------------------
-                with tab_plotly:
-                    st.markdown(
-                        """
-                            ### Plotly chart controls
-                            
-                            Plotly charts are interactive.
-                            
-                            **Modebar (chart tools)**
-                            When you **hover over the chart**, a row of tool icons appears in the **top-right** (zoom, pan, reset, download, etc.).  
-                            [1min read: Plotly modebar guide](https://plotly.com/chart-studio-help/getting-to-know-the-plotly-modebar/)
-                            
-                            **Legend (the colored labels)**
-                            - **Click** a legend item to hide/show it.
-                            - **Double-click** a legend item to show *only that one* (double-click again to reset).
-                            
-                            **Zoom & reset**
-                            - **Drag on the chart** to zoom into an area.
-                            - **Double-click** the chart to reset.
-                        """
-                    )
-        
-                    df_bar = pd.DataFrame(
-                        {
-                            "Week": ["W1", "W1", "W1", "W2", "W2", "W2", "W3", "W3", "W3"],
-                            "Type": ["Like", "Match", "Message"] * 3,
-                            "Count": [30, 12, 5, 25, 14, 7, 18, 10, 9],
-                        }
-                    )
-                    fig_bar = px.bar(df_bar, x="Week", y="Count", color="Type", barmode="stack")
-                    st.plotly_chart(fig_bar, use_container_width=True)
-        
-                # -------------------- TAB 3: BOXPLOTS --------------------
-                with tab_box:
-                    st.markdown(
-                        """
-                            ### Boxplots
-                            
-                            A boxplot summarizes a bunch of numbers without showing every row.
-                            
-                            **You’ll see these terms on hover:**
-                            - **Q1 (25th percentile):** 25% of values are below this.
-                            - **Median (50th percentile):** the middle value.
-                            - **Q3 (75th percentile):** 75% of values are below this.
-                            
-                            **What the shapes mean:**
-                            - The **shaded box** goes from **Q1 → Q3** (where the “middle half” of the data lives).
-                            - The **line inside the box** is the **median**.
-                            - The **whiskers** show the “normal range” *excluding outliers*:  
-                              think of them as the **lowest** and **highest** values that are still considered part of the main cluster.
-                            - **Outliers** are shown as separate dots because they’re **far away** from the main cluster (one very low or very high value can otherwise hide what most of the data looks like).
-                            
-                            The example below has **one low outlier** and **one high outlier** so you can see both.
-                        """
-                    )
-        
-                    np.random.seed(42)
-                    core = np.random.normal(loc=50, scale=7, size=220)
-                    values = np.concatenate([core, [10, 95]])  # low + high outliers
-                    df_box = pd.DataFrame({"Value": values})
-        
-                    fig_box = px.box(df_box, x="Value", points="outliers", orientation="h")
-                    st.plotly_chart(fig_box, use_container_width=True)
-        
-            _dialog()
-        
+            st.write(":material/filter_alt: Date")
+            engagements, filter_text = filter.filter_ui(engagements, filterable_columns=[var.col_like_timestamp], key="my_filter", layout="column", user_id=user_id)
 
 
 
@@ -595,9 +385,228 @@ if user_id:
 
         
         with st.sidebar:
-            st.divider()
             if st.button("Manage Date Ranges", width="stretch"):
                 manage_date_ranges_dialog(user_id)
+
+
+
+            
+            st.divider()
+
+
+
+
+        
+        # Reupload data
+        if st.sidebar.button("Upload More Data", width="stretch"):
+            hinge_sync_dialog()
+
+
+
+        
+        # Sign out
+        if st.sidebar.button("Sign Out", width="stretch"):
+            st.session_state.show_signout = True
+        
+        
+        if st.session_state.get("show_signout"):
+            @st.dialog("Sign out?")
+            def confirm_signout():
+                st.write("Are you sure you want to sign out?")
+        
+                if st.button("Yes, sign out", width="stretch", type="primary"):
+                    auth.sign_out()
+                    st.session_state.show_signout = False
+                    st.rerun()
+        
+            confirm_signout()
+
+
+
+        
+        # ---- init once (top of app) ----
+        if "show_delete_dialog" not in st.session_state:
+            st.session_state.show_delete_dialog = False
+        
+        
+        @st.dialog("Delete My Data")
+        def delete_data_dialog():
+            st.error("This will permanently delete all your data. This cannot be undone.")
+        
+            delete_data_clicked = st.button(
+                "Yes, delete my data",
+                type="primary",
+                width="stretch",
+                key="delete_confirm_data",
+            )
+        
+            # ---- extra: delete account (data + auth) ----
+            with st.expander("Delete data & account"):
+                st.warning("This will permanently delete your account and all associated data.")
+        
+                confirm_text = st.text_input(
+                    'Type "delete" to confirm',
+                    key="delete_account_confirm_text",
+                )
+        
+                delete_account_clicked = (
+                    confirm_text.strip().lower() == "delete"
+                    and st.button(
+                        "Delete my data & account",
+                        type="primary",
+                        width="stretch",
+                        key="delete_account_confirm_btn",
+                    )
+                )
+        
+            # ---------- actions (NOT in columns) ----------
+            if delete_data_clicked:
+                with st.spinner("Deleting your data..."):
+                    delete_my_data(st.session_state.user_id)
+        
+                st.session_state.show_delete_dialog = False
+                st.success("Your data has been deleted.")
+                st.rerun()
+        
+            if delete_account_clicked:
+                with st.spinner("Deleting your data and account..."):
+                    delete_all_my_data(st.session_state.user_id)
+                    auth.supabase_admin.auth.admin.delete_user(st.session_state.user_id)
+        
+                try:
+                    auth.sign_out()
+                except Exception:
+                    pass
+        
+                st.session_state.user_id = None
+                st.session_state.show_delete_dialog = False
+                st.success("Your account and data have been deleted.")
+                st.rerun()
+                
+                
+        # ---- sidebar trigger (NO st.rerun here) ----
+        if st.sidebar.button("Delete My Data", width="stretch", key="open_delete"):
+            st.session_state.show_delete_dialog = True
+        
+        
+        # ---- render dialog in main script flow ----
+        if st.session_state.show_delete_dialog:
+            delete_data_dialog()
+
+
+
+
+
+        
+        
+        def navigation_help_dialog():
+            @st.dialog("Quick Guides", width="large")
+            def _dialog():
+                tab_table, tab_plotly, tab_box = st.tabs(["Tables", "Plotly charts", "Boxplots"])
+        
+                # -------------------- TAB 1: TABLES --------------------
+                with tab_table:
+                    st.markdown(
+                        """
+                            ### Tables
+                            
+                            Streamlit tables are interactive.
+                            
+                            **Top-right toolbar (shows when you hover the table):**
+                            - **Full screen / expand** (makes the table easier to read, not shown in this example)
+                            - **Search** (magnifying glass icon)
+                            - **Download** (download the table)
+                            
+                            **Sorting**
+                            - Click a **column name** to sort.
+                            - Click again to reverse the sort.
+                            
+                            **Searching**
+                            - Click into the table first, then use **Ctrl/Cmd+F** to find text.
+                            - You can also use the **magnifying glass** icon in the table’s top-right toolbar.
+                        """
+                    )
+        
+                    # Example table (index hidden, nicer labels)
+                    df_demo = pd.DataFrame(
+                        {
+                            "Name": ["Ava", "Noah", "Mia", "Liam"],
+                            "Score": [72, 95, 88, 60],
+                            "Group": ["North", "North", "South", "South"],
+                        }
+                    )
+                    st.dataframe(df_demo, width="stretch", hide_index=True)
+        
+                # -------------------- TAB 2: PLOTLY --------------------
+                with tab_plotly:
+                    st.markdown(
+                        """
+                            ### Plotly chart controls
+                            
+                            Plotly charts are interactive.
+                            
+                            **Modebar (chart tools)**
+                            When you **hover over the chart**, a row of tool icons appears in the **top-right** (zoom, pan, reset, download, etc.).  
+                            [1min read: Plotly modebar guide](https://plotly.com/chart-studio-help/getting-to-know-the-plotly-modebar/)
+                            
+                            **Legend (the colored labels)**
+                            - **Click** a legend item to hide/show it.
+                            - **Double-click** a legend item to show *only that one* (double-click again to reset).
+                            
+                            **Zoom & reset**
+                            - **Drag on the chart** to zoom into an area.
+                            - **Double-click** the chart to reset.
+                        """
+                    )
+        
+                    df_bar = pd.DataFrame(
+                        {
+                            "Week": ["W1", "W1", "W1", "W2", "W2", "W2", "W3", "W3", "W3"],
+                            "Type": ["Like", "Match", "Message"] * 3,
+                            "Count": [30, 12, 5, 25, 14, 7, 18, 10, 9],
+                        }
+                    )
+                    fig_bar = px.bar(df_bar, x="Week", y="Count", color="Type", barmode="stack")
+                    st.plotly_chart(fig_bar, use_container_width=True)
+        
+                # -------------------- TAB 3: BOXPLOTS --------------------
+                with tab_box:
+                    st.markdown(
+                        """
+                            ### Boxplots
+                            
+                            A boxplot summarizes a bunch of numbers without showing every row.
+                            
+                            **You’ll see these terms on hover:**
+                            - **Q1 (25th percentile):** 25% of values are below this.
+                            - **Median (50th percentile):** the middle value.
+                            - **Q3 (75th percentile):** 75% of values are below this.
+                            
+                            **What the shapes mean:**
+                            - The **shaded box** goes from **Q1 → Q3** (where the “middle half” of the data lives).
+                            - The **line inside the box** is the **median**.
+                            - The **whiskers** show the “normal range” *excluding outliers*:  
+                              think of them as the **lowest** and **highest** values that are still considered part of the main cluster.
+                            - **Outliers** are shown as separate dots because they’re **far away** from the main cluster (one very low or very high value can otherwise hide what most of the data looks like).
+                            
+                            The example below has **one low outlier** and **one high outlier** so you can see both.
+                        """
+                    )
+        
+                    np.random.seed(42)
+                    core = np.random.normal(loc=50, scale=7, size=220)
+                    values = np.concatenate([core, [10, 95]])  # low + high outliers
+                    df_box = pd.DataFrame({"Value": values})
+        
+                    fig_box = px.box(df_box, x="Value", points="outliers", orientation="h")
+                    st.plotly_chart(fig_box, use_container_width=True)
+        
+            _dialog()
+        
+
+
+
+
                 
             st.divider()
             if st.button("Quick Guides", width="stretch"):
@@ -704,8 +713,8 @@ if user_id:
             st.session_state[flag_key] = True
 
         
-        with date_filter.expander(":material/filter_alt: Date", expanded=True):
-            engagements, filter_text = filter.filter_ui(engagements, filterable_columns=[var.col_like_timestamp], key="my_filter", layout="column", user_id=user_id)
+
+
 
         
              
