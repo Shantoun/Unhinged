@@ -696,8 +696,11 @@ def filter_ui(df, filterable_columns, allow_future_windows=False, key=None, layo
                 })
             
             # Sort by start date
-            grouped_rows.sort(key=lambda x: x['start'] if pd.notna(x['start']) else pd.Timestamp.min)
-            
+            grouped_rows.sort(key=lambda x: (
+                x['start'].tz_localize(None) if hasattr(x['start'], 'tz') and x['start'].tz is not None 
+                else x['start']
+            ) if pd.notna(x['start']) else pd.Timestamp.min)
+                        
             # Build display dataframe
             subscription_ranges = pd.DataFrame({
                 'Name': [r['name'] for r in grouped_rows],
