@@ -369,20 +369,30 @@ if user_id:
                                 
                                 st.success(f"Deleted: {', '.join(names_deleted)}")
                                 st.rerun()
+                                
+                        # Show hinge subscriptions (read-only) if any exist
+                        if grouped_hinge:
+                            st.divider()
+                            st.markdown("**All Ranges**")
+                            st.caption("You cannot delete Hinge subscriptions")
+                            st.dataframe(
+                                display_df[~display_df['selectable']][['Name', 'Start', 'End']],
+                                use_container_width=True,
+                                hide_index=True
+                            )
+                    
+                    with tab1:
+                        show_create_form(user_id)
                         
-                        # Always show All Ranges section
+                        # Always show All Ranges in Create tab
                         st.divider()
                         st.markdown("**All Ranges**")
-                        if grouped_hinge:
-                            st.caption("Your subscriptions are automatically included as default date ranges.")
+                        st.caption("Your subscriptions are automatically included as default date ranges.")
                         st.dataframe(
                             display_df[['Name', 'Start', 'End']],
                             use_container_width=True,
                             hide_index=True
                         )
-                    
-                    with tab1:
-                        show_create_form(user_id)
                 else:
                     # No user ranges, just show create form and read-only list
                     show_create_form(user_id)
