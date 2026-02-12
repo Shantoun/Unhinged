@@ -373,7 +373,7 @@ if user_id:
                         # Show hinge subscriptions (read-only) if any exist
                         if grouped_hinge:
                             st.divider()
-                            st.markdown("**All Ranges**")
+                            st.markdown("**Hinge Subscriptions**")
                             st.caption("You cannot delete Hinge subscriptions")
                             st.dataframe(
                                 display_df[~display_df['selectable']][['Name', 'Start', 'End']],
