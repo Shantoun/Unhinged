@@ -66,37 +66,34 @@ def auth_screen():
         st.session_state.reset_mode = False
     
     if not st.session_state.reset_mode:
-        # Normal login/signup screen
-        tab1, tab2 = st.tabs(["Login/Sign Up", "Forgot Password"])
+        # Normal login/signup
+        email = st.text_input("Email", key="login_email")
+        password = st.text_input("Password", type="password", 
+                                help="Must be at least 8 characters", 
+                                key="login_password")
         
-        with tab1:
-            email = st.text_input("Email", key="login_email")
-            password = st.text_input("Password", type="password", 
-                                    help="Must be at least 8 characters", 
-                                    key="login_password")
-            
-            if st.button("Continue", type="primary"):
-                if email and password:
-                    user, status, msg = smart_auth(email, password)
-                    if status == "success":
-                        st.session_state.user_email = user.user.email
-                        st.session_state.user_id = user.user.id 
-                        st.success(msg)
-                        st.rerun()
-                    elif status == "check_email":
-                        st.info(msg)
-                    else:
-                        st.error(msg)
+        if st.button("Continue", type="primary"):
+            if email and password:
+                user, status, msg = smart_auth(email, password)
+                if status == "success":
+                    st.session_state.user_email = user.user.email
+                    st.session_state.user_id = user.user.id 
+                    st.success(msg)
+                    st.rerun()
+                elif status == "check_email":
+                    st.info(msg)
                 else:
-                    st.warning("Enter email and password")
+                    st.error(msg)
+            else:
+                st.warning("Enter email and password")
         
-        with tab2:
-            st.subheader("Reset Your Password")
+        # Forgot password expander
+        with st.expander("🔑 Forgot Password?"):
             st.write("Enter your email and we'll send you a 6-digit code")
             
             reset_email = st.text_input("Email Address", key="reset_email_input")
             
-            if st.button("Send Code", type="primary"):
+            if st.button("Send Reset Code", type="secondary"):
                 if reset_email:
                     success, msg = request_password_reset(reset_email)
                     if success:
@@ -175,21 +172,3 @@ def sign_out():
     st.session_state.user_email = None
     st.session_state.user_id = None 
     st.rerun()
-
-
-
-
-
-# import streamlit as st
-
-# if not st.user.is_logged_in:
-#     st.write("Not logged in")
-#     if st.button("Sign in with Google"):
-#         st.login("google")
-# else:
-#     st.write(f"User: {st.user.name}")
-#     st.write(f"Email: {st.user.email}")
-#     st.success("Logged in")
-    
-#     if st.button("Sign out"):
-#         st.logout()
