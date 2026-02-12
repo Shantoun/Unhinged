@@ -651,28 +651,14 @@ def filter_ui(df, filterable_columns, allow_future_windows=False, key=None, layo
                     grouped_rows[-1]['end'] == row['start_timestamp'] and
                     grouped_rows[-1].get('duration') == row.get('subscription_duration')):
                     
-                    # Merge renewal
+                    # Merge renewal - take MOST RECENT price and currency
                     prev = grouped_rows[-1]
-                    prev_price = prev['price']
-                    curr_price = row.get('price', 0)
-                    prev_currency = prev['currency']
-                    curr_currency = row.get('currency')
-                    target_currency = curr_currency
-                    
-                    if prev_currency != target_currency:
-                        try:
-                            c = CurrencyRates()
-                            prev_price = c.convert(prev_currency, target_currency, prev_price)
-                        except:
-                            pass
-                    
-                    count = prev.get('count', 1)
-                    new_avg = ((prev_price * count) + curr_price) / (count + 1)
-                    
                     prev['end'] = row['end_timestamp']
-                    prev['price'] = new_avg
-                    prev['currency'] = target_currency
-                    prev['count'] = count + 1
+                    prev['price'] = row.get('price')
+                    prev['currency'] = row.get('currency')
+                    prev['count'] = prev.get('count', 1) + 1
+                    # Update name with most recent price
+                    prev['name'] = f"{row.get('currency')} {row.get('price')} - {row.get('subscription_duration')}"
                 else:
                     # New group
                     grouped_rows.append({
