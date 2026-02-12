@@ -88,7 +88,7 @@ def auth_screen():
                 st.warning("Enter email and password")
         
         # Forgot password expander
-        with st.expander("🔑 Forgot Password?"):
+        with st.expander("Forgot password?"):
             st.write("Enter your email and we'll send you a 6-digit code")
             
             reset_email = st.text_input("Email Address", key="reset_email_input")
