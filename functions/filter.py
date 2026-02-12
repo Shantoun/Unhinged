@@ -5,7 +5,7 @@ import variables as var
 from datetime import timedelta
 from dateutil.relativedelta import relativedelta
 import re
-from forex_python.converter import CurrencyRates
+
 
 operators_numeric = ['=', '≠', '≥', '≤', 'Between']
 operators_text = ['=', '≠', 'Contains', 'Doesn\'t Contain', 'Starts with', 'Ends with']
