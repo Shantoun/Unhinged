@@ -356,7 +356,7 @@ if user_id:
                         )
                         
                         # Delete button
-                        if st.button("Delete Selected", type="secondary", use_container_width=True):
+                        if st.button("Delete Selected", type="primary", use_container_width=True):
                             selected_indices = st.session_state.get("manage_ranges_table", {}).get("selection", {}).get("rows", [])
                             
                             if selected_indices:
