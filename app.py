@@ -246,8 +246,6 @@ if user_id:
 
 
 
-
-        
         def manage_date_ranges_dialog(user_id):
             @st.dialog("Manage Date Ranges", width="large")
             def _dialog():
@@ -363,25 +361,25 @@ if user_id:
                             
                             if selected_indices:
                                 selectable_df = display_df[display_df['selectable']].reset_index(drop=True)
-                                ids_to_delete = selectable_df.iloc[selected_indices]['subscription_id'].tolist()
+                                ids_to_delete = selectable_df.iloc[selected_indices][var.col_subscription_id].tolist()
                                 names_deleted = selectable_df.iloc[selected_indices]['Name'].tolist()
                                 
                                 for sub_id in ids_to_delete:
-                                    supabase.table(var.table_subscriptions).delete().eq('subscription_id', sub_id).execute()
+                                    supabase.table(var.table_subscriptions).delete().eq(var.col_subscription_id, sub_id).execute()
                                 
                                 st.success(f"Deleted: {', '.join(names_deleted)}")
                                 st.rerun()
-                                
-                        # Show hinge subscriptions (read-only) if any exist
+                        
+                        # Always show All Ranges section
+                        st.divider()
+                        st.markdown("**All Ranges**")
                         if grouped_hinge:
-                            st.divider()
-                            st.markdown("**All Ranges**")
-                            st.caption("You cannot delete Hinge subscriptions")
-                            st.dataframe(
-                                display_df[~display_df['selectable']][['Name', 'Start', 'End']],
-                                use_container_width=True,
-                                hide_index=True
-                            )
+                            st.caption("Your subscriptions are automatically included as default date ranges.")
+                        st.dataframe(
+                            display_df[['Name', 'Start', 'End']],
+                            use_container_width=True,
+                            hide_index=True
+                        )
                     
                     with tab1:
                         show_create_form(user_id)
@@ -400,7 +398,7 @@ if user_id:
                         )
             
             _dialog()
-        
+                
         
 
 
