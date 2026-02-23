@@ -966,7 +966,17 @@ if user_id:
                 with st.expander("View as data"):
                     time_table = time_table.set_index("Time Slot")
                     st.dataframe(time_table)
+                    order = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
+                    
+                    day_table["Day of Week"] = pd.Categorical(
+                        day_table["Day of Week"],
+                        categories=order,
+                        ordered=True
+                    )
+                    
+                    day_table = day_table.sort_values("Day of Week")
                     day_table = day_table.set_index("Day of Week")
+                    
                     st.dataframe(day_table)
                     st.dataframe(day_time_table, hide_index=True)
     
